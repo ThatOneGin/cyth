@@ -16,7 +16,7 @@
 
 void cythM_grow(cyth_State *C, void **ptr, cmem_t *size, cmem_t scalar, const char *type);
 void *cythM_malloc(cyth_State *C, cmem_t size);
-void *cythM_realloc(cyth_State *C, void *ptr, cmem_t size);
-void cythM_free(cyth_State *C, void *ptr);
+void *cythM_realloc(cyth_State *C, void *ptr, cmem_t oldsize, cmem_t size);
+void cythM_free(cyth_State *C, void *ptr, cmem_t size);
 
 #endif

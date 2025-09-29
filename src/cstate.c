@@ -1,6 +1,9 @@
 #include <cstate.h>
 #include <cmem.h>
 #include <stdarg.h>
+#include <cgc.h>
+
+global_State G = {0};
 
 static void init_stack(cyth_State *C) {
   C->base = cythM_malloc(C, sizeof(*C->base) * MINSTACK);
@@ -25,6 +28,7 @@ cyth_State *cythE_openstate(void) {
   if (!C) return C;
   init_stack(C);
   C->main = main;
+  C->G = &G;
   if (main) main = 0;
   return C;
 }
@@ -34,10 +38,12 @@ cmem_t cythE_gettop(cyth_State *C) {
 }
 
 void cythE_closestate(cyth_State *C) {
-  cythM_free(C, C->base);
+  cmem_t top = cythE_gettop(C);
+  cythM_free(C, C->base, sizeof(C->base)*top);
   C->top = NULL;
   C->base = NULL;
   C->maxoff = 0;
+  if (C->main) cythG_freeall(C);
   free(C);
   C = NULL;
 }

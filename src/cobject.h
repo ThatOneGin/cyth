@@ -3,6 +3,7 @@
 #include <cprefix.h>
 
 typedef struct cyth_State cyth_State;
+typedef struct global_State global_State;
 
 typedef struct {
   char *data;
@@ -24,10 +25,8 @@ typedef struct {
 } Tvalue;
 
 #define cyth_tt(o) ((o)->tt_)
-#define obj2i(o) \
-  (cyth_assert(cyth_tt(o) == CYTH_INTEGER), (o)->v.integer)
-#define obj2s(o) \
-  (cyth_assert(cyth_tt(o) == CYTH_STRING), (o)->v.string)
+#define obj2i(o) (o)->v.integer
+#define obj2s(o) (o)->v.string
 #define objcopy(s1, s2) {\
   cyth_tt(s1) = cyth_tt(s2); \
   (s1)->v = (s2)->v}
