@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -ggdb -Wall -Wextra -pedantic -std=c99
+CFLAGS = -ggdb -Wall -Wextra -pedantic -std=c99 -I src/
 BUILD = build
 SRC_FILES = $(wildcard src/*.c) $(wildcard src/**/*.c)
 OBJ_FILES = $(patsubst src/%.c, %.o, $(SRC_FILES))
@@ -15,5 +15,5 @@ $(BIN): $(OBJ_FILES)
 	$(CC) -c $(CFLAGS) $<
 
 clean:
-	rm *.o
+	rm build/*.o
 	rm $(BIN)

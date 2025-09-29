@@ -1,6 +1,7 @@
-#include <stdio.h>
+#include <cstate.h>
 
 int main() {
-  printf("Hello, world!\n");
+  cyth_State *C = cythE_openstate();
+  cythE_closestate(C);
   return 0;
 }
