@@ -34,4 +34,5 @@ typedef struct {
 /* Relative pointer to the stack */
 typedef Tvalue *stkrel;
 
+#define i2obj(i) ((Tvalue){.tt_=CYTH_INTEGER,.v.integer=(i)})
 #endif

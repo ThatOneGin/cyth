@@ -35,4 +35,5 @@ cmem_t cythE_gettop(cyth_State *C);
 void cythE_closestate(cyth_State *C);
 void cythE_error(cyth_State *C, const char *f, ...);
 void cythE_inctop(cyth_State *C);
+void cythE_dectop(cyth_State *C);
 #endif

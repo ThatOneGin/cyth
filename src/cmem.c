@@ -42,7 +42,7 @@ void cythM_grow(cyth_State *C, void **ptr,
     *size = old_size + INCSIZE;
     tmp = _realloc(*ptr, (*size)*scalar);
     if (tmp == NULL)
-      tmp = tryagain(C, ptr, (*size)*scalar);
+      tmp = tryagain(C, *ptr, (*size)*scalar);
     if (tmp == NULL)
       cythM_error(C, type, *size);
   }

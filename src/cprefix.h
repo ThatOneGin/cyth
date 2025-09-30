@@ -17,6 +17,6 @@
 #endif
 
 typedef uint8_t byte;
-typedef uint64_t cyth_integer;
+typedef int64_t cyth_integer;
 typedef size_t cmem_t;
 #endif

@@ -6,7 +6,9 @@
 global_State G = {0};
 
 static void init_stack(cyth_State *C) {
-  C->base = cythM_malloc(C, sizeof(*C->base) * MINSTACK);
+  C->base = malloc(sizeof(*C->base) * MINSTACK);
+  if (C->base == NULL)
+    cythE_error(C, "Couldn't allocate stack.\n");
   C->top = C->base;
   C->maxoff = MINSTACK;
 }
@@ -14,7 +16,11 @@ static void init_stack(cyth_State *C) {
 /* reallocate stack as a vector */
 static void realloc_stack(cyth_State *C) {
   cmem_t savedtop = C->top - C->base;
-  cythM_vecgrow(C, C->base, C->maxoff, Tvalue);
+  stkrel newbase = realloc(C->base, sizeof(*C->base)*(C->maxoff*2));
+  if (newbase == NULL)
+    cythE_error(C, "Couldn't reallocate stack.\n");
+  C->maxoff *= 2;
+  C->base = newbase;
   C->top = C->base + savedtop;
 }
 
@@ -61,7 +67,14 @@ void cythE_error(cyth_State *C,
 
 void cythE_inctop(cyth_State *C) {
   cmem_t top = cythE_gettop(C);
-  if (top >= C->maxoff)
+  if (top+1 >= C->maxoff)
     realloc_stack(C);
   C->top++;
+}
+
+void cythE_dectop(cyth_State *C) {
+  cmem_t top = cythE_gettop(C);
+  if (top == 0)
+    cythE_error(C, "Stack underflow.\n");
+  C->top--;
 }
