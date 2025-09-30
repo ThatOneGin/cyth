@@ -9,11 +9,17 @@
 typedef struct gc_object {
   byte tt_;
   union {
-    String s;
+    String *s;
   } v;
   byte mark;
   struct gc_object *next;
 } gc_object;
+
+typedef struct {
+  String **strings;
+  cmem_t nstrings;
+  cmem_t stringsize;
+} stringtable;
 
 struct global_State {
   gc_object *list; /* objects that live on the stack */
@@ -28,6 +34,7 @@ struct cyth_State {
   stkrel top; /* first empty slot */
   cmem_t maxoff; /* maximum distance from base to top */
   byte main; /* is it the main state? */
+  stringtable cache; /* string cache */
 };
 
 cyth_State *cythE_openstate(void);

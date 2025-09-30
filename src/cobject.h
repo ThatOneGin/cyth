@@ -16,7 +16,7 @@ typedef struct {
 
 typedef union {
   cyth_integer integer;
-  String string;
+  String *string;
 } Value;
 
 typedef struct {

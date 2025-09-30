@@ -1,5 +1,6 @@
 #include <cstate.h>
 #include <cmem.h>
+#include <cstring.h>
 #include <stdarg.h>
 #include <cgc.h>
 
@@ -35,6 +36,7 @@ cyth_State *cythE_openstate(void) {
   init_stack(C);
   C->main = main;
   C->G = &G;
+  cythS_init(C);
   if (main) main = 0;
   return C;
 }
@@ -49,6 +51,7 @@ void cythE_closestate(cyth_State *C) {
   C->top = NULL;
   C->base = NULL;
   C->maxoff = 0;
+  cythS_clear(C);
   if (C->main) cythG_freeall(C);
   free(C);
   C = NULL;
