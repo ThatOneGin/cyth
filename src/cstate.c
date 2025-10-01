@@ -36,6 +36,7 @@ cyth_State *cythE_openstate(void) {
   init_stack(C);
   C->main = main;
   C->G = &G;
+  C->errhandler = NULL;
   cythS_init(C);
   if (main) main = 0;
   return C;
@@ -51,6 +52,7 @@ void cythE_closestate(cyth_State *C) {
   C->top = NULL;
   C->base = NULL;
   C->maxoff = 0;
+  C->errhandler = NULL;
   cythS_clear(C);
   if (C->main) cythG_freeall(C);
   free(C);
@@ -59,13 +61,12 @@ void cythE_closestate(cyth_State *C) {
 
 void cythE_error(cyth_State *C,
                  const char *f, ...) {
-  cythE_closestate(C);
-  fprintf(stderr, "[Error]: ");
+  char *fmt = s2cstr(cythS_sprintf(C, "[Error]: %s\n", f));
   va_list ap;
   va_start(ap, f);
-  vfprintf(stderr, f, ap);
+  String *message = cythS_vsprintf(C, fmt, ap);
   va_end(ap);
-  exit(1);
+  cythE_throw(C, 1, message);
 }
 
 void cythE_inctop(cyth_State *C) {
@@ -80,4 +81,27 @@ void cythE_dectop(cyth_State *C) {
   if (top == 0)
     cythE_error(C, "Stack underflow.\n");
   C->top--;
+}
+
+void cythE_throw(cyth_State *C, byte errcode, String *errmsg) {
+  if (C->errhandler != NULL) {
+    C->errhandler->errmsg = errmsg;
+    C->errhandler->errcode = errcode;
+    cyth_throw(C, 1);
+  } else {
+    printf("%*s", (unsigned int)errmsg->len, errmsg->data);
+    cythE_closestate(C);
+    exit(1);
+  }
+}
+
+byte cythE_runprotected(cyth_State *C,
+                        cyth_Pfunction f,
+                        void *ud) {
+  cyth_jmpbuf newhandler;
+  newhandler.previous = C->errhandler;
+  C->errhandler = &newhandler;
+  cyth_try(C, f, ud);
+  C->errhandler = C->errhandler->previous;
+  return newhandler.errcode;
 }

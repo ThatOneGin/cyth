@@ -35,4 +35,6 @@ typedef struct {
 typedef Tvalue *stkrel;
 
 #define i2obj(i) ((Tvalue){.tt_=CYTH_INTEGER,.v.integer=(i)})
+
+typedef int(*cyth_Pfunction)(cyth_State*, void*);
 #endif

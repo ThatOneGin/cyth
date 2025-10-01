@@ -21,6 +21,13 @@ typedef struct {
   cmem_t stringsize;
 } stringtable;
 
+typedef struct cyth_jmpbuf {
+  String *errmsg;
+  byte errcode;
+  jmp_buf buf;
+  struct cyth_jmpbuf *previous;
+} cyth_jmpbuf;
+
 struct global_State {
   gc_object *list; /* objects that live on the stack */
   gc_object *uncollectables; /* objects that live until the main state dies */
@@ -35,6 +42,7 @@ struct cyth_State {
   cmem_t maxoff; /* maximum distance from base to top */
   byte main; /* is it the main state? */
   stringtable cache; /* string cache */
+  cyth_jmpbuf *errhandler;
 };
 
 cyth_State *cythE_openstate(void);
@@ -43,4 +51,6 @@ void cythE_closestate(cyth_State *C);
 void cythE_error(cyth_State *C, const char *f, ...);
 void cythE_inctop(cyth_State *C);
 void cythE_dectop(cyth_State *C);
+void cythE_throw(cyth_State *C, byte errcode, String *errmsg);
+byte cythE_runprotected(cyth_State *C, cyth_Pfunction f, void *ud);
 #endif

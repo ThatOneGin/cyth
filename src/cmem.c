@@ -2,6 +2,15 @@
 #include <cstate.h>
 #include <cgc.h>
 
+/*
+** For memory errors, we can't directly use
+** cythE_error as it allocates memory for strings
+** also, this excludes the recover point thing.
+*/
+#define cythM_rawmemerr(C, ...) \
+  {fprintf(stderr, "[Error]: Memory error: "); \
+  fprintf(stderr, __VA_ARGS__); \
+  cythE_closestate(C); exit(1);}
 
 /* auxiliary function */
 static void *_realloc(void *ptr, cmem_t size) {
@@ -25,12 +34,13 @@ static void *tryagain(cyth_State *C, void *ptr, cmem_t size) {
 }
 
 void cythM_error(cyth_State *C, const char *type, cmem_t size) {
-  if (type != NULL)
-    cythE_error(C,
+  if (type != NULL) {
+    cythM_rawmemerr(C,
       "Block of %s and size %lu is too big.\n", type, size);
-  else
-    cythE_error(C,
+  } else {
+    cythM_rawmemerr(C,
       "Block of size %lu is too big.\n", size);
+  }
 }
 
 void cythM_grow(cyth_State *C, void **ptr,
