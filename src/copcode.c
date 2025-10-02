@@ -13,7 +13,8 @@ char *opcodes[] = {
   [OP_POP] = "POP",
   [OP_ADD] = "ADD",
   [OP_SETVAR] = "SETVAR",
-  [OP_GETVAR] = "GETVAR"
+  [OP_GETVAR] = "GETVAR",
+  [OP_RETURN] = "RETURN"
 };
 
 int cythC_getmode(Instruction i) {

@@ -20,7 +20,7 @@ typedef struct {
   cmem_t linesize;
 } cyth_Function;
 
-cyth_Function *cyth_newfunc(cyth_State *C);
+cyth_Function *cythF_newfunc(cyth_State *C);
 int cythF_emitC(cyth_Function *f, Instruction i, int line);
 int cythF_emitK(cyth_Function *f, Tvalue k);
 void cythF_freefunc(cyth_Function *f);

@@ -10,6 +10,7 @@
 ** | 0-7     | 8-31                        |
 */
 typedef uint32_t Instruction;
+typedef uint32_t argZ; /* actually 24 bytes */
 
 enum opmode {
   iZ
@@ -22,6 +23,7 @@ enum opcode {
   OP_ADD,    /* iZ      push(pop() + pop()) */
   OP_SETVAR, /* iZ      vars[k[z]] = pop()  */
   OP_GETVAR, /* iZ      push(vars[k[z]])    */
+  OP_RETURN, /* iZ      return pop()        */
   OP_COUNT
 };
 
@@ -40,7 +42,7 @@ enum opcode {
 
 #define getfield(i, pos, mask) (((i) >> pos) & mask)
 #define getopcode(i) ((i)&MASK0)
-#define getargz(i) (getfield(i, ))
+#define getargz(i) (getfield(i, ARGZ_POS, MASK2))
 
 #define setfield(i, v, pos, m) ((i) = ((i) & ~(m << pos)) | ((v & m) << pos))
 #define setopcode(i, o) setfield(i, o, OPCODE_POS, MASK0)

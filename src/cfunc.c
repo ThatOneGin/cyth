@@ -1,7 +1,8 @@
 #include <cfunc.h>
 #include <cmem.h>
+#include <cvm.h>
 
-cyth_Function *cyth_newfunc(cyth_State *C) {
+cyth_Function *cythF_newfunc(cyth_State *C) {
   cyth_Function *f = cythM_malloc(C, sizeof(cyth_Function));
   f->C = C;
   f->code = NULL;
@@ -16,6 +17,7 @@ cyth_Function *cyth_newfunc(cyth_State *C) {
   return f;
 }
 
+/* Emit instruction i with debug info */
 int cythF_emitC(cyth_Function *f, Instruction i, int line) {
   if (f->ncode >= f->codesize)
     cythM_vecgrow(f->C, f->code, f->codesize, Instruction);
@@ -26,7 +28,14 @@ int cythF_emitC(cyth_Function *f, Instruction i, int line) {
   return f->ncode-1;
 }
 
+/* emit constant value */
 int cythF_emitK(cyth_Function *f, Tvalue k) {
+  for (cmem_t i = 0; i < f->nk; i++) {
+    /* reuse constants if possible */
+    if (cythV_objequ(f->C, f->k[i], k)) {
+      return i;
+    }
+  }
   if (f->nk >= f->ksize)
     cythM_vecgrow(f->C, f->k, f->ksize, Tvalue);
   f->k[f->nk++] = k;
