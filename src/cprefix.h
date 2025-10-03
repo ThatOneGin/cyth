@@ -6,9 +6,8 @@
 #include <setjmp.h>
 
 #ifndef cyth_assert
-#define cyth_assert(e) ((e) ? NULL : \
-  (fprintf(stderr, "%s:%s:%d Assertion failed.\n", \
-    __FILE__, __func__, __LINE__)), exit(1))
+#include <assert.h>
+#define cyth_assert(e) assert(e)
 #endif
 
 /* error macro to use when no cyth_State is available */

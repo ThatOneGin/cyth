@@ -11,5 +11,5 @@ cmem_t cythG_total(cyth_State *C);
 cmem_t cythG_inuse(cyth_State *C);
 void cythG_freeall(cyth_State *C);
 gc_object *cythG_newobj(cyth_State *C, byte tt_);
-gc_object *cythG_uncoll(cyth_State *C, byte tt_);
+void cythG_uncoll(cyth_State *C, gc_object *o);
 #endif

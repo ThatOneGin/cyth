@@ -124,14 +124,14 @@ gc_object *cythG_newobj(cyth_State *C, byte tt_) {
   return o;
 }
 
-/* allocate an uncollectable object */
-gc_object *cythG_uncoll(cyth_State *C, byte tt_) {
+/*
+** Makes an object uncollectable
+** object must be the last in GC list.
+*/
+void cythG_uncoll(cyth_State *C, gc_object *o) {
   global_State *G = C->G;
-  gc_object *o = cythM_malloc(C, sizeof(gc_object));
-  o->tt_ = tt_;
-  o->mark = 0;
-  /* put it in the list */
+  cyth_assert(G->list == o); /* must be the last element */
+  G->list = G->list->next;
   o->next = G->uncollectables;
   G->uncollectables = o;
-  return o;
 }
