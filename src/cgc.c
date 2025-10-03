@@ -13,6 +13,8 @@
 static void *val2ptr(Tvalue v) {
   switch (cyth_tt(&v)) {
   case CYTH_STRING: return obj2s(&v)->data;
+  case CYTH_LIST: return obj2ls(&v)->items;
+  case CYTH_TABLE: return obj2t(&v)->list;
   default: return NULL;
   }
 }
@@ -20,6 +22,8 @@ static void *val2ptr(Tvalue v) {
 static void *gco2ptr(gc_object *o) {
   switch (cyth_tt(o)) {
   case GCOS: return o->v.s->data;
+  case GCOL: return o->v.l->items;
+  case GCOT: return o->v.t->list;
   default: return NULL;
   }
 }
@@ -29,6 +33,14 @@ static void freeobj(cyth_State *C, gc_object *o) {
   case GCOS:
     cythM_free(C, o->v.s->data, o->v.s->len);
     cythM_free(C, o->v.s, sizeof(o->v.s));
+    break;
+  case GCOL:
+    cythO_listfree(C, o->v.l);
+    cythM_free(C, o->v.l, sizeof(o->v.l));
+    break;
+  case GCOT:
+    cythH_free(C, o->v.t);
+    cythM_free(C, o->v.t, sizeof(o->v.t));
   }
   cythM_free(C, o, sizeof(gc_object));
 }
@@ -43,6 +55,19 @@ static void markvalue(global_State *G, Tvalue v) {
     if (optr == vptr)
       l->mark = 1;
     l = l->next;
+  }
+  if (cyth_tt(&v) == CYTH_LIST) {
+    for (cmem_t i = 0; i < obj2ls(&v)->nitems; i++) {
+      markvalue(G, obj2ls(&v)->items[i]);
+    }
+  } else if (cyth_tt(&v) == CYTH_TABLE) {
+    Table *t = obj2t(&v);
+    Node *l = t->list;
+    while (l != NULL) {
+      markvalue(G, l->key);
+      markvalue(G, l->val);
+      l = l->next;
+    }
   }
 }
 

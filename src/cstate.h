@@ -5,11 +5,15 @@
 #define MINSTACK 20
 
 #define GCOS 0
+#define GCOL 1
+#define GCOT 2
 
 typedef struct gc_object {
   byte tt_;
   union {
     String *s;
+    List *l;
+    Table *t;
   } v;
   byte mark;
   struct gc_object *next;
