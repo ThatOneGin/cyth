@@ -27,3 +27,31 @@ int cythA_popint(cyth_State *C) {
   if (cyth_tt(C->top) != CYTH_INTEGER) return 0;
   else return obj2i(C->top);
 }
+
+int cythA_pushstr(cyth_State *C, String *string) {
+  Tvalue v = s2obj(string);
+  int top = (int)cythE_gettop(C);
+  *C->top = v;
+  cythE_inctop(C);
+  return top;
+}
+
+String *cythA_popstr(cyth_State *C) {
+  cythE_dectop(C);
+  if (cyth_tt(C->top) != CYTH_STRING) return NULL;
+  else return obj2s(C->top);
+}
+
+int cythA_pushlit(cyth_State *C, String *literal) {
+  Tvalue v = l2obj(literal);
+  int top = (int)cythE_gettop(C);
+  *C->top = v;
+  cythE_inctop(C);
+  return top;
+}
+
+String *cythA_poplit(cyth_State *C) {
+  cythE_dectop(C);
+  if (cyth_tt(C->top) != CYTH_LITERAL) return NULL;
+  else return obj2l(C->top);
+}
