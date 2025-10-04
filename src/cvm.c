@@ -20,8 +20,6 @@ int cythV_objequ(cyth_State *C,
     return obj2i(&t1) == obj2i(&t2);
   case CYTH_STRING:
     return cythS_streq(obj2s(&t1), obj2s(&t2));
-  case CYTH_LIST:
-    return obj2ls(&t1) == obj2ls(&t2);
   case CYTH_FUNCTION:
     return obj2f(&t1) == obj2f(&t2);
   case CYTH_TABLE:

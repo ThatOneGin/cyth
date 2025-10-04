@@ -3,31 +3,9 @@
 #include <cgc.h>
 #include <cvm.h>
 
-List *cythO_listnew(cyth_State *C) {
-  gc_object *ref = cythG_newobj(C, GCOL);
-  ref->v.l = cythM_malloc(C, sizeof(List));
-  List *l = ref->v.l;
-  l->items = NULL;
-  l->itemsize = 0;
-  l->nitems = 0;
-  return l;
-}
-
-int cythO_listappend(cyth_State *C, List *l, Tvalue v) {
-  if (l->nitems >= l->itemsize)
-    cythM_vecgrow(C, l->items, l->itemsize, Tvalue);
-  l->items[l->nitems++] = v;
-  return l->nitems-1;
-}
-
-void cythO_listfree(cyth_State *C, List *l) {
-  cythM_vecfree(C, l->items, l->itemsize, Tvalue);
-  l->nitems = 0;
-}
-
 Table *cythH_new(cyth_State *C) {
   gc_object *ref = cythG_newobj(C, GCOT);
-  ref->v.l = cythM_malloc(C, sizeof(Table));
+  ref->v.t = cythM_malloc(C, sizeof(Table));
   Table *t = ref->v.t;
   t->list = NULL;
   t->len = 0;

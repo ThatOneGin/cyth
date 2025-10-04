@@ -7,14 +7,12 @@
 #define MAXCALLS 100
 
 #define GCOS 0
-#define GCOL 1
-#define GCOT 2
+#define GCOT 1
 
 typedef struct gc_object {
   byte tt_;
   union {
     String *s;
-    List *l;
     Table *t;
   } v;
   byte mark;
