@@ -7,7 +7,12 @@
 #define MAXCODESIZE USHRT_MAX 
 #define MAXCONSTSIZE USHRT_MAX
 
-typedef struct {
+enum calltype {
+  CYTHCALL,
+  CCALL
+};
+
+struct cyth_Function {
   cyth_State *C;
   Instruction *code;
   cmem_t ncode;
@@ -18,10 +23,13 @@ typedef struct {
   int *lineinfo; /* debug info */
   cmem_t nline;
   cmem_t linesize;
-} cyth_Function;
+};
 
 cyth_Function *cythF_newfunc(cyth_State *C);
 int cythF_emitC(cyth_Function *f, Instruction i, int line);
 int cythF_emitK(cyth_Function *f, Tvalue k);
 void cythF_freefunc(cyth_Function *f);
+void cythF_precall(cyth_State *C, stkrel func, int nargs);
+void cythF_poscall(cyth_State *C);
+void cythF_call(cyth_State *C, int i, int nargs);
 #endif

@@ -48,3 +48,39 @@ void cythF_freefunc(cyth_Function *f) {
   cythM_vecfree(f->C, f->lineinfo, f->linesize, int);
   cythM_free(f->C, f, sizeof(cyth_Function));
 }
+
+void cythF_precall(cyth_State *C, stkrel func, int nargs) {
+  cythE_newci(C);
+  Call_info *ci = C->ci;
+  ci->func = func;
+  ci->type =
+    (cyth_tt(func) == CYTH_USERDATA &&
+    (obj2ud(func).type == UDFUN)) ? CCALL : CYTHCALL;
+  ci->top = func+nargs+1;
+  if (ci->type == CCALL) {
+    ci->u.c.nargs = nargs;
+  } else {
+    ci->u.cyth.f = obj2f(func);
+    ci->u.cyth.pc = 0;
+  }
+  C->top = ci->top;
+}
+
+void cythF_poscall(cyth_State *C) {
+  Call_info *ci = C->ci->prev;
+  cythM_free(C, C->ci, sizeof(*C->ci));
+  C->ci = ci;
+  C->ncalls--;
+}
+
+void cythF_call(cyth_State *C, int i, int nargs) {
+  stkrel func = &C->top[i];
+  cythF_precall(C, func, nargs);
+  Call_info *ci = C->ci;
+  if (ci->type == CYTHCALL) {
+    cythV_exec(C, C->ci);
+  } else {
+    obj2ud(ci->func).u.cfunc(C);
+  }
+  cythF_poscall(C);
+}

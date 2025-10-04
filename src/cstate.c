@@ -37,13 +37,35 @@ cyth_State *cythE_openstate(void) {
   C->main = main;
   C->G = &G;
   C->errhandler = NULL;
+  C->ci = NULL;
   cythS_init(C);
   if (main) main = 0;
   return C;
 }
 
+void cythE_newci(cyth_State *C) {
+  if (C->ncalls >= MAXCALLS)
+    cythE_error(C, "Stack overflow.\n");
+  Call_info *ci = cythM_malloc(C, sizeof(Call_info));
+  ci->top = NULL;
+  ci->func = NULL;
+  ci->type = 0;
+  ci->prev = C->ci;
+  C->ci = ci;
+  C->ncalls++;
+}
+
 cmem_t cythE_gettop(cyth_State *C) {
   return C->top - C->base;
+}
+
+static void closecalls(cyth_State *C) {
+  Call_info *ci = C->ci;
+  while (ci != NULL) {
+    Call_info *prev = ci->prev;
+    cythM_free(C, ci, sizeof(*ci));
+    ci = prev;
+  }
 }
 
 void cythE_closestate(cyth_State *C) {
@@ -54,6 +76,7 @@ void cythE_closestate(cyth_State *C) {
   C->maxoff = 0;
   C->errhandler = NULL;
   cythS_clear(C);
+  closecalls(C);
   if (C->main) cythG_freeall(C);
   free(C);
   C = NULL;

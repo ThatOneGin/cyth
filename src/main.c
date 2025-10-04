@@ -9,11 +9,28 @@
 
 int main() {
   cyth_State *C = cythE_openstate();
-  Table *t = cythH_new(C);
-  cythH_append(C, t, i2obj(0), i2obj(32));
-  Tvalue res;
-  cythH_get(C, t, i2obj(0), &res);
-  printf("%ld\n", res.v.integer);
+  cyth_Function *f = cythF_newfunc(C);
+
+  Instruction push = 0;
+  Instruction add = 0;
+  Instruction ret = 0;
+
+  setargz(push, cythF_emitK(f, i2obj(32)));
+  setopcode(push, OP_PUSH);
+  setopcode(add, OP_ADD);
+  setopcode(ret, OP_RETURN);
+
+  cythF_emitC(f, push, -1); /* push 32 */
+  cythF_emitC(f, push, -1); /* push 32 */
+  cythF_emitC(f, add,  -1); /* add     */
+  cythF_emitC(f, ret,  -1); /* ret     */
+
+  cythA_push(C, f2obj(f));
+  cythF_call(C, -1, 0);
+
+  printf("%d\n", cythA_popint(C));
+
+  cythF_freefunc(f);
   cythE_closestate(C);
   return 0;
 }

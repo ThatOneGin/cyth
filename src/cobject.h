@@ -27,8 +27,24 @@ typedef struct Table Table;
 #define CYTH_LITERAL 3
 #define CYTH_LIST 4
 #define CYTH_TABLE 5
+#define CYTH_FUNCTION 6
+#define CYTH_USERDATA 7
 
 #define NONE ((Tvalue){.tt_=CYTH_NONE,{0}})
+
+typedef struct cyth_Function cyth_Function;
+
+/* types of user data */
+#define UDFUN 0
+#define UDVAL 1
+
+typedef struct {
+  byte type;
+  union {
+    int (*cfunc)(cyth_State*);
+    void *val;
+  } u;
+} userdata;
 
 typedef union {
   cyth_integer integer;
@@ -36,6 +52,8 @@ typedef union {
   String *literal;
   List *list;
   Table *table;
+  cyth_Function *function;
+  userdata userdata;
 } Value;
 
 typedef struct {
@@ -66,6 +84,8 @@ struct Table {
 #define obj2l(o) (o)->v.literal
 #define obj2ls(o) (o)->v.list
 #define obj2t(o) (o)->v.table
+#define obj2f(o) (o)->v.function
+#define obj2ud(o) (o)->v.userdata
 #define objcopy(s1, s2) {\
   cyth_tt(s1) = cyth_tt(s2); \
   (s1)->v = (s2)->v}
@@ -78,6 +98,8 @@ typedef Tvalue *stkrel;
 #define l2obj(l) ((Tvalue){.tt_=CYTH_LITERAL,.v.literal=(l)})
 #define ls2obj(l) ((Tvalue){.tt_=CYTH_LIST,.v.list=(l)})
 #define t2obj(t) ((Tvalue){.tt_=CYTH_TABLE,.v.table=(l)})
+#define f2obj(f) ((Tvalue){.tt_=CYTH_FUNCTION,.v.function=(f)})
+#define ud2obj(ud) ((Tvalue){.tt_=CYTH_USERDATA,.v.userdata=(ud)})
 
 typedef int(*cyth_Pfunction)(cyth_State*, void*);
 

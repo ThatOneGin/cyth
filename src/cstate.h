@@ -1,8 +1,10 @@
 #ifndef CSTATE_H
 #define CSTATE_H
 #include <cobject.h>
+#include <cfunc.h>
 
 #define MINSTACK 20
+#define MAXCALLS 100
 
 #define GCOS 0
 #define GCOL 1
@@ -32,6 +34,22 @@ typedef struct cyth_jmpbuf {
   struct cyth_jmpbuf *previous;
 } cyth_jmpbuf;
 
+typedef struct Call_info {
+  struct Call_info *prev;
+  stkrel top;
+  stkrel func; /* pointer to function in the stack */
+  byte type; /* C or cyth */
+  union {
+    struct {
+      cyth_Function *f; /* function prototype */
+      int pc; /* function program counter */
+    } cyth;
+    struct {
+      int nargs;
+    } c;
+  } u;
+} Call_info;
+
 struct global_State {
   gc_object *list; /* objects that live on the stack */
   gc_object *uncollectables; /* objects that live until the main state dies */
@@ -46,10 +64,13 @@ struct cyth_State {
   cmem_t maxoff; /* maximum distance from base to top */
   byte main; /* is it the main state? */
   stringtable cache; /* string cache */
-  cyth_jmpbuf *errhandler;
+  cyth_jmpbuf *errhandler; /* recover point in case of errors */
+  Call_info *ci; /* function call information */
+  byte ncalls; /* how many function calls aren't finished */
 };
 
 cyth_State *cythE_openstate(void);
+void cythE_newci(cyth_State *C);
 cmem_t cythE_gettop(cyth_State *C);
 void cythE_closestate(cyth_State *C);
 void cythE_error(cyth_State *C, const char *f, ...);
