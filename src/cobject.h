@@ -74,7 +74,7 @@ struct Table {
 #define obj2ud(o) (o)->v.userdata
 #define objcopy(s1, s2) {\
   cyth_tt(s1) = cyth_tt(s2); \
-  (s1)->v = (s2)->v}
+  (s1)->v = (s2)->v;}
 
 /* Relative pointer to the stack */
 typedef Tvalue *stkrel;
