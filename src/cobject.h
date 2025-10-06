@@ -8,6 +8,12 @@ typedef struct global_State global_State;
 typedef struct {
   char *data;
   size_t len;
+  /*
+  ** This being set to UCHAR_MAX means
+  ** that the content on data is not
+  ** a reserved word
+  */
+  byte aux;
 } String;
 
 /*
@@ -82,7 +88,7 @@ typedef Tvalue *stkrel;
 #define i2obj(i) ((Tvalue){.tt_=CYTH_INTEGER,.v.integer=(i)})
 #define s2obj(s) ((Tvalue){.tt_=CYTH_STRING,.v.string=(s)})
 #define l2obj(l) ((Tvalue){.tt_=CYTH_LITERAL,.v.literal=(l)})
-#define t2obj(t) ((Tvalue){.tt_=CYTH_TABLE,.v.table=(l)})
+#define t2obj(t) ((Tvalue){.tt_=CYTH_TABLE,.v.table=(t)})
 #define f2obj(f) ((Tvalue){.tt_=CYTH_FUNCTION,.v.function=(f)})
 #define ud2obj(ud) ((Tvalue){.tt_=CYTH_USERDATA,.v.userdata=(ud)})
 

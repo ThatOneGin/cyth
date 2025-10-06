@@ -28,6 +28,7 @@ String *cythS_new(cyth_State *C, char *data) {
   String *s = cythM_malloc(C, sizeof(String));
   s->data = cythM_malloc(C, len+1);
   s->len = len;
+  s->aux = UCHAR_MAX;
   snprintf(s->data, s->len+1, "%s", data);
   gc_object *ref = cythG_newobj(C, GCOS);
   ref->v.s = s;
