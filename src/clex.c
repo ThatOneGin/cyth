@@ -8,7 +8,7 @@
 
 /* don't change order. */
 static char *reserved[] = {
-  "func", "const", "return"
+  "func", "const", "return", "add"
 };
 
 /*
@@ -25,9 +25,10 @@ lex_State *cythL_new(cyth_State *C, char *name, char *source) {
   ls->tab = cythH_new(C);
   /* put the table where the GC can see */
   cythA_push(C, t2obj(ls->tab));
-  ls->line = 0;
+  ls->line = 1;
   ls->pos = 1; /* ls->current already points to index 0 */
   ls->current = source[0];
+  ls->fs = NULL;
   ls->source = cythL_createstring(ls, source);
   ls->sourcename = cythL_createstring(ls, name);
   anchorstring(ls, ls->source);

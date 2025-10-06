@@ -1,6 +1,6 @@
 /*
 ** order of reserved words:
-** TK_FUNC, TK_CONST, TK_RETURN
+** TK_FUNC, TK_CONST, TK_RETURN, TK_ADD
 ** last reserved kind must be before TK_NAME
 */
 #ifndef CLEX_H
@@ -20,7 +20,7 @@
 
 enum tkreserved {
   TK_EOF,
-  TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN,
+  TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN, TK_ADD,
   TK_NAME, TK_INT, /* TK_STR */
 };
 
@@ -34,12 +34,15 @@ typedef struct {
   token_Value value;
 } Token;
 
+typedef struct func_State func_State;
+
 typedef struct {
   int line;
   int current; /* current char */
   int pos; /* position in source */
   Token t; /* current token */
   Table *tab; /* anchor for strings */
+  func_State *fs; /* used by the parser */
   cyth_State *C;
   String *source;
   String *sourcename;
