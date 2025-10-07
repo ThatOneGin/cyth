@@ -1,9 +1,9 @@
 #include <clex.h>
-#include <cstack.h>
+#include <caux.h>
 #include <cmem.h>
 #include <ctype.h>
 
-#define next(ls) ((ls)->current = (ls)->source->data[(ls)->pos++])
+#define next(ls) ((ls)->current = cythI_getc((ls)->input))
 #define save(c) (buf[pos++] = (c))
 
 /* don't change order. */
@@ -19,19 +19,17 @@ static void anchorstring(lex_State *ls, String *s) {
   cythH_append(ls->C, ls->tab, i2obj(ls->tab->len), s2obj(s));
 }
 
-lex_State *cythL_new(cyth_State *C, char *name, char *source) {
+lex_State *cythL_new(cyth_State *C, char *name, Stream *input) {
   lex_State *ls = cythM_malloc(C, sizeof(lex_State));
   ls->C = C;
   ls->tab = cythH_new(C);
   /* put the table where the GC can see */
   cythA_push(C, t2obj(ls->tab));
   ls->line = 1;
-  ls->pos = 1; /* ls->current already points to index 0 */
-  ls->current = source[0];
   ls->fs = NULL;
-  ls->source = cythL_createstring(ls, source);
   ls->sourcename = cythL_createstring(ls, name);
-  anchorstring(ls, ls->source);
+  ls->input = input;
+  ls->current = cythI_getc(ls->input);
   anchorstring(ls, ls->sourcename);
   String *s;
   for (int i = 0; i < NUMRESERVED; i++) {
@@ -68,7 +66,7 @@ static inline int c_isspace(int c) {
 void cythL_next(lex_State *ls) {
   char buf[maxidentsize];
   byte pos = 0;
-  if ((unsigned int)ls->pos > ls->source->len) {
+  if (ls->current == EOS) {
     ls->t.type = TK_EOF;
     return;
   } else if (c_isspace(ls->current)) {

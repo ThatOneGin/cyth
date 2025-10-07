@@ -1,6 +1,6 @@
 #include <cparser.h>
 #include <cmem.h>
-#include <cstack.h>
+#include <caux.h>
 
 /*
 ** Ok so, normally we should construct an AST and then compile it (2 steps)
@@ -133,8 +133,8 @@ static void func(lex_State *ls) {
 }
 
 /* parse the main function of a chunk */
-void cythP_parse(cyth_State *C, char *source, char *chunkname) {
-  lex_State *ls = cythL_new(C, chunkname, source);
+void cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
+  lex_State *ls = cythL_new(C, chunkname, input);
   cythL_next(ls);
   openfunc(ls);
   func(ls);

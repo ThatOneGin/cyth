@@ -7,6 +7,7 @@
 #define CLEX_H
 #include <cstring.h>
 #include <cobject.h>
+#include <cio.h>
 
 /*
 ** Terminal symbols that are also single chars
@@ -39,16 +40,15 @@ typedef struct func_State func_State;
 typedef struct {
   int line;
   int current; /* current char */
-  int pos; /* position in source */
   Token t; /* current token */
   Table *tab; /* anchor for strings */
   func_State *fs; /* used by the parser */
   cyth_State *C;
-  String *source;
+  Stream *input;
   String *sourcename;
 } lex_State;
 
-lex_State *cythL_new(cyth_State *C, char *name, char *source);
+lex_State *cythL_new(cyth_State *C, char *name, Stream *input);
 String *cythL_createstring(lex_State *ls, char *s);
 void cythL_syntaxerror(lex_State *ls, const char *s);
 void cythL_next(lex_State *ls);

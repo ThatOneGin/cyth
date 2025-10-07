@@ -1,8 +1,9 @@
 #include <cstate.h>
 #include <cmem.h>
 #include <cstring.h>
-#include <stdarg.h>
 #include <cgc.h>
+#include <caux.h>
+#include <stdarg.h>
 
 global_State G = {0};
 
@@ -110,6 +111,8 @@ void cythE_throw(cyth_State *C, byte errcode, String *errmsg) {
   if (C->errhandler != NULL) {
     C->errhandler->errmsg = errmsg;
     C->errhandler->errcode = errcode;
+    cythA_pushstr(C, errmsg);
+    cythA_pushint(C, 1);
     cyth_throw(C, 1);
   } else {
     printf("%*s", (unsigned int)errmsg->len, errmsg->data);

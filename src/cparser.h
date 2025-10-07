@@ -13,5 +13,5 @@ struct func_State {
   lex_State *ls;
 };
 
-void cythP_parse(cyth_State *C, char *source, char *chunkname);
+void cythP_parse(cyth_State *C, Stream *input, char *chunkname);
 #endif

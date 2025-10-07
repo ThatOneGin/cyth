@@ -1,5 +1,5 @@
 #include <cvm.h>
-#include <cstack.h>
+#include <caux.h>
 #include <cstring.h>
 
 #define fetchinst() {                     \

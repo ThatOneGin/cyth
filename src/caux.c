@@ -1,4 +1,6 @@
-#include <cstack.h>
+#include <cstate.h>
+#include <cstring.h>
+#include <cparser.h>
 #include <cstate.h>
 #include <string.h>
 
@@ -114,4 +116,20 @@ String *cythA_poplit(cyth_State *C) {
   cythE_dectop(C);
   if (cyth_tt(C->top) != CYTH_LITERAL) return NULL;
   else return obj2l(C->top);
+}
+
+/* parse stream with a recover point set */
+static int pparse(cyth_State *C, void *aux) {
+  Stream *s = (Stream*)aux;
+  char *name = s2cstr(cythA_popstr(C));
+  cythP_parse(C, s, name);
+  cythA_pushint(C, 0);
+  return 0;
+}
+
+int cythA_load(cyth_State *C, Stream *s, char *name) {
+  String *sname = cythS_new(C, name);
+  cythA_pushstr(C, sname);
+  cythE_runprotected(C, pparse, s);
+  return cythA_popint(C);
 }
