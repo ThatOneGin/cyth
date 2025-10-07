@@ -8,12 +8,14 @@
 
 #define GCOS 0
 #define GCOT 1
+#define GCOF 2
 
 typedef struct gc_object {
   byte tt_;
   union {
     String *s;
     Table *t;
+    cyth_Function *f;
   } v;
   byte mark;
   struct gc_object *next;

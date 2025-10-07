@@ -1,9 +1,12 @@
 #include <cfunc.h>
 #include <cmem.h>
 #include <cvm.h>
+#include <cgc.h>
 
 cyth_Function *cythF_newfunc(cyth_State *C) {
+  gc_object *ref = cythG_newobj(C, GCOF);
   cyth_Function *f = cythM_malloc(C, sizeof(cyth_Function));
+  ref->v.f = f;
   f->C = C;
   f->code = NULL;
   f->ncode = 0;

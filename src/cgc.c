@@ -14,6 +14,7 @@ static void *val2ptr(Tvalue v) {
   switch (cyth_tt(&v)) {
   case CYTH_STRING: return obj2s(&v)->data;
   case CYTH_TABLE: return obj2t(&v)->list;
+  case CYTH_FUNCTION: return obj2f(&v);
   default: return NULL;
   }
 }
@@ -22,6 +23,7 @@ static void *gco2ptr(gc_object *o) {
   switch (cyth_tt(o)) {
   case GCOS: return o->v.s->data;
   case GCOT: return o->v.t->list;
+  case GCOF: return o->v.f;
   default: return NULL;
   }
 }
@@ -35,6 +37,10 @@ static void freeobj(cyth_State *C, gc_object *o) {
   case GCOT:
     cythH_free(C, o->v.t);
     cythM_free(C, o->v.t, sizeof(o->v.t));
+    break;
+  case GCOF:
+    cythF_freefunc(o->v.f);
+    break;
   }
   cythM_free(C, o, sizeof(gc_object));
 }

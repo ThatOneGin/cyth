@@ -39,6 +39,7 @@ cyth_State *cythE_openstate(void) {
   C->G = &G;
   C->errhandler = NULL;
   C->ci = NULL;
+  C->ncalls = 0;
   cythS_init(C);
   if (main) main = 0;
   return C;
