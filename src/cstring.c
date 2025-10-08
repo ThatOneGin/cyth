@@ -57,3 +57,32 @@ String *cythS_sprintf(cyth_State *C, const char *f, ...) {
   va_end(ap);
   return s;
 }
+
+/* allocate a new string object without putting it in the string table */
+String *cythS_newstrobj(cyth_State *C, cmem_t len) {
+  String *s = cythM_malloc(C, sizeof(String));
+  s->data = cythM_malloc(C, len+1);
+  s->len = len;
+  s->aux = UCHAR_MAX;
+  s->data[s->len] = '\0';
+  gc_object *ref = cythG_newobj(C, GCOS);
+  ref->v.s = s;
+  return s;
+}
+
+/* put string object in cache */
+void cythS_finishstrobj(cyth_State *C, String **s) {
+  for (cmem_t i = 0; i < C->cache.nstrings; i++) {
+    if (strcmp(C->cache.strings[i]->data, (*s)->data) == 0) {
+      cythM_free(C, (*s)->data, (*s)->len+1);
+      (*s)->data = NULL;
+      (*s)->len = 0;
+      (*s)->aux = UCHAR_MAX;
+      (*s) = C->cache.strings[i];
+      return;
+    }
+  }
+  if (C->cache.nstrings >= C->cache.stringsize)
+    cythM_vecgrow(C, C->cache.strings, C->cache.stringsize, String*);
+  C->cache.strings[C->cache.nstrings++] = *s;
+}

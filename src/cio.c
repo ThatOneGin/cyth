@@ -3,6 +3,7 @@
 #include <caux.h>
 #include <string.h>
 #include <errno.h>
+#include <cchunk.h>
 
 struct BufferF {
   char data[IOBUFSIZE];
@@ -18,12 +19,16 @@ struct BufferS {
 
 /* read from a file buffer */
 static char *readF(cyth_State *C, void *aux, size_t *size) {
+  (void)C;
   struct BufferF *b = (struct BufferF*)aux;
-  size_t nread;
-  *size = 0;
-  if (feof(b->f)) return NULL;
-  if ((nread = fread(b->data, sizeof(char), IOBUFSIZE, b->f)) <= 0) {
-    cythE_error(C, "Couldn't read from stream.");
+  size_t nread = fread(b->data, sizeof(char), IOBUFSIZE, b->f);
+  if (nread == 0) {
+    if (ferror(b->f))
+      return NULL; /* read error */
+    else { /* end of file */
+      *size = 0;
+      return NULL;
+    }
   }
   *size = nread;
   return b->data;
@@ -88,15 +93,20 @@ int cythI_getc(Stream *s) {
   }
 }
 
+void cythI_ungetc(Stream *s) {
+  s->curr--;
+  s->size++;
+}
+
 int cythI_read(Stream *s, void *b, cmem_t n) {
-  int status = fill_buffer(s);
-  if (status == EOS) return EOS;
-  else {
-    if (n > s->size) {
-      n = s->size;
-    }
-    memcpy(b, s->curr, n);
+  size_t o_n;
+  if (fill_buffer(s) == EOS) {
+    return 1;
   }
+  o_n = (n <= s->size) ? n : s->size;
+  memcpy(b, s->curr, o_n);
+  s->size -= o_n;
+  s->curr += o_n;
   return 0;
 }
 
@@ -112,6 +122,16 @@ void cythI_loadfile(cyth_State *C, char *filename) {
   if (b.f == NULL)
     file_error(C, "Couldn't open", filename);
   cythI_new(C, &s, readF, &b);
+  if (cythI_getc(&s) == CYTH_MAGIC[0]) {
+    fclose(b.f);
+    b.f = fopen(filename, "rb"); /* reopen as 'rb' */
+    if (b.f == NULL)
+      file_error(C, "Couldn't open", filename);
+    cythI_new(C, &s, readF, &b);
+    cythL_load(C, &s, filename);
+    fclose(b.f);
+    return;
+  }
   if (cythA_load(C, &s, filename)) { /* failed */
     fclose(b.f);
     cythE_throw(C, 1, cythA_popstr(C));
