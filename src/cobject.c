@@ -2,6 +2,7 @@
 #include <cmem.h>
 #include <cgc.h>
 #include <cvm.h>
+#include <string.h>
 
 Table *cythH_new(cyth_State *C) {
   gc_object *ref = cythG_newobj(C, GCOT);
@@ -74,4 +75,35 @@ void cythH_free(cyth_State *C, Table *t) {
   }
   t->list = NULL;
   t->len = 0;
+}
+
+void cythO_buffer_new(SBuffer *s) {
+  s->data = NULL;
+  s->n = 0;
+  s->s = 0;
+}
+
+void cythO_buffer_appendstr(cyth_State *C, SBuffer *s,
+                            char *str, cmem_t len) {
+  cmem_t toappend = len == 0 ? strlen(str) : len;
+  if (toappend == 0) return;
+  if (s->n >= s->s)
+    cythM_vecgrow(C, s->data, s->s, char);
+  memcpy(s->data+s->n, str, toappend);
+  s->n += toappend;
+}
+
+void cythO_buffer_rewind(cyth_State *C, SBuffer *s) {
+  (void)C;
+  s->n = 0;
+  s->data[0] = '\0';
+}
+
+void cythO_buffer_free(cyth_State *C, SBuffer *s) {
+  cythM_vecfree(C, s->data, s->s, char);
+}
+
+void cythO_buffer_appendchar(cyth_State *C,
+                             SBuffer *s, char c) {
+  cythO_buffer_appendstr(C, s, &c, 1);
 }

@@ -74,6 +74,9 @@ static void value(lex_State *ls, Tvalue *res) {
   case TK_INT:
     *res = i2obj(t.value.i);
     break;
+  case TK_STR:
+    *res = s2obj(t.value.s);
+    break;
   default:
     cythL_syntaxerror(ls, "Invalid value specifier.");
     break;

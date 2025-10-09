@@ -5,6 +5,9 @@
 
 #define next(ls) ((ls)->current = cythI_getc((ls)->input))
 #define save(c) (buf[pos++] = (c))
+#define expect(ls, c, err) \
+  (((ls)->current == (c)) ? ((void)next(ls)) : \
+    cythL_syntaxerror(ls, err))
 
 /* don't change order. */
 static char *reserved[] = {
@@ -46,7 +49,7 @@ String *cythL_createstring(lex_State *ls, char *s) {
 }
 
 void cythL_syntaxerror(lex_State *ls, const char *s) {
-  cythE_error(ls->C, "%s: Syntax error ne ar line %d: %s",
+  cythE_error(ls->C, "%s: Syntax error near line %d: %s",
     s2cstr(ls->sourcename), ls->line, s);
 }
 
@@ -60,6 +63,33 @@ static inline int c_isnum(int c) {
 
 static inline int c_isspace(int c) {
   return isspace(c);
+}
+
+static void read_string(lex_State *ls) {
+  SBuffer s;
+  cythO_buffer_new(&s);
+  expect(ls, '"', "expected '\"'");
+  while (ls->current != '"' &&
+         ls->current != '\n' &&
+         ls->current != EOS) {
+    cythO_buffer_appendchar(ls->C, &s, ls->current);
+    next(ls);
+  }
+  if (ls->current != '"') {
+    cythO_buffer_free(ls->C, &s); /* avoid leak */
+    cythL_syntaxerror(ls, "Unfinished string.");
+  } else
+    next(ls);
+  String *tks;
+  if (s.data == NULL) {
+    tks = cythS_new(ls->C, "");
+  } else {
+    cythO_buffer_appendchar(ls->C, &s, 0);
+    tks = cythS_new(ls->C, s.data);
+    cythO_buffer_free(ls->C, &s);
+  }
+  ls->t.type = TK_STR;
+  ls->t.value.s = tks;
 }
 
 /* get next token stored in ls->t */
@@ -102,13 +132,20 @@ void cythL_next(lex_State *ls) {
     ls->t.type = TK_INT;
     ls->t.value.i = intbuf;
   } else {
-    if (!iscntrl(ls->current)) {
-      ls->t.value.i = ls->t.type = ls->current;
-      next(ls);
-    } else {
-      String *msg = cythS_sprintf(ls->C,
+    switch (ls->current) {
+    case '"':
+      read_string(ls);
+      break;
+    default:
+      if (!iscntrl(ls->current)) {
+        ls->t.value.i = ls->t.type = ls->current;
+        next(ls);
+      } else {
+        String *msg = cythS_sprintf(ls->C,
         "Unknown char <%d>.", ls->current);
-      cythL_syntaxerror(ls, s2cstr(msg));
+        cythL_syntaxerror(ls, s2cstr(msg));
+      }
+      break;
     }
   }
 }

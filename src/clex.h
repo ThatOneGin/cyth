@@ -22,7 +22,7 @@
 enum tkreserved {
   TK_EOF,
   TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN, TK_ADD,
-  TK_NAME, TK_INT, /* TK_STR */
+  TK_NAME, TK_INT, TK_STR
 };
 
 typedef union {

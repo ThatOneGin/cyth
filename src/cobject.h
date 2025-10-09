@@ -94,9 +94,20 @@ typedef Tvalue *stkrel;
 
 typedef int(*cyth_Pfunction)(cyth_State*, void*);
 
+typedef struct {
+  char *data;
+  cmem_t n;
+  cmem_t s;
+} SBuffer;
+
 Table *cythH_new(cyth_State *C);
 int cythH_append(cyth_State *C, Table *t, Tvalue i, Tvalue v);
 void cythH_get(cyth_State *C, Table *t, Tvalue i, Tvalue *res);
 int cythH_remove(cyth_State *C, Table *t, Tvalue i);
 void cythH_free(cyth_State *C, Table *t);
+void cythO_buffer_new(SBuffer *s);
+void cythO_buffer_appendstr(cyth_State *C, SBuffer *s, char *str, cmem_t len);
+void cythO_buffer_appendchar(cyth_State *C, SBuffer *s, char c);
+void cythO_buffer_rewind(cyth_State *C, SBuffer *s);
+void cythO_buffer_free(cyth_State *C, SBuffer *s);
 #endif
