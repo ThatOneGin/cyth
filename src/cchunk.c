@@ -4,7 +4,11 @@
 #include <cstring.h>
 #include <string.h>
 
+
 #define DEFAULTINTSIZE (sizeof(cyth_integer))
+
+/* unloader */
+
 #define unload_vector(U, v, n) unload_bytearray(U, v, (sizeof(*v) * (n)))
 
 typedef struct {
@@ -84,6 +88,8 @@ void cythU_unload(cyth_State *C, cyth_Function *f, cyth_Writer u, void *aux) {
   unload_header(&U);
   unload_function(&U, f);
 }
+
+/* loader */
 
 #define load_vector(L, v, n, t) (load_bytearray(L, v, sizeof(t)*(n)))
 
@@ -183,4 +189,91 @@ void cythL_load(cyth_State *C, Stream *input, char *name) {
   load_vector(&L, f->lineinfo, f->nline, int);
   load_constants(&L, f);
   cythA_push(C, f2obj(f));
+}
+
+/* printer */
+
+#define Putc(c) putc(c, stdout)
+
+static void print_int(cyth_integer i) {
+  printf("%ld", i);
+}
+
+static void print_string(String *s) {
+  Putc('"');
+  char *p = s->data;
+  for (cmem_t i = 0; i < s->len; p++, i++) {
+  switch (*p) {
+    case '"': printf("\\\""); break;
+    case '\a': printf("\\a"); break;
+    case '\b': printf("\\b"); break;
+    case '\f': printf("\\f"); break;
+    case '\n': printf("\\n"); break;
+    case '\r': printf("\\r"); break;
+    case '\t': printf("\\t"); break;
+    case '\v': printf("\\v"); break;
+    default: Putc(*p); break;
+  }
+ }
+  Putc('"');
+}
+
+static void print_value(Tvalue v) {
+  switch (cyth_tt(&v)) {
+  case CYTH_INTEGER:
+    print_int(obj2i(&v));
+    break;
+  case CYTH_STRING:
+    print_string(obj2s(&v));
+    break;
+  case CYTH_NONE:
+    printf("none");
+    break;
+  default: /* should never happen */
+    printf("?");
+    break;
+  }
+}
+
+static void print_constants(cyth_Function *f) {
+  for (cmem_t i = 0; i < f->nk; i++) {
+    printf("\t%lu ", i);
+    print_value(f->k[i]);
+    Putc('\n');
+  }
+}
+
+static void print_code(cyth_Function *f) {
+  int opcode;
+  int line;
+  argZ az;
+  Instruction j;
+  cyth_assert(f->ncode == f->nline);
+  for (cmem_t i = 0; i < f->ncode; i++) {
+    Putc('\t');
+    j = f->code[i];
+    opcode = getopcode(j);
+    az = getargz(j);
+    line = f->lineinfo[i];
+    printf("%lu\t", i);
+    printf("[");
+    if (line > 0) printf("%d", line);
+    else printf("#");
+    printf("]\t");
+    printf("%s\t%d\t", cythC_getopcode(opcode), az);
+    if (opcode == OP_PUSH) {
+      printf("; ");
+      print_value(f->k[az]);
+      Putc('\n');
+    } else {
+      Putc('\n');
+    }
+  }
+}
+
+void cythL_print(cyth_Function *f) {
+  printf("Function %p:\n", (void*)f);
+  print_code(f);
+  printf("Constants for %p (%lu):\n", (void*)f, f->nk);
+  print_constants(f);
 }

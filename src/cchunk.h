@@ -28,4 +28,5 @@ typedef int(*cyth_Writer)(cyth_State *, void *, size_t, void *);
 
 void cythU_unload(cyth_State *C, cyth_Function *f, cyth_Writer u, void *aux);
 void cythL_load(cyth_State *C, Stream *input, char *name);
+void cythL_print(cyth_Function *f);
 #endif

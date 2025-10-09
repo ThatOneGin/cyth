@@ -16,12 +16,13 @@ int main(int argc, char **argv) {
   cyth_State *C = cythE_openstate();
   if (argc < 2)
     cythE_error(C, "No arguments provided.");
-#if 0 /* compile and unload */
+#if 1 /* compile and unload */
   cythI_loadfile(C, argv[1]);
   FILE *d = fopen("a.out", "wb");
   if (d == NULL) goto defer;
   Tvalue f = cythA_pop(C);
   cythU_unload(C, obj2f(&f), generic_writer, d);
+  cythL_print(obj2f(&f));
 defer:
   if (d != NULL) fclose(d);
 #elif 0 /* load and execute */

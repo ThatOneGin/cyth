@@ -131,7 +131,8 @@ void cythI_loadfile(cyth_State *C, char *filename) {
     cythL_load(C, &s, filename);
     fclose(b.f);
     return;
-  }
+  } else /* else put char back */
+    cythI_ungetc(&s);
   if (cythA_load(C, &s, filename)) { /* failed */
     fclose(b.f);
     cythE_throw(C, 1, cythA_popstr(C));
