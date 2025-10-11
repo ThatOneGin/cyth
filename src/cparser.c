@@ -71,6 +71,10 @@ static void closefunc(lex_State *ls) {
 static void value(lex_State *ls, Tvalue *res) {
   Token t = next(ls);
   switch (t.type) {
+  case '-':
+    t = expect(ls, TK_INT, "valid integer");
+    *res = i2obj(t.value.i * -1);
+    break;
   case TK_INT:
     *res = i2obj(t.value.i);
     break;

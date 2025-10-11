@@ -54,7 +54,7 @@ void cythL_syntaxerror(lex_State *ls, const char *s) {
 }
 
 static inline int c_isident(int c) {
-  return isalpha(c) || c == '_' || c == '-';
+  return isalpha(c) || c == '_';
 }
 
 static inline int c_isnum(int c) {
@@ -92,6 +92,19 @@ static void read_string(lex_State *ls) {
   ls->t.value.s = tks;
 }
 
+static void skip_comment(lex_State *ls) {
+  expect(ls, '#', "Expected '#'");
+  while (ls->current != '\n' &&
+         ls->current != '\r' &&
+         ls->current != EOS) {
+    next(ls);
+  }
+  if (ls->current != EOS) {
+    next(ls);
+    ls->line++;
+  }
+}
+
 /* get next token stored in ls->t */
 void cythL_next(lex_State *ls) {
   char buf[maxidentsize];
@@ -105,12 +118,12 @@ void cythL_next(lex_State *ls) {
         ls->line++;
       next(ls);
     }
-  }
+  } else if (ls->current == '#') skip_comment(ls);
   if (c_isident(ls->current)) {
-    while (c_isident(ls->current) && pos < (maxidentsize-1)) {
+    do {
       save(ls->current);
       next(ls);
-    }
+    } while ((ls->current == '-' || c_isident(ls->current)) && pos < (maxidentsize-1));
     if (c_isident(ls->current)) { /* TODO: break this limit */
       cythL_syntaxerror(ls, "Maximum identifier length reached.");
     }
