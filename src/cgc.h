@@ -3,7 +3,12 @@
 #include <cobject.h>
 #include <cstate.h>
 
-#define GCTHRESHOLD 1000000
+#ifndef CYTH_GCTHRESHOLD
+#  define GCTHRESHOLD 1000000
+#else
+#  define GCTHRESHOLD CYTH_GCTHRESHOLD
+#endif
+
 #define GCMAXSWEEP 20
 
 void cythG_full(cyth_State *C);
