@@ -72,13 +72,26 @@ static void markvalue(global_State *G, Tvalue v) {
 }
 
 /*
-** As the only place we can look for
-** objects is the stack, we gonna go
-** look for some.
+** Look for all reachable objects in a cyth_State
+** and mark them.
 */
 static void markphase(cyth_State *C) {
+  global_State *G = C->G;
+  Call_info *ci = C->ci;
+  while (ci != NULL) {
+    if (ci->type == CYTHCALL) { /* ci->func is on the stack */
+      Node *l = ci->u.cyth.locvars->list;
+      while (l != NULL) {
+        markvalue(G, l->key);
+        markvalue(G, l->val);
+        l = l->next;
+      }
+      markvalue(G, t2obj(ci->u.cyth.locvars));
+    }
+    ci = ci->prev;
+  }
   for (stkrel v = C->base; v != C->top; v++) {
-    markvalue(C->G, *v);
+    markvalue(G, *v);
   }
 }
 

@@ -65,6 +65,7 @@ void cythF_precall(cyth_State *C, stkrel func, int nargs) {
   } else {
     ci->u.cyth.f = obj2f(func);
     ci->u.cyth.pc = 0;
+    ci->u.cyth.locvars = cythH_new(C);
   }
   C->top = ci->top;
 }
@@ -74,6 +75,7 @@ void cythF_poscall(cyth_State *C) {
   cythM_free(C, C->ci, sizeof(*C->ci));
   C->ci = ci;
   C->ncalls--;
+  cythG_full(C); /* collect unused values */
 }
 
 void cythF_call(cyth_State *C, int i, int nargs) {

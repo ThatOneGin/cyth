@@ -43,6 +43,7 @@ typedef struct Call_info {
     struct {
       cyth_Function *f; /* function prototype */
       int pc; /* function program counter */
+      Table *locvars; /* local variables */
     } cyth;
     struct {
       int nargs;
