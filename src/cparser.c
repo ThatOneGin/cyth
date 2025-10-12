@@ -89,13 +89,12 @@ static void value(lex_State *ls, Tvalue *res) {
 
 /* parse an instruction */
 static void instruction(lex_State *ls) {
-  int line;
+  int line = saveline(ls);
   Instruction i = 0;
   Token opcode = next(ls);
   switch (opcode.type) {
   case TK_CONST: {
     setopcode(i, OP_PUSH);
-    line = saveline(ls);
     int argz;
     Tvalue k;
     value(ls, &k);
@@ -103,12 +102,20 @@ static void instruction(lex_State *ls) {
     setargz(i, argz);
   } break;
   case TK_RETURN: {
-    line = saveline(ls);
     setopcode(i, OP_RETURN);
   } break;
   case TK_ADD: {
-    line = saveline(ls);
     setopcode(i, OP_ADD);
+  } break;
+  case TK_SETVAR: {
+    String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;
+    setopcode(i, OP_SETVAR);
+    setargz(i, emitK(ls, s2obj(name)));
+  } break;
+  case TK_GETVAR: {
+    String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;
+    setopcode(i, OP_GETVAR);
+    setargz(i, emitK(ls, s2obj(name)));
   } break;
   default:
     error_unknown(ls, "instruction name");
