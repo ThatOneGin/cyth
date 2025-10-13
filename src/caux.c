@@ -122,7 +122,10 @@ String *cythA_poplit(cyth_State *C) {
 static int pparse(cyth_State *C, void *aux) {
   Stream *s = (Stream*)aux;
   char *name = s2cstr(cythA_popstr(C));
-  cythP_parse(C, s, name);
+  stkrel top = C->top;
+  cyth_Function *f = cythP_parse(C, s, name);
+  C->top = top; /* erase lexer table */
+  cythA_push(C, f2obj(f));
   cythA_pushint(C, 0);
   return 0;
 }

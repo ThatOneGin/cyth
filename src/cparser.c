@@ -147,12 +147,14 @@ static void func(lex_State *ls) {
 }
 
 /* parse the main function of a chunk */
-void cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
+cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
   lex_State *ls = cythL_new(C, chunkname, input);
   cythL_next(ls);
   openfunc(ls);
   func(ls);
-  cythA_push(C, f2obj(ls->fs->f));
+  cyth_Function *f = ls->fs->f;
+  cythA_push(C, f2obj(f));
   closefunc(ls);
   cythL_free(ls);
+  return f;
 }
