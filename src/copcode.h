@@ -10,7 +10,7 @@
 ** | 0-7     | 8-31                        |
 */
 typedef uint32_t Instruction;
-typedef uint32_t argZ; /* actually 24 bytes */
+typedef uint32_t argZ; /* actually 24 bits */
 
 enum opmode {
   iZ
