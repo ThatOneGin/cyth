@@ -29,6 +29,7 @@ typedef struct Table Table;
 #define CYTH_TABLE 4
 #define CYTH_FUNCTION 5
 #define CYTH_USERDATA 6
+#define CYTH_BOOL 7
 
 #define NONE ((Tvalue){.tt_=CYTH_NONE,{0}})
 
@@ -53,6 +54,7 @@ typedef union {
   Table *table;
   cyth_Function *function;
   userdata userdata;
+  byte boolean;
 } Value;
 
 typedef struct {
@@ -78,6 +80,7 @@ struct Table {
 #define obj2t(o) (o)->v.table
 #define obj2f(o) (o)->v.function
 #define obj2ud(o) (o)->v.userdata
+#define obj2b(o) (o)->v.boolean
 #define objcopy(s1, s2) {\
   cyth_tt(s1) = cyth_tt(s2); \
   (s1)->v = (s2)->v;}
@@ -91,6 +94,7 @@ typedef Tvalue *stkrel;
 #define t2obj(t) ((Tvalue){.tt_=CYTH_TABLE,.v.table=(t)})
 #define f2obj(f) ((Tvalue){.tt_=CYTH_FUNCTION,.v.function=(f)})
 #define ud2obj(ud) ((Tvalue){.tt_=CYTH_USERDATA,.v.userdata=(ud)})
+#define b2obj(b) ((Tvalue){.tt_=CYTH_BOOL,.v.boolean=(b)})
 
 typedef int(*cyth_Pfunction)(cyth_State*, void*);
 

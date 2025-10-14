@@ -117,6 +117,12 @@ static void instruction(lex_State *ls) {
     setopcode(i, OP_GETVAR);
     setargz(i, emitK(ls, s2obj(name)));
   } break;
+  case TK_EQ: {
+    setopcode(i, OP_EQ);
+  } break;
+  case TK_NEQ: {
+    setopcode(i, OP_NEQ);
+  } break;
   default:
     error_unknown(ls, "instruction name");
     break;

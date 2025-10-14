@@ -51,6 +51,9 @@ static void unload_value(Unloader *U, Tvalue *v) {
   case CYTH_STRING:
     unload_string(U, obj2s(v));
     break;
+  case CYTH_BOOL:
+    unload_byte(U, obj2b(v));
+    break;
   default: 
     cyth_assert(0); /* unreachable */
   }
@@ -145,6 +148,9 @@ static void load_value(Loader *L, Tvalue *v) {
   case CYTH_STRING:
     load_string(L, &obj2s(v));
     break;
+  case CYTH_BOOL:
+    load_byte(L, (byte*)&obj2b(v));
+    break;
   default: 
     cyth_assert(0); /* unreachable */
   }
@@ -228,6 +234,9 @@ static void print_value(Tvalue v) {
     break;
   case CYTH_NONE:
     printf("none");
+    break;
+  case CYTH_BOOL:
+    printf("%s", obj2b(&v) ? "true" : "false");
     break;
   default: /* should never happen */
     printf("?");

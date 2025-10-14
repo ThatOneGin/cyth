@@ -25,6 +25,8 @@ int cythV_objequ(cyth_State *C,
     return obj2f(&t1) == obj2f(&t2);
   case CYTH_TABLE:
     return obj2t(&t1) == obj2t(&t2);
+  case CYTH_BOOL:
+    return obj2b(&t1) == obj2b(&t2);
   default:
     return 0;
   }
@@ -95,6 +97,16 @@ returning:
         ci = C->ci; /* return to caller */
         goto returning;
       } else return;
+    } break;
+    case OP_EQ: {
+      Tvalue r = cythA_pop(C);
+      Tvalue l = cythA_pop(C);
+      cythA_push(C, b2obj(cythV_objequ(C, l, r)));
+    } break;
+    case OP_NEQ: {
+      Tvalue r = cythA_pop(C);
+      Tvalue l = cythA_pop(C);
+      cythA_push(C, b2obj((!cythV_objequ(C, l, r))));
     } break;
     default:
       cythE_error(C, "Unknown opcode '%d'.", getopcode(i));

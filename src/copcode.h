@@ -24,6 +24,8 @@ enum opcode {
   OP_SETVAR, /* iZ      vars[k[z]] = pop()  */
   OP_GETVAR, /* iZ      push(vars[k[z]])    */
   OP_RETURN, /* iZ      return pop()        */
+  OP_EQ,     /* iZ      pop() == pop()      */
+  OP_NEQ,    /* iZ,     pop() != pop()      */
   OP_COUNT
 };
 
