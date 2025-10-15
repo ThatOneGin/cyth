@@ -7,25 +7,29 @@
 ** that can have the following structures:
 ** |**** ****|**** ****|**** ****|**** ****|
 ** | opcode  | argZ                        | iZ
+** | opcode  | argZ(signed)                | iZs
 ** | 0-7     | 8-31                        |
 */
 typedef uint32_t Instruction;
 typedef uint32_t argZ; /* actually 24 bits */
 
 enum opmode {
-  iZ
+  iZ, /* z is an unsigned integer */
+  iZs /* z is a signed integer */
 };
 
 enum opcode {
-/* opcode     | mode | desc                 */
-  OP_PUSH,   /* iZ      push(k[z])          */
-  OP_POP,    /* iZ      pop()               */
-  OP_ADD,    /* iZ      push(pop() + pop()) */
-  OP_SETVAR, /* iZ      vars[k[z]] = pop()  */
-  OP_GETVAR, /* iZ      push(vars[k[z]])    */
-  OP_RETURN, /* iZ      return pop()        */
-  OP_EQ,     /* iZ      pop() == pop()      */
-  OP_NEQ,    /* iZ,     pop() != pop()      */
+/* opcode     | mode | desc                       */
+  OP_PUSH,   /* iZ      push(k[z])                */
+  OP_POP,    /* iZ      pop()                     */
+  OP_ADD,    /* iZ      push(pop() + pop())       */
+  OP_SETVAR, /* iZ      vars[k[z]] = pop()        */
+  OP_GETVAR, /* iZ      push(vars[k[z]])          */
+  OP_RETURN, /* iZ      return pop()              */
+  OP_EQ,     /* iZ      pop() == pop()            */
+  OP_NEQ,    /* iZ,     pop() != pop()            */
+  OP_JT,     /* iZ      if pop() = true then pc++ */
+  OP_JMP,    /* iZ      pc += z                   */
   OP_COUNT
 };
 

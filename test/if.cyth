@@ -1,0 +1,13 @@
+(func main()
+  const 47;
+  (if
+   (const 33;
+    const 32;
+    add;
+    const 27;
+    neq;)
+    const 1;
+    const 1;
+    add;
+    return;)
+  return;)

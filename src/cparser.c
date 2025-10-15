@@ -22,7 +22,22 @@ static int emitK(lex_State *ls, Tvalue k) {
   return cythF_emitK(f, k);
 }
 
+static int jmp(lex_State *ls, int i, int line) {
+  Instruction inst = 0;
+  setopcode(inst, OP_JMP);
+  setargz(inst, i);
+  return emitC(ls, inst, line);
+}
+
+static void jt(lex_State *ls, int line) {
+  Instruction inst = 0;
+  setopcode(inst, OP_JT);
+  emitC(ls, inst, line);
+}
+
 /* Parsing source */
+
+static void ifstat(lex_State *ls);
 
 static void error_unknown(lex_State *ls, const char *what) {
   char buf[BUFFERSIZE];
@@ -131,12 +146,38 @@ static void instruction(lex_State *ls) {
   expect(ls, ';', "';'");
 }
 
-static void instlist(lex_State *ls, int stop) {
-  do {
+static void instblock(lex_State *ls) {
+  switch (ls->t.type) {
+  case '(': /* a block */
+    next(ls);
+    ifstat(ls);
+    break;
+  default:
     instruction(ls);
-  } while (!match(ls, stop));
+    break;
+  }
 }
 
+static void blockbody(lex_State *ls, int stop) {
+  do {
+    instblock(ls);
+  } while (!match(ls, stop) && !match(ls, TK_EOF));
+}
+
+/* '(' if '('instlist')' instlist ')' */
+static void ifstat(lex_State *ls) {
+  expect(ls, TK_IF, "Expected 'if'.");
+  expect(ls, '(', "Expected condition");
+  blockbody(ls, ')');
+  expect(ls, ')', "Expected end of condition");
+  jt(ls, saveline(ls));
+  int to_patch = jmp(ls, 0, saveline(ls));
+  blockbody(ls, ')');
+  expect(ls, ')', "Expected ')");
+  setargz(ls->fs->f->code[to_patch], (ls->fs->f->ncode - to_patch - 1));
+}
+
+/* '(' func '(' ')' instlist ')' */
 static void func(lex_State *ls) {
   String *name;
   expect(ls, '(', "'('");
@@ -148,7 +189,7 @@ static void func(lex_State *ls) {
     expect(ls, ')', "')'");
   }
   emitK(ls, s2obj(name));
-  instlist(ls, ')');
+  blockbody(ls, ')');
   expect(ls, ')', "')'");
 }
 

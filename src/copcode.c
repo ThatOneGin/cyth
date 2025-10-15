@@ -7,7 +7,8 @@ byte opmodes[] = {
   [OP_SETVAR] = iZ,
   [OP_GETVAR] = iZ,
   [OP_EQ] = iZ,
-  [OP_NEQ] = iZ
+  [OP_NEQ] = iZ,
+  [OP_JMP] = iZs
 };
 
 char *opcodes[] = {
@@ -18,7 +19,9 @@ char *opcodes[] = {
   [OP_GETVAR] = "GETVAR",
   [OP_RETURN] = "RETURN",
   [OP_EQ] = "EQ",
-  [OP_NEQ] = "NEQ"
+  [OP_NEQ] = "NEQ",
+  [OP_JT] = "JT",
+  [OP_JMP] = "JMP"
 };
 
 int cythC_getmode(Instruction i) {

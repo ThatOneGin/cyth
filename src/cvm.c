@@ -58,6 +58,29 @@ static void getvar(cyth_State *C, Call_info *ci, Tvalue name, Tvalue *res) {
   *res = NONE;
 }
 
+/* transform value to a boolean */
+int cythV_toboolean(Tvalue v, Tvalue *res) {
+  Tvalue dummy;
+  if (res == NULL)
+    res = &dummy;
+  switch (cyth_tt(&v)) {
+  case CYTH_INTEGER:
+  case CYTH_STRING:
+  case CYTH_FUNCTION:
+  case CYTH_TABLE:
+    *res = b2obj(1);
+    break;
+  case CYTH_BOOL:
+    *res = v;
+    break;
+  case CYTH_NONE:
+  default:
+    *res = b2obj(0);
+    break;
+  }
+  return obj2b(&dummy);
+}
+
 /* execute a cyth call */
 void cythV_exec(cyth_State *C, Call_info *ci) {
   cyth_Function *f;
@@ -107,6 +130,18 @@ returning:
       Tvalue r = cythA_pop(C);
       Tvalue l = cythA_pop(C);
       cythA_push(C, b2obj((!cythV_objequ(C, l, r))));
+    } break;
+    case OP_JT: {
+      Tvalue val = cythA_pop(C);
+      if (cythV_toboolean(val, NULL))
+        fetchinst();
+    } break;
+    case OP_JMP: {
+      int32_t az = getargz(i);
+      if ((pc-f->code) + az >= (int64_t)f->ncode)
+        cythE_error(C, "Invalid jump trying to jump to offset %ld.\n", (pc-f->code) + az);
+      else
+        pc += az;
     } break;
     default:
       cythE_error(C, "Unknown opcode '%d'.", getopcode(i));

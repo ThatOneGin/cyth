@@ -1,6 +1,8 @@
 /*
 ** order of reserved words:
-** TK_FUNC, TK_CONST, TK_RETURN, TK_ADD
+** TK_FUNC, TK_CONST, TK_RETURN, TK_ADD,
+** TK_SETVAR, TK_GETVAR, TK_EQ, TK_NEQ,
+** TK_IF
 ** last reserved kind must be before TK_NAME
 */
 #ifndef CLEX_H
@@ -21,7 +23,8 @@
 
 enum tkreserved {
   TK_EOF,
-  TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN, TK_ADD, TK_SETVAR, TK_GETVAR, TK_EQ, TK_NEQ,
+  TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN, TK_ADD, TK_SETVAR, TK_GETVAR,
+  TK_EQ, TK_NEQ, TK_IF,
   TK_NAME, TK_INT, TK_STR
 };
 
