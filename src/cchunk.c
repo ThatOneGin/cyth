@@ -246,11 +246,22 @@ static void print_value(Tvalue v) {
 
 static void print_constants(cyth_Function *f) {
   for (cmem_t i = 0; i < f->nk; i++) {
-    printf("\t%lu ", i);
+    printf("\t%lu\t", i);
     print_value(f->k[i]);
     Putc('\n');
   }
 }
+
+static byte print_az_as_value[OP_COUNT] = {
+  [OP_PUSH] = 1,
+  [OP_POP] = 0,
+  [OP_ADD] = 0,
+  [OP_SETVAR] = 1,
+  [OP_GETVAR] = 1,
+  [OP_EQ] = 0,
+  [OP_NEQ] = 0,
+  [OP_JMP] = 0,
+};
 
 static void print_code(cyth_Function *f) {
   int opcode;
@@ -270,7 +281,7 @@ static void print_code(cyth_Function *f) {
     else printf("#");
     printf("]\t");
     printf("%s\t%d\t", cythC_getopcode(opcode), az);
-    if (opcode == OP_PUSH) {
+    if (opcode < OP_COUNT && print_az_as_value[opcode]) {
       printf("; ");
       print_value(f->k[az]);
       Putc('\n');
@@ -281,8 +292,8 @@ static void print_code(cyth_Function *f) {
 }
 
 void cythL_print(cyth_Function *f) {
-  printf("Function %p:\n", (void*)f);
+  printf("Function %p (%lu):\n", (void*)f, f->ncode);
   print_code(f);
-  printf("Constants for %p (%lu):\n", (void*)f, f->nk);
+  printf("constants for %p (%lu):\n", (void*)f, f->nk);
   print_constants(f);
 }
