@@ -3,6 +3,12 @@
 #include <cvm.h>
 #include <cgc.h>
 
+#define checkveclimit(C, lim, ty) \
+  if ((lim) > MAXVECSIZE) \
+    cythE_error(C, \
+      "Maximum size of vector" \
+      " reached (%u elements, type %s)", MAXVECSIZE, #ty);
+
 cyth_Function *cythF_newfunc(cyth_State *C) {
   gc_object *ref = cythG_newobj(C, GCOF);
   cyth_Function *f = cythM_malloc(C, sizeof(cyth_Function));
@@ -17,13 +23,18 @@ cyth_Function *cythF_newfunc(cyth_State *C) {
   f->lineinfo = NULL;
   f->nline = 0;
   f->linesize = 0;
+  f->f = NULL;
+  f->nf = 0;
+  f->fsize = 0;
   return f;
 }
 
 /* Emit instruction i with debug info */
 int cythF_emitC(cyth_Function *f, Instruction i, int line) {
+  checkveclimit(f->C, f->codesize, Instruction);
   if (f->ncode >= f->codesize)
     cythM_vecgrow(f->C, f->code, f->codesize, Instruction);
+  checkveclimit(f->C, f->codesize, Instruction);
   if (f->nline >= f->linesize)
     cythM_vecgrow(f->C, f->lineinfo, f->linesize, int);
   f->code[f->ncode++] = i;
@@ -39,16 +50,26 @@ int cythF_emitK(cyth_Function *f, Tvalue k) {
       return i;
     }
   }
+  checkveclimit(f->C, f->ksize, Tvalue);
   if (f->nk >= f->ksize)
     cythM_vecgrow(f->C, f->k, f->ksize, Tvalue);
   f->k[f->nk++] = k;
   return f->nk-1;
 }
 
+int cythF_emitF(cyth_Function *f, cyth_Function *f2) {
+  checkveclimit(f->C, f->fsize, cyth_Function);
+  if (f->nf >= f->fsize)
+    cythM_vecgrow(f->C, f->f, f->fsize, sizeof(*f->f));
+  f->f[f->nf++] = f2;
+  return f->nf-1;
+}
+
 void cythF_freefunc(cyth_Function *f) {
   cythM_vecfree(f->C, f->code, f->codesize, Instruction);
   cythM_vecfree(f->C, f->k, f->ksize, Tvalue);
   cythM_vecfree(f->C, f->lineinfo, f->linesize, int);
+  cythM_vecfree(f->C, f->f, f->fsize, cyth_Function*);
   cythM_free(f->C, f, sizeof(cyth_Function));
 }
 

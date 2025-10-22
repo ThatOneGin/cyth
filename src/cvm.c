@@ -39,6 +39,12 @@ static Tvalue getk(cyth_Function *f, argZ az) {
   return f->k[az];
 }
 
+static Tvalue getf(cyth_Function *f, argZ az) {
+  if (az >= f->nf)
+    cythE_error(f->C, "Unreachable closure (address=%u)", az);
+  return f2obj(f->f[az]);
+}
+
 /* get a local variable (checks for outer environments) */
 static void getvar(cyth_State *C, Call_info *ci, Tvalue name, Tvalue *res) {
   Call_info *l = ci;
@@ -79,6 +85,17 @@ int cythV_toboolean(Tvalue v, Tvalue *res) {
     break;
   }
   return obj2b(&dummy);
+}
+
+void cythV_setglobal(cyth_State *C, String *name, Tvalue v) {
+  Tvalue k = s2obj(name);
+  cythH_append(C, C->gt, k, v);
+}
+
+int cythV_getglobal(cyth_State *C, String *name, Tvalue *res) {
+  Tvalue k = s2obj(name);
+  cythH_get(C, C->gt, k, res);
+  return (res->tt_ != CYTH_NONE);
 }
 
 /* execute a cyth call */
@@ -142,6 +159,24 @@ returning:
         cythE_error(C, "Invalid jump trying to jump to offset %ld.\n", (pc-f->code) + az);
       else
         pc += az;
+    } break;
+    case OP_FUNC: {
+      cythA_push(C, getf(f, getargz(i)));
+    } break;
+    case OP_SETGLB: {
+      Tvalue k = getk(f, getargz(i));
+      if (cyth_tt(&k) != CYTH_STRING)
+        cythE_error(C, "Invalid global variable name.\n");
+      Tvalue v = cythA_pop(C);
+      cythV_setglobal(C, obj2s(&k), v);
+    } break;
+    case OP_GETGLB: {
+      Tvalue k = getk(f, getargz(i));
+      if (cyth_tt(&k) != CYTH_STRING)
+        cythE_error(C, "Invalid global variable name.\n");
+      Tvalue v;
+      cythV_getglobal(C, obj2s(&k), &v);
+      cythA_push(C, v);
     } break;
     default:
       cythE_error(C, "Unknown opcode '%d'.", getopcode(i));

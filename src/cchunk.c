@@ -69,12 +69,17 @@ static void unload_function(Unloader *U, cyth_Function *f) {
   unload_int(U, f->ncode, sizeof(int16_t));
   unload_int(U, f->nk, sizeof(int16_t));
   unload_int(U, f->nline, sizeof(int16_t));
+  unload_int(U, f->nf, sizeof(int16_t));
   unload_int(U, f->codesize, sizeof(int16_t));
   unload_int(U, f->ksize, sizeof(int16_t));
   unload_int(U, f->linesize, sizeof(int16_t));
+  unload_int(U, f->fsize, sizeof(int16_t));
   unload_vector(U, f->code, f->ncode);
   unload_vector(U, f->lineinfo, f->nline);
   unload_constants(U, f);
+  for (cmem_t i = 0; i < f->nf; i++) {
+    unload_function(U, f->f[i]);
+  }
 }
 
 void unload_header(Unloader *U) {
@@ -170,6 +175,31 @@ static void load_header(Loader *L) {
   }
 }
 
+static void load_function(Loader *L, cyth_Function *f, byte needinit) {
+  if (needinit)
+    f = cythF_newfunc(L->C);
+  load_size(L, &f->ncode, sizeof(int16_t));
+  load_size(L, &f->nk, sizeof(int16_t));
+  load_size(L, &f->nline, sizeof(int16_t));
+  load_size(L, &f->nf, sizeof(int16_t));
+  load_size(L, &f->codesize, sizeof(int16_t));
+  load_size(L, &f->ksize, sizeof(int16_t));
+  load_size(L, &f->linesize, sizeof(int16_t));
+  load_size(L, &f->fsize, sizeof(int16_t));
+  f->codesize = f->ncode;
+  f->ksize = f->nk;
+  f->linesize = f->nline;
+  f->code = cythM_malloc(L->C, sizeof(*f->code) * f->ncode);
+  f->lineinfo = cythM_malloc(L->C, sizeof(*f->lineinfo) * f->nline);
+  f->k = cythM_malloc(L->C, sizeof(*f->k) * f->nk);
+  f->f = cythM_malloc(L->C, sizeof(*f->f) * f->nf);
+  load_vector(L, f->code, f->ncode, Instruction);
+  load_vector(L, f->lineinfo, f->nline, int);
+  load_constants(L, f);
+  for (cmem_t i = 0; i < f->nf; i++)
+    load_function(L, f->f[i], 1);
+}
+
 /* load a bytecode file */
 void cythL_load(cyth_State *C, Stream *input, char *name) {
   Loader L;
@@ -179,21 +209,7 @@ void cythL_load(cyth_State *C, Stream *input, char *name) {
   L.offset = 0;
   cyth_Function *f = cythF_newfunc(C);
   load_header(&L);
-  load_size(&L, &f->ncode, sizeof(int16_t));
-  load_size(&L, &f->nk, sizeof(int16_t));
-  load_size(&L, &f->nline, sizeof(int16_t));
-  load_size(&L, &f->codesize, sizeof(int16_t));
-  load_size(&L, &f->ksize, sizeof(int16_t));
-  load_size(&L, &f->linesize, sizeof(int16_t));
-  f->codesize = f->ncode;
-  f->ksize = f->nk;
-  f->linesize = f->nline;
-  f->code = cythM_malloc(C, sizeof(*f->code) * f->ncode);
-  f->lineinfo = cythM_malloc(C, sizeof(*f->lineinfo) * f->nline);
-  f->k = cythM_malloc(C, sizeof(*f->k) * f->nk);
-  load_vector(&L, f->code, f->ncode, Instruction);
-  load_vector(&L, f->lineinfo, f->nline, int);
-  load_constants(&L, f);
+  load_function(&L, f, 0);
   cythA_push(C, f2obj(f));
 }
 
@@ -261,6 +277,9 @@ static byte print_az_as_value[OP_COUNT] = {
   [OP_EQ] = 0,
   [OP_NEQ] = 0,
   [OP_JMP] = 0,
+  [OP_FUNC] = 0,
+  [OP_SETGLB] = 1,
+  [OP_GETGLB] = 1
 };
 
 static void print_code(cyth_Function *f) {
@@ -296,4 +315,7 @@ void cythL_print(cyth_Function *f) {
   print_code(f);
   printf("constants for %p (%lu):\n", (void*)f, f->nk);
   print_constants(f);
+  for (cmem_t i = 0; i < f->nf; i++) {
+    cythL_print(f->f[i]);
+  }
 }

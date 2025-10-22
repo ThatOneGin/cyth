@@ -18,12 +18,15 @@ typedef int(*cyth_Writer)(cyth_State *, void *, size_t, void *);
 **  - f->ncode (2 bytes)
 **  - f->nk (2 bytes)
 **  - f->nline (2 bytes)
+**  - f->nf (2 bytes)
 **  - f->codesize (2 bytes)
 **  - f->ksize (2 bytes)
 **  - f->linesize (2 bytes)
+**  - f->fsize (2 bytes)
 **  - f->code (vector)
 **  - f->lineinfo (vector)
 **  - f->k (vector)
+**  - f->f (vector)
 */
 
 void cythU_unload(cyth_State *C, cyth_Function *f, cyth_Writer u, void *aux);

@@ -60,6 +60,7 @@ struct global_State {
 
 struct cyth_State {
   global_State *G;
+  Table *gt; /* global table */
   stkrel base; /* first stack element */
   stkrel top; /* first empty slot */
   cmem_t maxoff; /* maximum distance from base to top */

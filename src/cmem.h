@@ -8,6 +8,8 @@
 ** add INCSIZE to it.
 */
 #define INCSIZE 5
+/* Optional maximum vector size */
+#define MAXVECSIZE USHRT_MAX
 
 #define cythM_vecnew(C, v, s, t) ((v)=cythM_malloc(C, sizeof(t)*(s)))
 #define cythM_vecgrow(C, v, s, t) \
