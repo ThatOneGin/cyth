@@ -11,6 +11,7 @@
 /* Code generation */
 
 #define saveline(ls) ((ls)->line)
+#define freturn(ls, line) emitC(ls, (OP_RETURN<<OPCODE_POS), line)
 
 static int emitC(lex_State *ls, Instruction i, int line) {
   cyth_Function *f = ls->fs->f;
@@ -32,6 +33,20 @@ static int jmp(lex_State *ls, int i, int line) {
 static void jt(lex_State *ls, int line) {
   Instruction inst = 0;
   setopcode(inst, OP_JT);
+  emitC(ls, inst, line);
+}
+
+static void function(lex_State *ls, int f, int line) {
+  Instruction inst = 0;
+  setopcode(inst, OP_FUNC);
+  setargz(inst, f);
+  emitC(ls, inst, line);
+}
+
+static void setglobal(lex_State *ls, String *name, int line) {
+  Instruction inst = 0;
+  setopcode(inst, OP_SETGLB);
+  setargz(inst, emitK(ls, s2obj(name)));
   emitC(ls, inst, line);
 }
 
@@ -177,9 +192,12 @@ static void ifstat(lex_State *ls) {
   setargz(ls->fs->f->code[to_patch], (ls->fs->f->ncode - to_patch - 1));
 }
 
-/* '(' func '(' ')' instlist ')' */
+/* func '(' ')' instlist ')' */
 static void func(lex_State *ls) {
+  openfunc(ls);
+  cyth_Function *f = ls->fs->f;
   String *name;
+  int start_line = saveline(ls);
   expect(ls, '(', "'('");
   expect(ls, TK_FUNC, "'func' keyword.");
   name = expect(ls, TK_NAME, "identifier").value.s;
@@ -188,20 +206,36 @@ static void func(lex_State *ls) {
     /* TODO: parameters */
     expect(ls, ')', "')'");
   }
-  emitK(ls, s2obj(name));
   blockbody(ls, ')');
+  int end_line = saveline(ls);
   expect(ls, ')', "')'");
+  freturn(ls, end_line); /* last instruction (return) */
+  closefunc(ls);
+  int fidx = cythF_emitF(ls->fs->f, f);
+  function(ls, fidx, end_line);
+  setglobal(ls, name, start_line);
+}
+
+static void mainfunc(lex_State *ls) {
+  openfunc(ls);
+  cyth_Function *f = ls->fs->f;
+  while (ls->t.type == '(') {
+    func(ls);
+  }
+  expect(ls, TK_EOF, "End-of-file");
+  freturn(ls, saveline(ls));
+  closefunc(ls);
+  cythA_push(ls->C, f2obj(f));
 }
 
 /* parse the main function of a chunk */
 cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
   lex_State *ls = cythL_new(C, chunkname, input);
   cythL_next(ls);
-  openfunc(ls);
-  func(ls);
-  cyth_Function *f = ls->fs->f;
-  cythA_push(C, f2obj(f));
-  closefunc(ls);
+  mainfunc(ls);
   cythL_free(ls);
-  return f;
+  return obj2f(&C->top[-1]); /* function is at the top */
 }
+
+#undef saveline
+#undef freturn

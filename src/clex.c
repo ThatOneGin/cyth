@@ -171,3 +171,4 @@ void cythL_free(lex_State *ls) {
 
 #undef next
 #undef save
+#undef expect

@@ -1,3 +1,9 @@
+(func add_()
+  const 24;
+  const 23;
+  add;
+  return;)
+
 (func main()
   const 12;
   const 21;
