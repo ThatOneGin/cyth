@@ -230,10 +230,9 @@ static void mainfunc(lex_State *ls) {
 
 /* parse the main function of a chunk */
 cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
-  lex_State *ls = cythL_new(C, chunkname, input);
-  cythL_next(ls);
-  mainfunc(ls);
-  cythL_free(ls);
+  lex_State ls = cythL_new(C, chunkname, input);
+  cythL_next(&ls);
+  mainfunc(&ls);
   return obj2f(&C->top[-1]); /* function is at the top */
 }
 

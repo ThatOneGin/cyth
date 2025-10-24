@@ -22,23 +22,23 @@ static void anchorstring(lex_State *ls, String *s) {
   cythH_append(ls->C, ls->tab, i2obj(ls->tab->len), s2obj(s));
 }
 
-lex_State *cythL_new(cyth_State *C, char *name, Stream *input) {
-  lex_State *ls = cythM_malloc(C, sizeof(lex_State));
-  ls->C = C;
-  ls->tab = cythH_new(C);
+lex_State cythL_new(cyth_State *C, char *name, Stream *input) {
+  lex_State ls = {0};
+  ls.C = C;
+  ls.tab = cythH_new(C);
   /* put the table where the GC can see */
-  cythA_push(C, t2obj(ls->tab));
-  ls->line = 1;
-  ls->fs = NULL;
-  ls->sourcename = cythL_createstring(ls, name);
-  ls->input = input;
-  ls->current = cythI_getc(ls->input);
-  anchorstring(ls, ls->sourcename);
+  cythA_push(C, t2obj(ls.tab));
+  ls.line = 1;
+  ls.fs = NULL;
+  ls.sourcename = cythL_createstring(&ls, name);
+  ls.input = input;
+  ls.current = cythI_getc(ls.input);
+  anchorstring(&ls, ls.sourcename);
   String *s;
   for (int i = 0; i < NUMRESERVED; i++) {
-    s = cythL_createstring(ls, reserved[i]);
+    s = cythL_createstring(&ls, reserved[i]);
     s->aux = (byte)i;
-    anchorstring(ls, s);
+    anchorstring(&ls, s);
   }
   return ls;
 }
@@ -161,12 +161,6 @@ void cythL_next(lex_State *ls) {
       break;
     }
   }
-}
-
-void cythL_free(lex_State *ls) {
-  ls->current = 0;
-  ls->line = 0;
-  cythM_free(ls->C, ls, sizeof(lex_State));
 }
 
 #undef next

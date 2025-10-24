@@ -51,9 +51,8 @@ typedef struct {
   String *sourcename;
 } lex_State;
 
-lex_State *cythL_new(cyth_State *C, char *name, Stream *input);
+lex_State cythL_new(cyth_State *C, char *name, Stream *input);
 String *cythL_createstring(lex_State *ls, char *s);
 void cythL_syntaxerror(lex_State *ls, const char *s);
 void cythL_next(lex_State *ls);
-void cythL_free(lex_State *ls);
 #endif
