@@ -102,8 +102,11 @@ static void value(lex_State *ls, Tvalue *res) {
   Token t = next(ls);
   switch (t.type) {
   case '-':
-    t = expect(ls, TK_INT, "valid integer");
-    *res = i2obj(t.value.i * -1);
+    value(ls, res);
+    if (cyth_tt(res) != CYTH_INTEGER)
+      cythL_syntaxerror(ls, "- Unary operator requires a number.");
+    else
+      obj2i(res) *= -1;
     break;
   case TK_INT:
     *res = i2obj(t.value.i);
