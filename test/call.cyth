@@ -1,0 +1,10 @@
+(func _add()
+  const 32;
+  const 23;
+  add;
+  return;)
+
+(func main()
+  getvar _add;
+  call 0;
+  return;)

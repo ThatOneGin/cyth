@@ -50,6 +50,46 @@ static void setglobal(lex_State *ls, String *name, int line) {
   emitC(ls, inst, line);
 }
 
+static void setvar(lex_State *ls, Vardsc v) {
+  DataBlk *blk = (DataBlk*)ls->pdata;
+  if (blk->nvars >= blk->varsize)
+    cythM_vecgrow(ls->C, blk->vars, blk->varsize, Vardsc);
+  for (cmem_t i = 0; i < blk->nvars; i++) {
+    if (blk->vars[i].name == v.name) {
+      cythE_error(ls->C, "Trying to redefine variable '%*s'",
+        (unsigned int)v.name->len, v.name->data);
+    }
+  }
+  blk->vars[blk->nvars++] = v;
+}
+
+static void getvar(lex_State *ls, String *name, Vardsc *v) {
+  Vardsc dummy = {0};
+  if (v == NULL) /* result is unused */
+    v = &dummy;
+  DataBlk *blk = (DataBlk*)ls->pdata;
+  for (cmem_t i = 0; i < blk->nvars; i++) {
+    if (blk->vars[i].name == name) {
+      *v = blk->vars[i];
+      return;
+    }
+  }
+  cythE_error(ls->C, "Unknown variable '%*s'",
+    (unsigned int)name->len, name->data);
+}
+
+/* enter new scope */
+static void enter(lex_State *ls, cmem_t *nvars) {
+  DataBlk *blk = (DataBlk*)ls->pdata;
+  *nvars = blk->nvars;
+}
+
+/* leave scope (erase scope's local variables) */
+static void leave(lex_State *ls, cmem_t nvars) {
+  DataBlk *blk = (DataBlk*)ls->pdata;
+  blk->nvars = nvars;
+}
+
 /* Parsing source */
 
 static void ifstat(lex_State *ls);
@@ -141,20 +181,39 @@ static void instruction(lex_State *ls) {
     setopcode(i, OP_ADD);
   } break;
   case TK_SETVAR: {
+    Vardsc var = {0};
     String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;
+    var.k = VKLOC;
+    var.name = name;
+    var.i = 0;
+    setvar(ls, var);
     setopcode(i, OP_SETVAR);
     setargz(i, emitK(ls, s2obj(name)));
   } break;
   case TK_GETVAR: {
+    Vardsc v;
     String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;
-    setopcode(i, OP_GETVAR);
-    setargz(i, emitK(ls, s2obj(name)));
+    getvar(ls, name, &v);
+    if (v.k != VKFUN) {
+      setopcode(i, OP_GETVAR);
+      setargz(i, emitK(ls, s2obj(name)));
+    } else { /* a function */
+      setopcode(i, OP_GETGLB);
+      setargz(i, emitK(ls, s2obj(name)));
+    }
   } break;
   case TK_EQ: {
     setopcode(i, OP_EQ);
   } break;
   case TK_NEQ: {
     setopcode(i, OP_NEQ);
+  } break;
+  case TK_CALL: {
+    int nargs = expect(ls, TK_INT,
+      "Expected number of arguments"
+      " for call instruction.").value.i;
+    setopcode(i, OP_CALL);
+    setargz(i, nargs);
   } break;
   default:
     error_unknown(ls, "instruction name");
@@ -177,9 +236,12 @@ static void instblock(lex_State *ls) {
 }
 
 static void blockbody(lex_State *ls, int stop) {
+  cmem_t nvars = 0;
+  enter(ls, &nvars);
   do {
     instblock(ls);
   } while (!match(ls, stop) && !match(ls, TK_EOF));
+  leave(ls, nvars);
 }
 
 /* '(' if '('instlist')' instlist ')' */
@@ -217,6 +279,11 @@ static void func(lex_State *ls) {
   int fidx = cythF_emitF(ls->fs->f, f);
   function(ls, fidx, end_line);
   setglobal(ls, name, start_line);
+  Vardsc var = {0};
+  var.k = VKFUN;
+  var.i = fidx;
+  var.name = name;
+  setvar(ls, var);
 }
 
 static void mainfunc(lex_State *ls) {
@@ -226,6 +293,19 @@ static void mainfunc(lex_State *ls) {
     func(ls);
   }
   expect(ls, TK_EOF, "End-of-file");
+  Vardsc v;
+  getvar(ls, cythS_new(ls->C, "main"), &v);
+  if (v.k != VKFUN)
+    cythE_error(ls->C, "Expected symbol 'main' to be a function.");
+  else {
+    Instruction i = 0;
+    setopcode(i, OP_FUNC);
+    setargz(i, v.i);
+    emitC(ls, i, saveline(ls));
+    setopcode(i, OP_CALL);
+    setargz(i, 0);
+    emitC(ls, i, saveline(ls));
+  }
   freturn(ls, saveline(ls));
   closefunc(ls);
   cythA_push(ls->C, f2obj(f));
@@ -233,9 +313,12 @@ static void mainfunc(lex_State *ls) {
 
 /* parse the main function of a chunk */
 cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
+  DataBlk blk = {0};
   lex_State ls = cythL_new(C, chunkname, input);
+  ls.pdata = (void*)&blk;
   cythL_next(&ls);
   mainfunc(&ls);
+  cythM_vecfree(C, blk.vars, blk.varsize, Vardsc);
   return obj2f(&C->top[-1]); /* function is at the top */
 }
 

@@ -9,7 +9,8 @@ byte opmodes[] = {
   [OP_EQ] = iZ,
   [OP_NEQ] = iZ,
   [OP_JMP] = iZs,
-  [OP_FUNC] = iZ
+  [OP_FUNC] = iZ,
+  [OP_CALL] = iZ
 };
 
 char *opcodes[] = {
@@ -25,7 +26,8 @@ char *opcodes[] = {
   [OP_JMP] = "JMP",
   [OP_FUNC] = "FUNC",
   [OP_SETGLB] = "SETGLB",
-  [OP_GETGLB] = "GETGLB"
+  [OP_GETGLB] = "GETGLB",
+  [OP_CALL] = "CALL"
 };
 
 int cythC_getmode(Instruction i) {

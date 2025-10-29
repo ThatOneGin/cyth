@@ -2,7 +2,7 @@
 ** order of reserved words:
 ** TK_FUNC, TK_CONST, TK_RETURN, TK_ADD,
 ** TK_SETVAR, TK_GETVAR, TK_EQ, TK_NEQ,
-** TK_IF
+** TK_IF, TK_CALL
 ** last reserved kind must be before TK_NAME
 */
 #ifndef CLEX_H
@@ -24,7 +24,7 @@
 enum tkreserved {
   TK_EOF,
   TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN, TK_ADD, TK_SETVAR, TK_GETVAR,
-  TK_EQ, TK_NEQ, TK_IF,
+  TK_EQ, TK_NEQ, TK_IF, TK_CALL,
   TK_NAME, TK_INT, TK_STR
 };
 
@@ -49,6 +49,7 @@ typedef struct {
   cyth_State *C;
   Stream *input;
   String *sourcename;
+  void *pdata; /* used by the paser (set later) */
 } lex_State;
 
 lex_State cythL_new(cyth_State *C, char *name, Stream *input);

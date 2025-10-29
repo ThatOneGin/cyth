@@ -3,6 +3,21 @@
 #include <clex.h>
 #include <cobject.h>
 
+#define VKLOC 0
+#define VKFUN 1
+
+typedef struct {
+  byte k; /* VKLOC or VKFUN */
+  String *name;
+  int i; /* for function variables */
+} Vardsc;
+
+typedef struct {
+  Vardsc *vars;
+  cmem_t nvars;
+  cmem_t varsize;
+} DataBlk;
+
 /*
 ** Auxiliary state to help build
 ** functions.

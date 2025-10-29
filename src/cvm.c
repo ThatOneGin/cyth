@@ -178,6 +178,13 @@ returning:
       cythV_getglobal(C, obj2s(&k), &v);
       cythA_push(C, v);
     } break;
+    case OP_CALL: {
+      int f = -(getargz(i)+1); /* get relative index to the stack */
+      cythF_precall(C, &C->top[f], getargz(i)); /* load function */
+      C->ci->prev = ci;
+      ci = C->ci; /* replace old frame with the new one */
+      goto returning; /* but execute in the same C call */
+    } break;
     default:
       cythE_error(C, "Unknown opcode '%d'.", getopcode(i));
     }
