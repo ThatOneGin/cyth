@@ -1,0 +1,10 @@
+(func main()
+  const 1;
+  setvar x;
+  const 0;
+  (while (
+    const 0;
+    eq;)
+    getvar x;
+    )
+)

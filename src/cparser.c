@@ -24,10 +24,27 @@ static int emitK(lex_State *ls, Tvalue k) {
 }
 
 static int jmp(lex_State *ls, int i, int line) {
+  i = ((i << 1) | 0);
   Instruction inst = 0;
   setopcode(inst, OP_JMP);
   setargz(inst, i);
   return emitC(ls, inst, line);
+}
+
+static int jmpback(lex_State *ls, int i, int line) {
+  int offset = (i << 1) | 1;
+  Instruction inst = 0;
+  setopcode(inst, OP_JMP);
+  setargz(inst, offset);
+  return emitC(ls, inst, line);
+}
+
+static void patchjmp(lex_State *ls, unsigned int idx,
+                     int i, int back) {
+  func_State *fs = ls->fs;
+  if (idx >= fs->f->ncode) 
+    cythL_syntaxerror(ls, "Invalid jmp patch.\n");
+  setargz(fs->f->code[idx], ((i << 1) | (back?1:0)));
 }
 
 static void jt(lex_State *ls, int line) {
@@ -93,6 +110,7 @@ static void leave(lex_State *ls, cmem_t nvars) {
 /* Parsing source */
 
 static void ifstat(lex_State *ls);
+static void whilestat(lex_State *ls);
 
 static void error_unknown(lex_State *ls, const char *what) {
   char buf[BUFFERSIZE];
@@ -227,7 +245,17 @@ static void instblock(lex_State *ls) {
   switch (ls->t.type) {
   case '(': /* a block */
     next(ls);
-    ifstat(ls);
+    switch (ls->t.type) {
+    case TK_IF:
+      ifstat(ls);
+      break;
+    case TK_WHILE:
+      whilestat(ls);
+      break;
+    default:
+      cythL_syntaxerror(ls, "Unknown block name");
+      break;
+    }
     break;
   default:
     instruction(ls);
@@ -253,8 +281,23 @@ static void ifstat(lex_State *ls) {
   jt(ls, saveline(ls));
   int to_patch = jmp(ls, 0, saveline(ls));
   blockbody(ls, ')');
-  expect(ls, ')', "Expected ')");
+  expect(ls, ')', "Expected ')'");
   setargz(ls->fs->f->code[to_patch], (ls->fs->f->ncode - to_patch - 1));
+}
+
+static void whilestat(lex_State *ls) {
+  func_State *fs = ls->fs;
+  expect(ls, TK_WHILE, "Expected 'while'.");
+  expect(ls, '(', "Expected condition");
+  int init = fs->f->ncode;
+  blockbody(ls, ')');
+  expect(ls, ')', "Expected end of condition");
+  jt(ls, saveline(ls));
+  int topatch = jmp(ls, 0, saveline(ls));
+  blockbody(ls, ')');
+  expect(ls, ')', "Expected ')'");
+  jmpback(ls, fs->f->ncode - init + 1, saveline(ls));
+  patchjmp(ls, topatch, fs->f->ncode - topatch, 0);
 }
 
 /* func '(' ')' instlist ')' */

@@ -300,7 +300,13 @@ static void print_code(cyth_Function *f) {
     if (line > 0) printf("%d", line);
     else printf("#");
     printf("]\t");
-    printf("%s\t%d\t", cythC_getopcode(opcode), az);
+    if (cythC_getmode(j) == iZs) {
+      int32_t azs = (int32_t)((az & 0x01) ?
+        -(az >> 1) :
+        (az >> 1));
+      printf("%s\t%d\t", cythC_getopcode(opcode), azs);
+    } else
+      printf("%s\t%d\t", cythC_getopcode(opcode), az);
     if (opcode < OP_COUNT && print_az_as_value[opcode]) {
       printf("; ");
       print_value(f->k[az]);

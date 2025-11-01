@@ -153,8 +153,10 @@ returning:
       if (cythV_toboolean(val, NULL))
         fetchinst();
     } break;
-    case OP_JMP: {
-      int32_t az = getargz(i);
+    case OP_JMP: { /* the first bit determines the signedness */
+      int32_t _az = getargz(i);
+      int32_t az = _az & 0x01 ? -(_az >> 1) : _az;
+      break;
       if ((pc-f->code) + az >= (int64_t)f->ncode)
         cythE_error(C, "Invalid jump trying to jump to offset %ld.\n", (pc-f->code) + az);
       else
