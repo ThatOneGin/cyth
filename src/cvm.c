@@ -185,7 +185,17 @@ returning:
       cythF_precall(C, &C->top[f], getargz(i)); /* load function */
       C->ci->prev = ci;
       ci = C->ci; /* replace old frame with the new one */
-      goto returning; /* but execute in the same C call */
+      if (ci->type == CYTHCALL)
+        goto returning;
+      else {
+        userdata ud = obj2ud(&C->top[f]);
+        if (ud.type != UDFUN)
+          cythE_error(C,
+            "Trying to call userdata that doesn't"
+            "represent a valid callable object.\n");
+        else
+          ud.u.cfunc(C);
+      }
     } break;
     default:
       cythE_error(C, "Unknown opcode '%d'.", getopcode(i));
