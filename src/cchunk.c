@@ -175,9 +175,8 @@ static void load_header(Loader *L) {
   }
 }
 
-static void load_function(Loader *L, cyth_Function *f, byte needinit) {
-  if (needinit)
-    f = cythF_newfunc(L->C);
+/* Load function from stream */
+static void load_function(Loader *L, cyth_Function *f) {
   load_size(L, &f->ncode, sizeof(int16_t));
   load_size(L, &f->nk, sizeof(int16_t));
   load_size(L, &f->nline, sizeof(int16_t));
@@ -196,8 +195,10 @@ static void load_function(Loader *L, cyth_Function *f, byte needinit) {
   load_vector(L, f->code, f->ncode, Instruction);
   load_vector(L, f->lineinfo, f->nline, int);
   load_constants(L, f);
-  for (cmem_t i = 0; i < f->nf; i++)
-    load_function(L, f->f[i], 1);
+  for (cmem_t i = 0; i < f->nf; i++) {
+    f->f[i] = cythF_newfunc(L->C);
+    load_function(L, f->f[i]);
+  }
 }
 
 /* load a bytecode file */
@@ -209,7 +210,7 @@ void cythL_load(cyth_State *C, Stream *input, char *name) {
   L.offset = 0;
   cyth_Function *f = cythF_newfunc(C);
   load_header(&L);
-  load_function(&L, f, 0);
+  load_function(&L, f); /* load the root (main) chunk */
   cythA_push(C, f2obj(f));
 }
 
