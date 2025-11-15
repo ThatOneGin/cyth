@@ -98,16 +98,33 @@ int cythV_getglobal(cyth_State *C, String *name, Tvalue *res) {
   return (res->tt_ != CYTH_NONE);
 }
 
+/*
+** Custom pop, we assume that the current Call_info's func slot
+** is the stack base to avoid functions to access values
+** that are outside their frame (arguments are an exception)
+*/
+static Tvalue pop(cyth_State *C, stkrel base) {
+  if (C->top == base) {
+    /* For now it is better to raise an error */
+    cythE_error(C, "Stack underflow.\n");
+  } else {
+    return cythA_pop(C);
+  }
+  return NONE; /* avoid gcc's warning, but this is unreachable */
+}
+
 /* execute a cyth call */
 void cythV_exec(cyth_State *C, Call_info *ci) {
   cyth_Function *f;
   Instruction i;
   Instruction *pc;
   Table *vars;
+  stkrel base;
 returning:
   f = ci->u.cyth.f;
   pc = f->code + ci->u.cyth.pc;
   vars = ci->u.cyth.locvars;
+  base = ci->func;
   for (;;) {
     fetchinst();
     switch (getopcode(i)) {
@@ -115,14 +132,20 @@ returning:
       cythA_push(C, getk(f, getargz(i)));
       break;
     case OP_POP:
-      cythE_dectop(C);
+      if (C->top == base)
+        cythE_error(C, "Stack underflow.\n");
+      else
+        cythE_dectop(C);
       break;
     case OP_ADD: {
-      Tvalue r = cythA_pop(C);
-      Tvalue l = cythA_pop(C);
+      Tvalue r = pop(C, base);
+      Tvalue l = pop(C, base);
       cythA_pushint(C, obj2i(&l) + obj2i(&r));
     } break;
     case OP_SETVAR: {
+      if (C->top == base)
+        cythE_error(C, "No available value in "
+                       "the stack for variable.\n");
       Tvalue v = C->top[-1];
       cythH_append(C, vars, getk(f, getargz(i)), v);
       cythE_dectop(C);
@@ -139,17 +162,17 @@ returning:
       } else return;
     } break;
     case OP_EQ: {
-      Tvalue r = cythA_pop(C);
-      Tvalue l = cythA_pop(C);
+      Tvalue r = pop(C, base);
+      Tvalue l = pop(C, base);
       cythA_push(C, b2obj(cythV_objequ(C, l, r)));
     } break;
     case OP_NEQ: {
-      Tvalue r = cythA_pop(C);
-      Tvalue l = cythA_pop(C);
+      Tvalue r = pop(C, base);
+      Tvalue l = pop(C, base);
       cythA_push(C, b2obj((!cythV_objequ(C, l, r))));
     } break;
     case OP_JT: {
-      Tvalue val = cythA_pop(C);
+      Tvalue val = pop(C, base);
       if (cythV_toboolean(val, NULL))
         fetchinst();
     } break;
@@ -169,7 +192,7 @@ returning:
       Tvalue k = getk(f, getargz(i));
       if (cyth_tt(&k) != CYTH_STRING)
         cythE_error(C, "Invalid global variable name.\n");
-      Tvalue v = cythA_pop(C);
+      Tvalue v = pop(C, base);
       cythV_setglobal(C, obj2s(&k), v);
     } break;
     case OP_GETGLB: {
