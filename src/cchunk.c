@@ -281,7 +281,9 @@ static byte print_az_as_value[OP_COUNT] = {
   [OP_FUNC] = 0,
   [OP_SETGLB] = 1,
   [OP_GETGLB] = 1,
-  [OP_CALL] = 0
+  [OP_CALL] = 0,
+  [OP_DUP] = 0,
+  [OP_SWAP] = 0
 };
 
 static void print_code(cyth_Function *f) {

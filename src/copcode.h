@@ -19,21 +19,23 @@ enum opmode {
 };
 
 enum opcode {
-/* opcode     | mode | desc                       */
-  OP_PUSH,   /* iZ      push(k[z])                */
-  OP_POP,    /* iZ      pop()                     */
-  OP_ADD,    /* iZ      push(pop() + pop())       */
-  OP_SETVAR, /* iZ      vars[k[z]] = pop()        */
-  OP_GETVAR, /* iZ      push(vars[k[z]])          */
-  OP_RETURN, /* iZ      return pop()              */
-  OP_EQ,     /* iZ      pop() == pop()            */
-  OP_NEQ,    /* iZ,     pop() != pop()            */
-  OP_JT,     /* iZ      if pop() = true then pc++ */
-  OP_JMP,    /* iZ      pc += z                   */
-  OP_FUNC,   /* iZ      push(f[Z])                */
-  OP_SETGLB, /* iZ      gt[k[z]] = pop()          */
-  OP_GETGLB, /* iZ      push(gt[k[z]])            */
-  OP_CALL,   /* iZ      call(-(z+1))              */
+/* opcode     | mode | desc                             */
+  OP_PUSH,   /* iZ      push(k[z])                      */
+  OP_POP,    /* iZ      pop()                           */
+  OP_ADD,    /* iZ      push(pop() + pop())             */
+  OP_SETVAR, /* iZ      vars[k[z]] = pop()              */
+  OP_GETVAR, /* iZ      push(vars[k[z]])                */
+  OP_RETURN, /* iZ      return pop()                    */
+  OP_EQ,     /* iZ      pop() == pop()                  */
+  OP_NEQ,    /* iZ      pop() != pop()                  */
+  OP_JT,     /* iZ      if pop() = true then pc++       */
+  OP_JMP,    /* iZ      pc += z                         */
+  OP_FUNC,   /* iZ      push(f[Z])                      */
+  OP_SETGLB, /* iZ      gt[k[z]] = pop()                */
+  OP_GETGLB, /* iZ      push(gt[k[z]])                  */
+  OP_CALL,   /* iZ      call(-(z+1))                    */
+  OP_DUP,    /* iZ      x=pop() push(x) push(x)         */
+  OP_SWAP,   /* iZ      x,y=pop(),pop() push(y) push(x) */
   OP_COUNT
 };
 

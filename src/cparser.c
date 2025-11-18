@@ -192,12 +192,8 @@ static void instruction(lex_State *ls) {
     argz = emitK(ls, k);
     setargz(i, argz);
   } break;
-  case TK_RETURN: {
-    setopcode(i, OP_RETURN);
-  } break;
-  case TK_ADD: {
-    setopcode(i, OP_ADD);
-  } break;
+  case TK_RETURN: setopcode(i, OP_RETURN); break;
+  case TK_ADD: setopcode(i, OP_ADD); break;
   case TK_SETVAR: {
     Vardsc var = {0};
     String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;
@@ -220,12 +216,8 @@ static void instruction(lex_State *ls) {
       setargz(i, emitK(ls, s2obj(name)));
     }
   } break;
-  case TK_EQ: {
-    setopcode(i, OP_EQ);
-  } break;
-  case TK_NEQ: {
-    setopcode(i, OP_NEQ);
-  } break;
+  case TK_EQ: setopcode(i, OP_EQ); break;
+  case TK_NEQ: setopcode(i, OP_NEQ); break;
   case TK_CALL: {
     int nargs = expect(ls, TK_INT,
       "Expected number of arguments"
@@ -233,6 +225,8 @@ static void instruction(lex_State *ls) {
     setopcode(i, OP_CALL);
     setargz(i, nargs);
   } break;
+  case TK_DUP: setopcode(i, OP_DUP); break;
+  case TK_SWAP: setopcode(i, OP_SWAP); break;
   default:
     error_unknown(ls, "instruction name");
     break;

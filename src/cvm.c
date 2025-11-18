@@ -103,7 +103,8 @@ int cythV_getglobal(cyth_State *C, String *name, Tvalue *res) {
 ** is the stack base to avoid functions to access values
 ** that are outside their frame (arguments are an exception)
 */
-static Tvalue pop(cyth_State *C, stkrel base) {
+static Tvalue pop(cyth_State *C) {
+  stkrel base = C->ci->func + 1;
   if (C->top == base) {
     /* For now it is better to raise an error */
     cythE_error(C, "Stack underflow.\n");
@@ -111,6 +112,23 @@ static Tvalue pop(cyth_State *C, stkrel base) {
     return cythA_pop(C);
   }
   return NONE; /* avoid gcc's warning, but this is unreachable */
+}
+
+void cythV_dup(cyth_State *C) {
+  stkrel base = C->ci->func + 1;
+  if (C->top == base)
+    cythE_error(C, "Stack underflow.\n");
+  objcopy(C->top, &C->top[-1]);
+  cythE_inctop(C);
+}
+
+void cythV_swap(cyth_State *C) {
+  stkrel base = C->ci->func + 1;
+  if (C->top - base <= 1)
+    cythE_error(C, "Stack underflow.\n");
+  stkrel tmp = C->top-1;
+  objcopy(C->top-1, C->top - 2);
+  objcopy(C->top-2, tmp);
 }
 
 /* execute a cyth call */
@@ -124,7 +142,7 @@ returning:
   f = ci->u.cyth.f;
   pc = f->code + ci->u.cyth.pc;
   vars = ci->u.cyth.locvars;
-  base = ci->func;
+  base = ci->func + 1;
   for (;;) {
     fetchinst();
     switch (getopcode(i)) {
@@ -138,8 +156,8 @@ returning:
         cythE_dectop(C);
       break;
     case OP_ADD: {
-      Tvalue r = pop(C, base);
-      Tvalue l = pop(C, base);
+      Tvalue r = pop(C);
+      Tvalue l = pop(C);
       cythA_pushint(C, obj2i(&l) + obj2i(&r));
     } break;
     case OP_SETVAR: {
@@ -162,17 +180,17 @@ returning:
       } else return;
     } break;
     case OP_EQ: {
-      Tvalue r = pop(C, base);
-      Tvalue l = pop(C, base);
+      Tvalue r = pop(C);
+      Tvalue l = pop(C);
       cythA_push(C, b2obj(cythV_objequ(C, l, r)));
     } break;
     case OP_NEQ: {
-      Tvalue r = pop(C, base);
-      Tvalue l = pop(C, base);
+      Tvalue r = pop(C);
+      Tvalue l = pop(C);
       cythA_push(C, b2obj((!cythV_objequ(C, l, r))));
     } break;
     case OP_JT: {
-      Tvalue val = pop(C, base);
+      Tvalue val = pop(C);
       if (cythV_toboolean(val, NULL))
         fetchinst();
     } break;
@@ -192,7 +210,7 @@ returning:
       Tvalue k = getk(f, getargz(i));
       if (cyth_tt(&k) != CYTH_STRING)
         cythE_error(C, "Invalid global variable name.\n");
-      Tvalue v = pop(C, base);
+      Tvalue v = pop(C);
       cythV_setglobal(C, obj2s(&k), v);
     } break;
     case OP_GETGLB: {
@@ -220,6 +238,8 @@ returning:
           ud.u.cfunc(C);
       }
     } break;
+    case OP_DUP: cythV_dup(C); break;
+    case OP_SWAP: cythV_swap(C); break;
     default:
       cythE_error(C, "Unknown opcode '%d'.", getopcode(i));
     }
