@@ -94,6 +94,7 @@ int cythI_getc(Stream *s) {
 }
 
 void cythI_ungetc(Stream *s) {
+  if (s->curr == NULL) return;
   s->curr--;
   s->size++;
 }

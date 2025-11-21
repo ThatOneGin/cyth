@@ -260,9 +260,9 @@ static void instblock(lex_State *ls) {
 static void blockbody(lex_State *ls, int stop) {
   cmem_t nvars = 0;
   enter(ls, &nvars);
-  do {
+  while (!match(ls, stop) && !match(ls, TK_EOF)) {
     instblock(ls);
-  } while (!match(ls, stop) && !match(ls, TK_EOF));
+  }
   leave(ls, nvars);
 }
 

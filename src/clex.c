@@ -119,7 +119,13 @@ void cythL_next(lex_State *ls) {
         ls->line++;
       next(ls);
     }
-  } else if (ls->current == '#') skip_comment(ls);
+    cythL_next(ls);
+    return;
+  } else if (ls->current == '#') {
+    skip_comment(ls);
+    cythL_next(ls);
+    return;
+  }
   if (c_isident(ls->current)) {
     do {
       save(ls->current);

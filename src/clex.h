@@ -2,7 +2,7 @@
 ** order of reserved words:
 ** TK_FUNC, TK_CONST, TK_RETURN, TK_ADD,
 ** TK_SETVAR, TK_GETVAR, TK_EQ, TK_NEQ,
-** TK_IF, TK_CALL
+** TK_IF, TK_CALL, TK_DUP, TK_SWAP
 ** last reserved kind must be before TK_NAME
 */
 #ifndef CLEX_H

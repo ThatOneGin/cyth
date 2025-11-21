@@ -74,13 +74,21 @@ void cythF_freefunc(cyth_Function *f) {
 }
 
 void cythF_precall(cyth_State *C, stkrel func, int nargs) {
+  if (cyth_tt(func) == CYTH_USERDATA) {
+    if (obj2ud(func).type != UDFUN) {
+      cythE_error(C,
+        "Trying to call an userdata "
+        "value that is not a function");
+    }
+  } else if (cyth_tt(func) != CYTH_FUNCTION &&
+             cyth_tt(func) != CYTH_USERDATA) {
+    cythE_error(C, "Trying to call an invalid value.\n");
+  }
   cythE_newci(C);
   Call_info *ci = C->ci;
   ci->func = func;
-  ci->type =
-    (cyth_tt(func) == CYTH_USERDATA &&
-    (obj2ud(func).type == UDFUN)) ? CCALL : CYTHCALL;
   ci->top = func+nargs+1;
+  ci->type = (cyth_tt(func) == CYTH_USERDATA) ? CCALL : CYTHCALL;
   if (ci->type == CCALL) {
     ci->u.c.nargs = nargs;
   } else {
