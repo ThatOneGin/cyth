@@ -84,7 +84,7 @@ int cythV_toboolean(Tvalue v, Tvalue *res) {
     *res = b2obj(0);
     break;
   }
-  return obj2b(&dummy);
+  return obj2b(res);
 }
 
 void cythV_setglobal(cyth_State *C, String *name, Tvalue v) {
