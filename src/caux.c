@@ -124,9 +124,17 @@ static int pparse(cyth_State *C, void *aux) {
   char *name = s2cstr(cythA_popstr(C));
   stkrel top = C->top;
   cyth_Function *f = cythP_parse(C, s, name);
-  C->top = top; /* erase lexer table */
-  cythA_push(C, f2obj(f));
-  cythA_pushint(C, 0);
+  if (f == NULL) {
+    /*
+    ** message is on the stack
+    ** so we push the error int
+    */
+    cythA_pushint(C, 1);
+  } else {
+    C->top = top; /* erase lexer table */
+    cythA_push(C, f2obj(f));
+    cythA_pushint(C, 0);
+  }
   return 0;
 }
 

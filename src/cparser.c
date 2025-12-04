@@ -348,15 +348,37 @@ static void mainfunc(lex_State *ls) {
   cythA_push(ls->C, f2obj(f));
 }
 
+static int pmainfunc(cyth_State *C, void *aux) {
+  (void)C;
+  mainfunc((lex_State*)aux);
+  cythA_pushint(C, 0);
+  return 0;
+}
+
+static void close_funcs(lex_State *ls) {
+  func_State *fs = ls->fs;
+  func_State *prev = NULL;
+  while (fs != NULL) {
+    prev = fs->prev;
+    cythM_free(ls->C, fs, sizeof(fs));
+    fs = prev;
+  }
+}
+
 /* parse the main function of a chunk */
 cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
+  cyth_Function *f = NULL;
   DataBlk blk = {0};
   lex_State ls = cythL_new(C, chunkname, input);
   ls.pdata = (void*)&blk;
   cythL_next(&ls);
-  mainfunc(&ls);
+  cythE_runprotected(C, pmainfunc, &ls);
+  if (!cythA_popint(C)) {
+    /* if it doesn't fails, f is the top of the stack (the main function) */
+    f = obj2f(&C->top[-1]);
+  } else close_funcs(&ls);
   cythM_vecfree(C, blk.vars, blk.varsize, Vardsc);
-  return obj2f(&C->top[-1]); /* function is at the top */
+  return f; /* function is either null or the top */
 }
 
 #undef saveline
