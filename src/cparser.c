@@ -91,8 +91,8 @@ static void getvar(lex_State *ls, String *name, Vardsc *v) {
       return;
     }
   }
-  cythE_error(ls->C, "Unknown variable '%*s'",
-    (unsigned int)name->len, name->data);
+  v->k = VKGLB;
+  v->name = name;
 }
 
 /* enter new scope */
@@ -208,7 +208,7 @@ static void instruction(lex_State *ls) {
     Vardsc v;
     String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;
     getvar(ls, name, &v);
-    if (v.k != VKFUN) {
+    if (v.k == VKLOC) {
       setopcode(i, OP_GETVAR);
       setargz(i, emitK(ls, s2obj(name)));
     } else { /* a function */

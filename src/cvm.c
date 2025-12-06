@@ -47,21 +47,9 @@ static Tvalue getf(cyth_Function *f, argZ az) {
 
 /* get a local variable (checks for outer environments) */
 static void getvar(cyth_State *C, Call_info *ci, Tvalue name, Tvalue *res) {
-  Call_info *l = ci;
-  while (l != NULL) {
-    if (l->type != CYTHCALL) {
-      l = l->prev;
-      continue;
-    }
-    cythH_get(C, l->u.cyth.locvars, name, res);
-    if (res->tt_ == CYTH_NONE) {
-      l = l->prev;
-      continue;
-    } else {
-      return;
-    }
-  }
-  *res = NONE;
+  cythH_get(C, ci->u.cyth.locvars, name, res);
+  if (res->tt_ == CYTH_NONE)
+    cythE_error(C, "Unknown variable '%s'.\n", s2cstr(obj2s(&name)));
 }
 
 /* transform value to a boolean */
@@ -219,6 +207,8 @@ returning:
         cythE_error(C, "Invalid global variable name.\n");
       Tvalue v;
       cythV_getglobal(C, obj2s(&k), &v);
+      if (cyth_tt(&v) == CYTH_NONE)
+        cythE_error(C, "Unknown global variable '%s'.\n", s2cstr(obj2s(&k)));
       cythA_push(C, v);
     } break;
     case OP_CALL: {

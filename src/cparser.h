@@ -5,6 +5,7 @@
 
 #define VKLOC 0
 #define VKFUN 1
+#define VKGLB 2
 
 typedef struct {
   byte k; /* VKLOC or VKFUN */
