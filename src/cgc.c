@@ -12,8 +12,8 @@
 
 static void *val2ptr(Tvalue v) {
   switch (cyth_tt(&v)) {
-  case CYTH_STRING: return obj2s(&v)->data;
-  case CYTH_TABLE: return obj2t(&v)->list;
+  case CYTH_STRING: return obj2s(&v);
+  case CYTH_TABLE: return obj2t(&v);
   case CYTH_FUNCTION: return obj2f(&v);
   default: return NULL;
   }
@@ -21,8 +21,8 @@ static void *val2ptr(Tvalue v) {
 
 static void *gco2ptr(gc_object *o) {
   switch (cyth_tt(o)) {
-  case GCOS: return o->v.s->data;
-  case GCOT: return o->v.t->list;
+  case GCOS: return o->v.s;
+  case GCOT: return o->v.t;
   case GCOF: return o->v.f;
   default: return NULL;
   }
@@ -36,7 +36,7 @@ static void freeobj(cyth_State *C, gc_object *o) {
     break;
   case GCOT:
     cythH_free(C, o->v.t);
-    cythM_free(C, o->v.t, sizeof(o->v.t));
+    cythM_free(C, o->v.t, sizeof(*o->v.t));
     break;
   case GCOF:
     cythF_freefunc(o->v.f);
@@ -79,15 +79,8 @@ static void markphase(cyth_State *C) {
   global_State *G = C->G;
   Call_info *ci = C->ci;
   while (ci != NULL) {
-    if (ci->type == CYTHCALL) { /* ci->func is on the stack */
-      Node *l = ci->u.cyth.locvars->list;
-      while (l != NULL) {
-        markvalue(G, l->key);
-        markvalue(G, l->val);
-        l = l->next;
-      }
+    if (ci->type == CYTHCALL) /* ci->func is on the stack */
       markvalue(G, t2obj(ci->u.cyth.locvars));
-    }
     ci = ci->prev;
   }
   for (stkrel v = C->base; v != C->top; v++) {

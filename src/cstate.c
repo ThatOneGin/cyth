@@ -73,8 +73,7 @@ static void closecalls(cyth_State *C) {
 }
 
 void cythE_closestate(cyth_State *C) {
-  cmem_t top = cythE_gettop(C);
-  cythM_free(C, C->base, sizeof(*C->base)*top);
+  free(C->base);
   C->top = NULL;
   C->base = NULL;
   C->maxoff = 0;
