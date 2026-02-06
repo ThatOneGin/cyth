@@ -4,7 +4,7 @@
 
 /*
 ** Ok so, normally we should construct an AST and then compile it (2 steps)
-** But for a language like this (unless we have more complex semantic analisys)
+** But for a language like this (unless we have more complex semantic analysis)
 ** we don't actually need to do that, just get some information and compile it.
 */
 
@@ -232,7 +232,6 @@ static void instruction(lex_State *ls) {
     break;
   }
   emitC(ls, i, line);
-  expect(ls, ';', "';'");
 }
 
 static void instblock(lex_State *ls) {
@@ -247,14 +246,14 @@ static void instblock(lex_State *ls) {
       whilestat(ls);
       break;
     default:
-      cythL_syntaxerror(ls, "Unknown block name");
+      instruction(ls);
       break;
-    }
-    break;
+  } break;
   default:
-    instruction(ls);
+    cythL_syntaxerror(ls, "Expected instruction");
     break;
   }
+  expect(ls, ')', "Expected ')' to close instruction");
 }
 
 static void blockbody(lex_State *ls, int stop) {
@@ -294,7 +293,39 @@ static void whilestat(lex_State *ls) {
   patchjmp(ls, topatch, fs->f->ncode - topatch, 0);
 }
 
-/* func '(' ')' instlist ')' */
+/* '(' name list ')' */
+static void funcparams(lex_State *ls) {
+  cmem_t first_var = ls->fs->f->ncode-1;
+  cmem_t last_var = first_var;
+  int line = 1;
+  Instruction i = 0;
+  Tvalue name = NONE;
+  setopcode(i, OP_SETVAR);
+  expect(ls, '(', "Expected '(' to open parameter list");
+  Vardsc vd = {0};
+  while (ls->t.type != ')' && ls->t.type != TK_EOF) {
+    line = saveline(ls);
+    name = s2obj(expect(ls, TK_NAME, "Expected parameter name").value.s);
+    vd.name = obj2s(&name);
+    setargz(i, emitK(ls, name));
+    emitC(ls, i, line);
+    setvar(ls, vd);
+    last_var++;
+  }
+  expect(ls, ')', "Expected ')' to close parameter list");
+  last_var++;
+  Instruction *code = ls->fs->f->code;
+  Instruction tmp;
+  while (first_var < last_var) {
+    tmp = code[first_var];
+    code[first_var] = code[last_var];
+    code[last_var] = tmp;
+    first_var++;
+    last_var--;
+  }
+}
+
+/* '(' func params instlist ')' */
 static void func(lex_State *ls) {
   openfunc(ls);
   cyth_Function *f = ls->fs->f;
@@ -303,11 +334,7 @@ static void func(lex_State *ls) {
   expect(ls, '(', "'('");
   expect(ls, TK_FUNC, "'func' keyword.");
   name = expect(ls, TK_NAME, "identifier").value.s;
-  {
-    expect(ls, '(', "'('");
-    /* TODO: parameters */
-    expect(ls, ')', "')'");
-  }
+  funcparams(ls);
   blockbody(ls, ')');
   int end_line = saveline(ls);
   expect(ls, ')', "')'");
