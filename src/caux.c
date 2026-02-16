@@ -104,20 +104,6 @@ String *cythA_popstr(cyth_State *C) {
   else return obj2s(C->top);
 }
 
-int cythA_pushlit(cyth_State *C, String *literal) {
-  Tvalue v = l2obj(literal);
-  int top = (int)cythE_gettop(C);
-  *C->top = v;
-  cythE_inctop(C);
-  return top;
-}
-
-String *cythA_poplit(cyth_State *C) {
-  cythE_dectop(C);
-  if (cyth_tt(C->top) != CYTH_LITERAL) return NULL;
-  else return obj2l(C->top);
-}
-
 /* parse stream with a recover point set */
 static int pparse(cyth_State *C, void *aux) {
   Stream *s = (Stream*)aux;
