@@ -1,5 +1,5 @@
 (func main()
-  const 47;
+  (const 47)
   (if
    ((const 33)
     (const 32)

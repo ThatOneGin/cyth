@@ -141,8 +141,7 @@ static Token expect(lex_State *ls, int type, char *what) {
   return t;
 }
 
-static void openfunc(lex_State *ls) {
-  func_State *fs = cythM_malloc(ls->C, sizeof(func_State));
+static void openfunc(lex_State *ls, func_State *fs) {
   fs->ls = ls;
   fs->f = cythF_newfunc(ls->C);
   fs->prev = ls->fs;
@@ -151,7 +150,6 @@ static void openfunc(lex_State *ls) {
 
 static void closefunc(lex_State *ls) {
   func_State *fs = ls->fs->prev;
-  cythM_free(ls->C, ls->fs, sizeof(func_State));
   ls->fs = fs;
 }
 
@@ -274,7 +272,7 @@ static void ifstat(lex_State *ls) {
   jt(ls, saveline(ls));
   int to_patch = jmp(ls, 0, saveline(ls));
   blockbody(ls, ')');
-  expect(ls, ')', "Expected ')'");
+  // expect(ls, ')', "Expected ')'");
   setargz(ls->fs->f->code[to_patch], (ls->fs->f->ncode - to_patch - 1));
 }
 
@@ -288,7 +286,7 @@ static void whilestat(lex_State *ls) {
   jt(ls, saveline(ls));
   int topatch = jmp(ls, 0, saveline(ls));
   blockbody(ls, ')');
-  expect(ls, ')', "Expected ')'");
+  // expect(ls, ')', "Expected ')'");
   jmpback(ls, fs->f->ncode - init + 1, saveline(ls));
   patchjmp(ls, topatch, fs->f->ncode - topatch, 0);
 }
@@ -327,7 +325,8 @@ static void funcparams(lex_State *ls) {
 
 /* '(' func params instlist ')' */
 static void func(lex_State *ls) {
-  openfunc(ls);
+  func_State fs;
+  openfunc(ls, &fs);
   cyth_Function *f = ls->fs->f;
   String *name;
   int start_line = saveline(ls);
@@ -351,7 +350,8 @@ static void func(lex_State *ls) {
 }
 
 static void mainfunc(lex_State *ls) {
-  openfunc(ls);
+  func_State fs;
+  openfunc(ls, &fs);
   cyth_Function *f = ls->fs->f;
   while (ls->t.type == '(') {
     func(ls);
@@ -382,16 +382,6 @@ static int pmainfunc(cyth_State *C, void *aux) {
   return 0;
 }
 
-static void close_funcs(lex_State *ls) {
-  func_State *fs = ls->fs;
-  func_State *prev = NULL;
-  while (fs != NULL) {
-    prev = fs->prev;
-    cythM_free(ls->C, fs, sizeof(fs));
-    fs = prev;
-  }
-}
-
 /* parse the main function of a chunk */
 cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
   cyth_Function *f = NULL;
@@ -403,7 +393,7 @@ cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
   if (!cythA_popint(C)) {
     /* if it doesn't fails, f is the top of the stack (the main function) */
     f = obj2f(&C->top[-1]);
-  } else close_funcs(&ls);
+  }
   cythM_vecfree(C, blk.vars, blk.varsize, Vardsc);
   return f; /* function is either null or the top */
 }
