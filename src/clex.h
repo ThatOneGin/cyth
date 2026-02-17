@@ -49,6 +49,7 @@ typedef struct {
   cyth_State *C;
   Stream *input;
   String *sourcename;
+  SBuffer buf; /* buffer for string building */
   void *pdata; /* used by the paser (set later) */
 } lex_State;
 

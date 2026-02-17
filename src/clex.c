@@ -29,6 +29,7 @@ lex_State cythL_new(cyth_State *C, char *name, Stream *input) {
   ls.tab = cythH_new(C);
   /* put the table where the GC can see */
   cythA_push(C, t2obj(ls.tab));
+  cythO_buffer_new(&ls.buf);
   ls.line = 1;
   ls.fs = NULL;
   ls.sourcename = cythL_createstring(&ls, name);
@@ -67,30 +68,27 @@ static inline int c_isspace(int c) {
 }
 
 static void read_string(lex_State *ls) {
-  SBuffer s;
-  cythO_buffer_new(&s);
   expect(ls, '"', "expected '\"'");
   while (ls->current != '"' &&
          ls->current != '\n' &&
          ls->current != EOS) {
-    cythO_buffer_appendchar(ls->C, &s, ls->current);
+    cythO_buffer_appendchar(ls->C, &ls->buf, ls->current);
     next(ls);
   }
   if (ls->current != '"') {
-    cythO_buffer_free(ls->C, &s); /* avoid leak */
     cythL_syntaxerror(ls, "Unfinished string.");
   } else
     next(ls);
   String *tks;
-  if (s.data == NULL) {
+  if (ls->buf.n == 0) {
     tks = cythS_new(ls->C, "");
   } else {
-    cythO_buffer_appendchar(ls->C, &s, 0);
-    tks = cythS_new(ls->C, s.data);
-    cythO_buffer_free(ls->C, &s);
+    cythO_buffer_appendchar(ls->C, &ls->buf, 0);
+    tks = cythS_new(ls->C, ls->buf.data);
   }
   ls->t.type = TK_STR;
   ls->t.value.s = tks;
+  cythO_buffer_rewind(ls->C, &ls->buf);
 }
 
 static void skip_comment(lex_State *ls) {

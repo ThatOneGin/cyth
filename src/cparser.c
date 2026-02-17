@@ -394,6 +394,7 @@ cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
     /* if it doesn't fails, f is the top of the stack (the main function) */
     f = obj2f(&C->top[-1]);
   }
+  cythO_buffer_free(C, &ls.buf);
   cythM_vecfree(C, blk.vars, blk.varsize, Vardsc);
   return f; /* function is either null or the top */
 }
