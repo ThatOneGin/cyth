@@ -9,17 +9,19 @@
 #define GCOS 0
 #define GCOT 1
 #define GCOF 2
+#define GCOU 3
 
-typedef struct gc_object {
+struct gc_object {
   byte tt_;
   union {
     String *s;
     Table *t;
     cyth_Function *f;
+    userdata u;
   } v;
   byte mark;
   struct gc_object *next;
-} gc_object;
+};
 
 typedef struct {
   String **strings;

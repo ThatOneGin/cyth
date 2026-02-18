@@ -4,6 +4,7 @@
 
 typedef struct cyth_State cyth_State;
 typedef struct global_State global_State;
+typedef struct gc_object gc_object;
 
 typedef struct {
   char *data;
@@ -33,6 +34,7 @@ typedef struct Table Table;
 #define NONE ((Tvalue){.tt_=CYTH_NONE,{0}})
 
 typedef struct cyth_Function cyth_Function;
+typedef void (*cyth_Destructor)(void*, void*); /* params: userdata, pointer */
 
 /* types of user data */
 #define UDFUN 0
@@ -42,8 +44,13 @@ typedef struct {
   byte type;
   union {
     int (*cfunc)(cyth_State*);
-    void *val;
+    struct {
+      void *data;
+      cmem_t size;
+      gc_object *ref;
+    } val;
   } u;
+  cyth_Destructor destructor;
 } userdata;
 
 typedef union {

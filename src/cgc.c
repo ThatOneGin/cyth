@@ -15,6 +15,7 @@ static void *val2ptr(Tvalue v) {
   case CYTH_STRING: return obj2s(&v);
   case CYTH_TABLE: return obj2t(&v);
   case CYTH_FUNCTION: return obj2f(&v);
+  case CYTH_USERDATA: return obj2ud(&v).type == UDVAL ? obj2ud(&v).u.val.data : NULL;
   default: return NULL;
   }
 }
@@ -40,6 +41,12 @@ static void freeobj(cyth_State *C, gc_object *o) {
     break;
   case GCOF:
     cythF_freefunc(o->v.f);
+    break;
+  case GCOU:
+    if (o->v.u.destructor != NULL)
+      o->v.u.destructor(C, o->v.u.u.val.data);
+    else
+      cythM_free(C, o->v.u.u.val.data, o->v.u.u.val.size);
     break;
   }
   cythM_free(C, o, sizeof(gc_object));

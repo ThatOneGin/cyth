@@ -3,6 +3,8 @@
 #include <cparser.h>
 #include <cstate.h>
 #include <string.h>
+#include <cmem.h>
+#include <cgc.h>
 
 #define checkidx(idx) if (idx > 0) idx = -idx;
 
@@ -129,4 +131,33 @@ int cythA_load(cyth_State *C, Stream *s, char *name) {
   cythA_pushstr(C, sname);
   cythE_runprotected(C, pparse, s);
   return cythA_popint(C);
+}
+
+/* create an userdata object and push it onto the stack */
+void *cythA_udnew(cyth_State *C, cmem_t n) {
+  gc_object *ref;
+  userdata ud = {0};
+  ud.destructor = NULL;
+  ud.type = UDVAL;
+  ud.u.val.data = cythM_malloc(C, n);
+  ud.u.val.size = n;
+  ref = cythG_newobj(C, GCOU);
+  ud.u.val.ref = ref;
+  ref->v.u = ud;
+  cythA_push(C, ud2obj(ud));
+  return ud.u.val.data;
+}
+
+/* set the destruct method of userdata at top-i */
+void cythA_udsetdestructor(cyth_State *C, int i, cyth_Destructor d) {
+  checkidx(i);
+  if (cyth_tt(&C->top[i]) != CYTH_USERDATA) return;
+  else {
+    /* only values can have destructors */
+    if (obj2ud(&C->top[i]).type != UDVAL) return;
+    userdata ud = obj2ud(&C->top[i]);
+    ud.destructor = d;
+    gc_object *ref = ud.u.val.ref;
+    ref->v.u.destructor = d;
+  }
 }
