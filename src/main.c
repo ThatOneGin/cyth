@@ -10,8 +10,9 @@
 static byte load = 0;
 static byte print = 0;
 static byte compile = 0;
+static byte helpmsg = 0;
 static char *prog = NULL;
-static char *out = NULL;
+static char *out = "a.out";
 
 static int handle_long_args(char *arg) {
   if (longargcmp(arg, "load")) {
@@ -20,6 +21,8 @@ static int handle_long_args(char *arg) {
     print = 1;
   } else if (longargcmp(arg, "compile")) {
     compile = 1;
+  } else if (longargcmp(arg, "help")) {
+    helpmsg = 1;
   } else {
     printf("Unrecognized option '%s'.\n", arg);
     return 1;
@@ -52,6 +55,9 @@ static int handle_short_args(char **argv, int argc) {
         out = argv[i+1];
         i++;
         break;
+      case 'h':
+        helpmsg = 1;
+        break;
       case '-': /* long arg */
         if (handle_long_args(argv[i]))
           return 1;
@@ -75,6 +81,7 @@ static void help(void) {
   printf("\t-l -- load: load bytecode file.\n");
   printf("\t-p -- print: print bytecode file.\n");
   printf("\t-c -- compile: compile source.\n");
+  printf("\t-h -- help: print this message\n");
 }
 
 int main(int argc, char **argv) {
@@ -84,7 +91,7 @@ int main(int argc, char **argv) {
   if (compile) {
     if (prog == NULL) cythE_error(C, "No input file.");
     cythI_loadfile(C, prog);
-    FILE *d = fopen((out == NULL) ? "a.out" : out, "wb");
+    FILE *d = fopen(out, "wb");
     if (d == NULL) goto defer;
     Tvalue f = cythA_pop(C);
     cythU_unload(C, obj2f(&f), generic_writer, d);
@@ -100,7 +107,7 @@ defer:
     cythI_loadfile(C, prog);
     Tvalue f = cythA_pop(C);
     cythL_print(obj2f(&f));
-  } else
+  } else /* or helpmsg = 1 */
     help();
 close:
   cythE_closestate(C);
