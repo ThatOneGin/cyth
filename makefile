@@ -1,19 +1,17 @@
-CC = gcc
+CC = cc
 CFLAGS = -ggdb -Wall -Wextra -pedantic -std=c99 -I src/
-BUILD = build
-SRC_FILES = $(wildcard src/*.c) $(wildcard src/**/*.c)
-OBJ_FILES = $(patsubst src/%.c, %.o, $(SRC_FILES))
 BIN = cyth
+SOURCE = $(wildcard src/*.c)
+OBJECT = $(patsubst %.c, build/%.o, $(notdir $(SOURCE)))
 
 all: $(BIN)
-	mv *.o build/
 
-$(BIN): $(OBJ_FILES)
-	$(CC) -o $(BIN) $(OBJ_FILES)
+$(BIN): $(OBJECT)
+	$(CC) -o $(BIN) $(CFLAGS) $(OBJECT)
 
-%.o: src/%.c
-	$(CC) -c $(CFLAGS) $<
+build/%.o: src/%.c
+	$(CC) -c $(CFLAGS) $(MYCFLAGS) -o $(patsubst src/%.c, build/%.o, $<) $<
 
 clean:
-	rm build/*.o
+	rm $(OBJECT)
 	rm $(BIN)
