@@ -35,18 +35,17 @@ lex_State cythL_new(cyth_State *C, char *name, Stream *input) {
   ls.sourcename = cythL_createstring(&ls, name);
   ls.input = input;
   ls.current = cythI_getc(ls.input);
-  anchorstring(&ls, ls.sourcename);
   String *s;
   for (int i = 0; i < NUMRESERVED; i++) {
     s = cythL_createstring(&ls, reserved[i]);
     s->aux = (byte)i;
-    anchorstring(&ls, s);
   }
   return ls;
 }
 
 String *cythL_createstring(lex_State *ls, char *s) {
   String *sdesc = cythS_new(ls->C, s);
+  anchorstring(ls, sdesc);
   return sdesc;
 }
 
