@@ -34,6 +34,7 @@ typedef struct Table Table;
 #define NONE ((Tvalue){.tt_=CYTH_NONE,{0}})
 
 typedef struct cyth_Function cyth_Function;
+typedef int (*cyth_Cfunction)(cyth_State *);
 typedef void (*cyth_Destructor)(void*, void*); /* params: userdata, pointer */
 
 /* types of user data */
@@ -43,7 +44,7 @@ typedef void (*cyth_Destructor)(void*, void*); /* params: userdata, pointer */
 typedef struct {
   byte type;
   union {
-    int (*cfunc)(cyth_State*);
+    cyth_Cfunction cfunc;
     struct {
       void *data;
       cmem_t size;

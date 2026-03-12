@@ -5,6 +5,7 @@
 #include <string.h>
 #include <cmem.h>
 #include <cgc.h>
+#include <cvm.h>
 
 #define checkidx(idx) if (idx > 0) idx = -idx;
 
@@ -160,4 +161,13 @@ void cythA_udsetdestructor(cyth_State *C, int i, cyth_Destructor d) {
     gc_object *ref = ud.u.val.ref;
     ref->v.u.destructor = d;
   }
+}
+
+/* put function 'u' as 'name' in global table */
+void cythA_regcf(cyth_State *C, cyth_Cfunction f, const char *name) {
+  userdata u;
+  u.destructor = NULL;
+  u.type = UDFUN;
+  u.u.cfunc = f;
+  cythV_setglobal(C, cythS_new(C, name), ud2obj(u));
 }

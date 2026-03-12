@@ -3,6 +3,7 @@
 #include <cparser.h>
 #include <caux.h>
 #include <cchunk.h>
+#include <cbuiltin.h>
 #include <string.h>
 
 #define longargcmp(arg, opt) (strcmp(arg+2, opt)==0)
@@ -100,6 +101,7 @@ defer:
       fclose(d);
   } else if (load) {
     if (prog == NULL) cythE_error(C, "No input file.");
+    cythB_openlib(C);
     cythI_loadfile(C, prog);
     cythF_call(C, -1, 0);
   } else if (print) {
