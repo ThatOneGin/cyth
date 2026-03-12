@@ -164,7 +164,7 @@ void cythA_udsetdestructor(cyth_State *C, int i, cyth_Destructor d) {
 }
 
 /* put function 'u' as 'name' in global table */
-void cythA_regcf(cyth_State *C, cyth_Cfunction f, const char *name) {
+void cythA_regcf(cyth_State *C, cyth_Cfunction f, char *name) {
   userdata u;
   u.destructor = NULL;
   u.type = UDFUN;
