@@ -49,7 +49,7 @@ cyth_State *cythE_openstate(void) {
 
 void cythE_newci(cyth_State *C) {
   if (C->ncalls >= MAXCALLS)
-    cythE_error(C, "Stack overflow.\n");
+    cythE_error(C, "Call stack overflow.\n");
   Call_info *ci = cythM_malloc(C, sizeof(Call_info));
   ci->top = NULL;
   ci->func = NULL;
@@ -104,8 +104,10 @@ void cythE_inctop(cyth_State *C) {
 
 void cythE_dectop(cyth_State *C) {
   cmem_t top = cythE_gettop(C);
-  if (top == 0)
-    cythE_error(C, "Stack underflow.\n");
+  if (top == 0 || (C->ci != NULL &&
+                   C->ci->func == C->top)) {
+    cythE_error(C, "Stack underflow");
+  }
   C->top--;
 }
 

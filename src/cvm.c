@@ -222,16 +222,19 @@ returning:
       } break;
       vmcase(OP_CALL) {
         int f = -(getargz(i)+1); /* get relative index to the stack */
-        cythF_precall(C, &C->top[f], getargz(i)); /* load function */
+        stkrel func = &C->top[f];
+        if (func <= base)
+          cythE_error(C, "No function on the stack to call.");
+        cythF_precall(C, func, getargz(i)); /* load function */
         C->ci->prev = ci;
         ci = C->ci; /* replace old frame with the new one */
         if (ci->type == CYTHCALL)
           goto returning;
         else {
-          userdata ud = obj2ud(&C->top[f]);
+          userdata ud = obj2ud(func);
           if (ud.type != UDFUN)
             cythE_error(C,
-              "Trying to call userdata that doesn't"
+              "Trying to call userdata that doesn't "
               "represent a valid callable object.\n");
           else
             ud.u.cfunc(C);
