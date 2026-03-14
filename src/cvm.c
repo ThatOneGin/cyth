@@ -223,7 +223,7 @@ returning:
       vmcase(OP_CALL) {
         int f = -(getargz(i)+1); /* get relative index to the stack */
         stkrel func = &C->top[f];
-        if (func <= base)
+        if (func < base)
           cythE_error(C, "No function on the stack to call.");
         cythF_precall(C, func, getargz(i)); /* load function */
         C->ci->prev = ci;
