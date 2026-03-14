@@ -19,18 +19,22 @@ void cythS_clear(cyth_State *C) {
 
 /* create a string and search for it in cache */
 String *cythS_new(cyth_State *C, char *data) {
-  for (cmem_t i = 0; i < C->cache.nstrings; i++) {
-    if (strcmp(C->cache.strings[i]->data, data) == 0) {
-      return C->cache.strings[i];
-    }
+  size_t len = strlen(data);
+  String *s;
+  gc_object *ref;
+   for (cmem_t i = 0; i < C->cache.nstrings; i++) {
+     if (len == C->cache.strings[i]->len &&
+         memcmp(C->cache.strings[i]->data, data, len) == 0) {
+       return C->cache.strings[i];
+     }
   }
-  size_t len =  strlen(data);
-  String *s = cythM_malloc(C, sizeof(String));
+  s = cythM_malloc(C, sizeof(String));
   s->data = cythM_malloc(C, len+1);
   s->len = len;
-  s->aux = UCHAR_MAX;
-  snprintf(s->data, s->len+1, "%s", data);
-  gc_object *ref = cythG_newobj(C, GCOS);
+  s->aux = -1;
+  s->data[s->len] = 0;
+  memcpy(s->data, data, s->len);
+  ref = cythG_newobj(C, GCOS);
   ref->v.s = s;
   if (C->cache.nstrings >= C->cache.stringsize)
     cythM_vecgrow(C, C->cache.strings, C->cache.stringsize, String*);
@@ -63,7 +67,7 @@ String *cythS_newstrobj(cyth_State *C, cmem_t len) {
   String *s = cythM_malloc(C, sizeof(String));
   s->data = cythM_malloc(C, len+1);
   s->len = len;
-  s->aux = UCHAR_MAX;
+  s->aux = -1;
   s->data[s->len] = '\0';
   gc_object *ref = cythG_newobj(C, GCOS);
   ref->v.s = s;
@@ -73,11 +77,8 @@ String *cythS_newstrobj(cyth_State *C, cmem_t len) {
 /* put string object in cache */
 void cythS_finishstrobj(cyth_State *C, String **s) {
   for (cmem_t i = 0; i < C->cache.nstrings; i++) {
-    if (strcmp(C->cache.strings[i]->data, (*s)->data) == 0) {
-      cythM_free(C, (*s)->data, (*s)->len+1);
-      (*s)->data = NULL;
-      (*s)->len = 0;
-      (*s)->aux = UCHAR_MAX;
+    if ((*s)->len == C->cache.strings[i]->len &&
+        memcmp(C->cache.strings[i]->data, (*s)->data, (*s)->len) == 0) {
       (*s) = C->cache.strings[i];
       return;
     }

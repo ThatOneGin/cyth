@@ -38,7 +38,7 @@ lex_State cythL_new(cyth_State *C, char *name, Stream *input) {
   String *s;
   for (int i = 0; i < NUMRESERVED; i++) {
     s = cythL_createstring(&ls, reserved[i]);
-    s->aux = (byte)i;
+    s->aux = (sbyte)i;
   }
   return ls;
 }
@@ -133,7 +133,7 @@ void cythL_next(lex_State *ls) {
     }
     save(0);
     String *s = cythS_new(ls->C, buf);
-    if (s->aux < 255) { /* it's a reserved word */
+    if (s->aux >= 0) { /* it's a reserved word */
       ls->t.type = FIRSTRESERVED + s->aux;
     } else { /* identifier */
       ls->t.type = TK_NAME;

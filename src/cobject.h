@@ -9,12 +9,7 @@ typedef struct gc_object gc_object;
 typedef struct {
   char *data;
   size_t len;
-  /*
-  ** This being set to UCHAR_MAX means
-  ** that the content on data is not
-  ** a reserved word
-  */
-  byte aux;
+  sbyte aux; /* this field helps to identify reserved words */
 } String;
 
 /*

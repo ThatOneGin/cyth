@@ -16,6 +16,7 @@
   (fprintf(stderr, "[Error]: "), fprintf(stderr, __VA_ARGS__), exit(1))
 #endif
 
+typedef int8_t sbyte;
 typedef uint8_t byte;
 typedef int64_t cyth_integer;
 typedef size_t cmem_t;
