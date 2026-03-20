@@ -40,8 +40,7 @@ int print(cyth_State *C) {
   String *s;
   tostring(C);
   s = cythA_popstr(C);
-  if (s) printf("%*s\n", (int)s->len, s->data);
-  else printf("none\n");
+  printf("%*s\n", (int)s->len, s->data);
   return 0;
 }
 

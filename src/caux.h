@@ -15,4 +15,5 @@ int cythA_load(cyth_State *C, Stream *s, char *name);
 void *cythA_udnew(cyth_State *C, cmem_t n);
 void cythA_udsetdestructor(cyth_State *C, int i, cyth_Destructor d);
 void cythA_regcf(cyth_State *C, cyth_Cfunction f, char *name);
+char *cythA_type2str(int i);
 #endif

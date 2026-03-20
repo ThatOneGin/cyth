@@ -6,6 +6,7 @@
 #include <cmem.h>
 #include <cgc.h>
 #include <cvm.h>
+#include <caux.h>
 
 #define checkidx(idx) if (idx > 0) idx = -idx;
 
@@ -36,6 +37,13 @@ static void fillstack(stkrel from, stkrel to, Tvalue with) {
     *from = with;
     from++;
   }
+}
+
+static void expect_top_type(cyth_State *C, int t) {
+  if (cyth_tt(C->top-1) != t)
+    cythE_error(C, "Expected %s, but got %s",
+      cythA_type2str(t),
+      cythA_type2str(cyth_tt(C->top-1)));
 }
 
 /*
@@ -89,8 +97,8 @@ int cythA_pushint(cyth_State *C, int i) {
 
 int cythA_popint(cyth_State *C) {
   cythE_dectop(C);
-  if (cyth_tt(C->top) != CYTH_INTEGER) return 0;
-  else return obj2i(C->top);
+  expect_top_type(C, CYTH_INTEGER);
+  return obj2i(C->top);
 }
 
 int cythA_pushstr(cyth_State *C, String *string) {
@@ -103,8 +111,8 @@ int cythA_pushstr(cyth_State *C, String *string) {
 
 String *cythA_popstr(cyth_State *C) {
   cythE_dectop(C);
-  if (cyth_tt(C->top) != CYTH_STRING) return NULL;
-  else return obj2s(C->top);
+  expect_top_type(C, CYTH_STRING);
+  return obj2s(C->top);
 }
 
 /* parse stream with a recover point set */
@@ -170,4 +178,15 @@ void cythA_regcf(cyth_State *C, cyth_Cfunction f, char *name) {
   u.type = UDFUN;
   u.u.cfunc = f;
   cythV_setglobal(C, cythS_new(C, name), ud2obj(u));
+}
+
+char *cythA_type2str(int i) {
+  switch (i) {
+#define X(name, str, value) case name: return str;
+  VALUES
+#undef X
+  default:
+    assert(0);
+    break;
+  }
 }

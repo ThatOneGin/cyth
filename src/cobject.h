@@ -18,13 +18,20 @@ typedef struct {
 */
 typedef struct Table Table;
 
-#define CYTH_NONE 0
-#define CYTH_INTEGER 1
-#define CYTH_STRING 2
-#define CYTH_TABLE 3
-#define CYTH_FUNCTION 4
-#define CYTH_USERDATA 5
-#define CYTH_BOOL 6
+#define VALUES \
+  X(CYTH_NONE, "none", 0) \
+  X(CYTH_INTEGER, "integer", 1) \
+  X(CYTH_STRING, "string", 2) \
+  X(CYTH_TABLE, "table", 3) \
+  X(CYTH_FUNCTION, "function", 4) \
+  X(CYTH_USERDATA, "userdata", 5) \
+  X(CYTH_BOOL, "bool", 6)
+
+enum CYTH_VALUES {
+#define X(name, str, value) name = value,
+  VALUES
+#undef X
+};
 
 #define NONE ((Tvalue){.tt_=CYTH_NONE,{0}})
 
