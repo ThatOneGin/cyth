@@ -75,11 +75,9 @@ void cythA_settop(cyth_State *C, int top) {
   }
 }
 
-int cythA_push(cyth_State *C, Tvalue v) {
-  int top = (int)cythE_gettop(C);
+void cythA_push(cyth_State *C, Tvalue v) {
   *C->top = v;
   cythE_inctop(C);
-  return top;
 }
 
 Tvalue cythA_pop(cyth_State *C) {
@@ -87,12 +85,10 @@ Tvalue cythA_pop(cyth_State *C) {
   return *C->top;
 }
 
-int cythA_pushint(cyth_State *C, int i) {
+void cythA_pushint(cyth_State *C, int i) {
   Tvalue v = i2obj(i);
-  int top = (int)cythE_gettop(C);
   *C->top = v;
   cythE_inctop(C);
-  return top;
 }
 
 int cythA_popint(cyth_State *C) {
@@ -101,12 +97,10 @@ int cythA_popint(cyth_State *C) {
   return obj2i(C->top);
 }
 
-int cythA_pushstr(cyth_State *C, String *string) {
+void cythA_pushstr(cyth_State *C, String *string) {
   Tvalue v = s2obj(string);
-  int top = (int)cythE_gettop(C);
   *C->top = v;
   cythE_inctop(C);
-  return top;
 }
 
 String *cythA_popstr(cyth_State *C) {

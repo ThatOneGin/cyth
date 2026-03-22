@@ -26,6 +26,10 @@ static void realloc_stack(cyth_State *C) {
   C->top = C->base + savedtop;
 }
 
+static inline cmem_t stack_size(cyth_State *C) {
+  return C->top - C->base;
+}
+
 /*
 ** allocate a new cyth_State
 ** should be paired with cythE_closestate
@@ -60,7 +64,7 @@ void cythE_newci(cyth_State *C) {
 }
 
 cmem_t cythE_gettop(cyth_State *C) {
-  return C->top - C->base;
+  return C->top - (C->ncalls > 0 ? (C->ci->func + 1) : (C->base));
 }
 
 static void closecalls(cyth_State *C) {
@@ -96,15 +100,15 @@ void cythE_error(cyth_State *C,
 }
 
 void cythE_inctop(cyth_State *C) {
-  cmem_t top = cythE_gettop(C);
-  if (top+1 >= C->maxoff)
+  cmem_t stksz = stack_size(C);
+  if (stksz+1 >= C->maxoff)
     realloc_stack(C);
   C->top++;
 }
 
 void cythE_dectop(cyth_State *C) {
-  cmem_t top = cythE_gettop(C);
-  if (top == 0 || (C->ci != NULL &&
+  cmem_t stksz = stack_size(C);
+  if (stksz == 0 || (C->ci != NULL &&
                    C->ci->func == C->top)) {
     cythE_error(C, "Stack underflow");
   }
