@@ -96,8 +96,8 @@ int cythA_pushint(cyth_State *C, int i) {
 }
 
 int cythA_popint(cyth_State *C) {
-  cythE_dectop(C);
   expect_top_type(C, CYTH_INTEGER);
+  cythE_dectop(C);
   return obj2i(C->top);
 }
 
@@ -110,8 +110,8 @@ int cythA_pushstr(cyth_State *C, String *string) {
 }
 
 String *cythA_popstr(cyth_State *C) {
-  cythE_dectop(C);
   expect_top_type(C, CYTH_STRING);
+  cythE_dectop(C);
   return obj2s(C->top);
 }
 
