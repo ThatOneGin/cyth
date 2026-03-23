@@ -109,7 +109,7 @@ void cythE_inctop(cyth_State *C) {
 void cythE_dectop(cyth_State *C) {
   cmem_t stksz = stack_size(C);
   if (stksz == 0 || (C->ci != NULL &&
-                   C->ci->func == C->top)) {
+                   C->ci->func + 1 == C->top)) {
     cythE_error(C, "Stack underflow");
   }
   C->top--;
