@@ -4,7 +4,7 @@
 #define cyth_builtinerr(C, f) cythE_error(C, "%s: " f, __func__)
 #define cyth_pushcstr(C, s) (cythA_pushstr(C, cythS_new(C, s)))
 
-int tostring(cyth_State *C) {
+static int tostring(cyth_State *C) {
   static int init = 0;
   static String *none = NULL;
   static String *table = NULL;
@@ -39,11 +39,18 @@ int tostring(cyth_State *C) {
   return 1;
 }
 
-int print(cyth_State *C) {
+static int print(cyth_State *C) {
   String *s = NULL;
   tostring(C);
   s = cythA_popstr(C);
   printf("%*s\n", (int)s->len, s->data);
+  return 0;
+}
+
+static int load(cyth_State *C) {
+  String *s = cythA_popstr(C);
+  cythI_loadfile(C, s2cstr(s));
+  cythF_call(C, -1, 0);
   return 0;
 }
 
@@ -53,6 +60,7 @@ static struct {
 } funcs[] = {
   {"print", print},
   {"tostring", tostring},
+  {"load", load},
   {NULL, NULL}
 };
 
