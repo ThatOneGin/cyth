@@ -25,6 +25,7 @@ static void *gco2ptr(gc_object *o) {
   case GCOS: return o->v.s;
   case GCOT: return o->v.t;
   case GCOF: return o->v.f;
+  case GCOU: return (o->v.u.type == UDVAL) ? o->v.u.u.val.data : NULL;
   default: return NULL;
   }
 }
