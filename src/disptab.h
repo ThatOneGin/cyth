@@ -1,26 +1,18 @@
-/* dispatch table for the VM main loop */
+/*
+** dispatch table for the VM main loop
+** by default, this is disabled, but just in case
+** to enable it, define 'CYTH_USE_COMP_GOTOS', but
+** it is only available for some C compilers like gcc
+*/
 
 #define vmcase(c) LCASE_##c:
 #define vmdispatch(c) goto *disptab[c];
 #define vmbreak fetchinst(); vmdispatch(getopcode(i))
 
-#define casename(x) LCASE_##X
+#define casename(X) LCASE_##X
 
 static const void *const disptab[OP_COUNT] = {
-  &&casename(OP_PUSH),
-  &&casename(OP_POP),
-  &&casename(OP_ADD),
-  &&casename(OP_SETVAR),
-  &&casename(OP_GETVAR),
-  &&casename(OP_RETURN),
-  &&casename(OP_EQ),
-  &&casename(OP_NEQ),
-  &&casename(OP_JT),
-  &&casename(OP_JMP),
-  &&casename(OP_FUNC),
-  &&casename(OP_SETGLB),
-  &&casename(OP_GETGLB),
-  &&casename(OP_CALL),
-  &&casename(OP_DUP),
-  &&casename(OP_SWAP),
+#define X(name, string, opmode) &&casename(name),
+  OPCODES
+#undef X
 };

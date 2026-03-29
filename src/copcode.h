@@ -18,25 +18,47 @@ enum opmode {
   iZs /* z is a signed integer */
 };
 
-enum opcode {
-/* opcode     | mode | desc                             */
-  OP_PUSH,   /* iZ      push(k[z])                      */
-  OP_POP,    /* iZ      pop()                           */
-  OP_ADD,    /* iZ      push(pop() + pop())             */
-  OP_SETVAR, /* iZ      vars[k[z]] = pop()              */
-  OP_GETVAR, /* iZ      push(vars[k[z]])                */
-  OP_RETURN, /* iZ      return pop()                    */
-  OP_EQ,     /* iZ      pop() == pop()                  */
-  OP_NEQ,    /* iZ      pop() != pop()                  */
-  OP_JT,     /* iZ      if pop() = true then pc++       */
-  OP_JMP,    /* iZs     pc += z                         */
-  OP_FUNC,   /* iZ      push(f[Z])                      */
-  OP_SETGLB, /* iZ      gt[k[z]] = pop()                */
-  OP_GETGLB, /* iZ      push(gt[k[z]])                  */
-  OP_CALL,   /* iZ      call(-(z+1))                    */
-  OP_DUP,    /* iZ      x=pop() push(x) push(x)         */
-  OP_SWAP,   /* iZ      x,y=pop(),pop() push(y) push(x) */
-  OP_COUNT
+  /* OP_PUSH    iZ      push(k[z])                      */
+  /* OP_POP     iZ      pop()                           */
+  /* OP_ADD     iZ      push(pop() + pop())             */
+  /* OP_SETVAR  iZ      vars[k[z]] = pop()              */
+  /* OP_GETVAR  iZ      push(vars[k[z]])                */
+  /* OP_RETURN  iZ      return pop()                    */
+  /* OP_EQ      iZ      pop() == pop()                  */
+  /* OP_NEQ     iZ      pop() != pop()                  */
+  /* OP_JT      iZ      if pop() = true then pc++       */
+  /* OP_JMP     iZs     pc += z                         */
+  /* OP_FUNC    iZ      push(f[Z])                      */
+  /* OP_SETGLB  iZ      gt[k[z]] = pop()                */
+  /* OP_GETGLB  iZ      push(gt[k[z]])                  */
+  /* OP_CALL    iZ      call(-(z+1))                    */
+  /* OP_DUP     iZ      x=pop() push(x) push(x)         */
+  /* OP_SWAP    iZ      x,y=pop(),pop() push(y) push(x) */
+  /* OP_COUNT (guard)                                   */
+  /* opcode   | mode |  desc                            */
+#define OPCODES \
+  X(OP_PUSH, "PUSH", iZ)     \
+  X(OP_POP, "POP", iZ)       \
+  X(OP_ADD, "ADD", iZ)       \
+  X(OP_SETVAR, "SETVAR", iZ) \
+  X(OP_GETVAR, "GETVAR", iZ) \
+  X(OP_RETURN, "RETURN", iZ) \
+  X(OP_EQ, "EQ", iZ)         \
+  X(OP_NEQ, "NEQ", iZ)       \
+  X(OP_JT, "JT", iZ)         \
+  X(OP_JMP, "JMP", iZs)      \
+  X(OP_FUNC, "FUNC", iZ)     \
+  X(OP_SETGLB, "SETGLB", iZ) \
+  X(OP_GETGLB, "GETGLB", iZ) \
+  X(OP_CALL, "CALL", iZ)     \
+  X(OP_DUP, "DUP", iZ)       \
+  X(OP_SWAP, "SWAP", iZ)
+
+enum opcodes {
+#define X(name, string, opmode) name,
+  OPCODES
+#undef X
+  OP_COUNT /* how many opcodes we have */
 };
 
 /* masks */
