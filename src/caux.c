@@ -13,23 +13,23 @@
 /* remove value at position idx */
 void cythA_remove(cyth_State *C, int idx) {
   checkidx(idx);
-  stkrel sv = &C->top[idx];
-  for (;sv != C->top-1; sv++) {
+  stkrel sv = &C->top.p[idx];
+  for (;sv != C->top.p-1; sv++) {
     objcopy(sv, sv+1);
   }
-  C->top--;
+  C->top.p--;
 }
 
 /* insert top-1 at position idx */
 void cythA_insert(cyth_State *C, int idx) {
   checkidx(idx);
-  if (idx < (C->base - C->top)) return;
-  stkrel sv = &C->top[idx];
-  Tvalue val = C->top[-1];
-  for (; sv < C->top-1; sv++) {
+  if (idx < (C->base.p - C->top.p)) return;
+  stkrel sv = &C->top.p[idx];
+  Tvalue val = C->top.p[-1];
+  for (; sv < C->top.p-1; sv++) {
     objcopy(sv+1, sv);
   }
-  C->top[idx] = val;
+  C->top.p[idx] = val;
 }
 
 static void fillstack(stkrel from, stkrel to, Tvalue with) {
@@ -40,10 +40,10 @@ static void fillstack(stkrel from, stkrel to, Tvalue with) {
 }
 
 static void expect_top_type(cyth_State *C, int t) {
-  if (cyth_tt(C->top-1) != t)
+  if (cyth_tt(C->top.p-1) != t)
     cythE_error(C, "Expected %s, but got %s",
       cythA_type2str(t),
-      cythA_type2str(cyth_tt(C->top-1)));
+      cythA_type2str(cyth_tt(C->top.p-1)));
 }
 
 /*
@@ -54,66 +54,66 @@ static void expect_top_type(cyth_State *C, int t) {
 void cythA_settop(cyth_State *C, int top) {
   if (top > 0) { /* absolute index */
     if ((unsigned)top > C->maxoff) {
-      cmem_t savedtop = C->top - C->base;
-      stkrel newbase = realloc(C->base, sizeof(*C->base)*(C->maxoff+top));
+      cmem_t savedtop = C->top.p - C->base.p;
+      stkrel newbase = realloc(C->base.p, sizeof(*C->base.p)*(C->maxoff+top));
       if (newbase == NULL)
         cythE_error(C, "Couldn't reallocate stack.\n");
       C->maxoff += top;
-      C->base = newbase;
-      C->top = C->base + (savedtop + top);
-      fillstack(C->base+savedtop, C->top, NONE);
+      C->base.p = newbase;
+      C->top.p = C->base.p + (savedtop + top);
+      fillstack(C->base.p+savedtop, C->top.p, NONE);
     } else {
-      stkrel oldtop = C->top;
-      C->top += top;
-      fillstack(oldtop, C->top, NONE);
+      stkrel oldtop = C->top.p;
+      C->top.p += top;
+      fillstack(oldtop, C->top.p, NONE);
     }
   } else { /* relative index */
     if (top == 0) return;
-    else if ((C->base - C->top) > top)
+    else if ((C->base.p - C->top.p) > top)
       cythE_error(C, "Invalid stack top index.\n");
-    C->top += top;
+    C->top.p += top;
   }
 }
 
 void cythA_push(cyth_State *C, Tvalue v) {
-  *C->top = v;
+  *C->top.p = v;
   cythE_inctop(C);
 }
 
 Tvalue cythA_pop(cyth_State *C) {
   cythE_dectop(C);
-  return *C->top;
+  return *C->top.p;
 }
 
 void cythA_pushint(cyth_State *C, int i) {
   Tvalue v = i2obj(i);
-  *C->top = v;
+  *C->top.p = v;
   cythE_inctop(C);
 }
 
 int cythA_popint(cyth_State *C) {
   expect_top_type(C, CYTH_INTEGER);
   cythE_dectop(C);
-  return obj2i(C->top);
+  return obj2i(C->top.p);
 }
 
 void cythA_pushstr(cyth_State *C, String *string) {
   Tvalue v = s2obj(string);
-  *C->top = v;
+  *C->top.p = v;
   cythE_inctop(C);
 }
 
 String *cythA_popstr(cyth_State *C) {
   expect_top_type(C, CYTH_STRING);
   cythE_dectop(C);
-  return obj2s(C->top);
+  return obj2s(C->top.p);
 }
 
 /* parse stream with a recover point set */
 static int pparse(cyth_State *C, void *aux) {
   Stream *s = (Stream*)aux;
   char *name = s2cstr(cythA_popstr(C));
-  stkrel top = C->top;
+  stkrel top = C->top.p;
   cyth_Function *f = cythP_parse(C, s, name);
   if (f == NULL) {
     /*
@@ -122,7 +122,7 @@ static int pparse(cyth_State *C, void *aux) {
     */
     cythA_pushint(C, 1);
   } else {
-    C->top = top; /* erase lexer table */
+    C->top.p = top; /* erase lexer table */
     cythA_push(C, f2obj(f));
     cythA_pushint(C, 0);
   }
@@ -154,11 +154,11 @@ void *cythA_udnew(cyth_State *C, cmem_t n) {
 /* set the destruct method of userdata at top-i */
 void cythA_udsetdestructor(cyth_State *C, int i, cyth_Destructor d) {
   checkidx(i);
-  if (cyth_tt(&C->top[i]) != CYTH_USERDATA) return;
+  if (cyth_tt(&C->top.p[i]) != CYTH_USERDATA) return;
   else {
     /* only values can have destructors */
-    if (obj2ud(&C->top[i]).type != UDVAL) return;
-    userdata ud = obj2ud(&C->top[i]);
+    if (obj2ud(&C->top.p[i]).type != UDVAL) return;
+    userdata ud = obj2ud(&C->top.p[i]);
     ud.destructor = d;
     gc_object *ref = ud.u.val.ref;
     ref->v.u.destructor = d;

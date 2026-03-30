@@ -86,8 +86,8 @@ void cythF_precall(cyth_State *C, stkrel func, int nargs) {
   }
   cythE_newci(C);
   Call_info *ci = C->ci;
-  ci->func = func;
-  ci->top = func+nargs+1;
+  ci->func.p = func;
+  ci->top.p = func+nargs+1;
   ci->type = (cyth_tt(func) == CYTH_USERDATA) ? CCALL : CYTHCALL;
   if (ci->type == CCALL) {
     ci->u.c.nargs = nargs;
@@ -96,7 +96,7 @@ void cythF_precall(cyth_State *C, stkrel func, int nargs) {
     ci->u.cyth.pc = 0;
     ci->u.cyth.locvars = cythH_new(C);
   }
-  C->top = ci->top;
+  C->top.p = ci->top.p;
 }
 
 void cythF_poscall(cyth_State *C) {
@@ -108,13 +108,13 @@ void cythF_poscall(cyth_State *C) {
 }
 
 void cythF_call(cyth_State *C, int i, int nargs) {
-  stkrel func = &C->top[i];
+  stkrel func = &C->top.p[i];
   cythF_precall(C, func, nargs);
   Call_info *ci = C->ci;
   if (ci->type == CYTHCALL) {
     cythV_exec(C, C->ci);
   } else {
-    obj2ud(ci->func).u.cfunc(C);
+    obj2ud(ci->func.p).u.cfunc(C);
   }
   cythF_poscall(C);
 }

@@ -8,26 +8,51 @@
 global_State G = {0};
 
 static void init_stack(cyth_State *C) {
-  C->base = malloc(sizeof(*C->base) * MINSTACK);
-  if (C->base == NULL)
+  C->base.p = malloc(sizeof(*C->base.p) * MINSTACK);
+  if (C->base.p == NULL)
     cythE_error(C, "Couldn't allocate stack.\n");
-  C->top = C->base;
+  C->top.p = C->base.p;
   C->maxoff = MINSTACK;
+}
+
+/* saves the stack offsets */
+static void save_stack(cyth_State *C) {
+  C->top.offs = calculate_stack_offset(C, C->top.p);
+  Call_info *ci = C->ci;
+  while (ci != NULL) {
+    ci->top.offs = calculate_stack_offset(C, ci->top.p);
+    ci->func.offs = calculate_stack_offset(C, ci->func.p);
+    ci = ci->prev;
+  }
+}
+
+/* restore the stack after an reallocation (should be used after save_stack) */
+static void restore_stack(cyth_State *C) {
+  C->top.p = apply_stack_offset(C, C->top.offs);
+  Call_info *ci = C->ci;
+  while (ci != NULL) {
+    ci->top.p = apply_stack_offset(C, ci->top.offs);
+    ci->func.p = apply_stack_offset(C, ci->func.offs);
+    ci = ci->prev;
+  }
 }
 
 /* reallocate stack as a vector */
 static void realloc_stack(cyth_State *C) {
-  cmem_t savedtop = C->top - C->base;
-  stkrel newbase = realloc(C->base, sizeof(*C->base)*(C->maxoff*2));
-  if (newbase == NULL)
+  save_stack(C);
+  stkrel newbase = realloc(C->base.p, sizeof(*C->base.p)*(C->maxoff*2));
+  if (newbase == NULL) {
+    restore_stack(C);
     cythE_error(C, "Couldn't reallocate stack.\n");
-  C->maxoff *= 2;
-  C->base = newbase;
-  C->top = C->base + savedtop;
+  } else {
+    C->base.p = newbase;
+    C->maxoff *= 2;
+    restore_stack(C);
+  }
 }
 
 static inline cmem_t stack_size(cyth_State *C) {
-  return C->top - C->base;
+  return C->top.p - C->base.p;
 }
 
 /*
@@ -55,8 +80,8 @@ void cythE_newci(cyth_State *C) {
   if (C->ncalls >= MAXCALLS)
     cythE_error(C, "Call stack overflow.\n");
   Call_info *ci = cythM_malloc(C, sizeof(Call_info));
-  ci->top = NULL;
-  ci->func = NULL;
+  ci->top.p = NULL;
+  ci->func.p = NULL;
   ci->type = 0;
   ci->prev = C->ci;
   C->ci = ci;
@@ -64,7 +89,7 @@ void cythE_newci(cyth_State *C) {
 }
 
 cmem_t cythE_gettop(cyth_State *C) {
-  return C->top - (C->ncalls > 0 ? (C->ci->func + 1) : (C->base));
+  return C->top.p - (C->ncalls > 0 ? (C->ci->func.p + 1) : (C->base.p));
 }
 
 static void closecalls(cyth_State *C) {
@@ -77,9 +102,9 @@ static void closecalls(cyth_State *C) {
 }
 
 void cythE_closestate(cyth_State *C) {
-  free(C->base);
-  C->top = NULL;
-  C->base = NULL;
+  free(C->base.p);
+  C->top.p = NULL;
+  C->base.p = NULL;
   C->maxoff = 0;
   C->errhandler = NULL;
   cythS_clear(C);
@@ -103,16 +128,16 @@ void cythE_inctop(cyth_State *C) {
   cmem_t stksz = stack_size(C);
   if (stksz+1 >= C->maxoff)
     realloc_stack(C);
-  C->top++;
+  C->top.p++;
 }
 
 void cythE_dectop(cyth_State *C) {
   cmem_t stksz = stack_size(C);
   if (stksz == 0 || (C->ci != NULL &&
-                   C->ci->func + 1 == C->top)) {
+                   C->ci->func.p + 1 == C->top.p)) {
     cythE_error(C, "Stack underflow");
   }
-  C->top--;
+  C->top.p--;
 }
 
 void cythE_throw(cyth_State *C, byte errcode, String *errmsg) {

@@ -398,7 +398,7 @@ cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
   cythE_runprotected(C, pmainfunc, &ls);
   if (!cythA_popint(C)) {
     /* if it doesn't fails, f is the top of the stack (the main function) */
-    f = obj2f(&C->top[-1]);
+    f = obj2f(&C->top.p[-1]);
   }
   cythO_buffer_free(C, &ls.buf);
   cythM_vecfree(C, blk.vars, blk.varsize, Vardsc);

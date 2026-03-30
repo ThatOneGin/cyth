@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <setjmp.h>
+#include <stddef.h>
 
 #ifndef cyth_assert
 #include <assert.h>

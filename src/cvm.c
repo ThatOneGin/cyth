@@ -101,8 +101,8 @@ int cythV_getglobal(cyth_State *C, String *name, Tvalue *res) {
 ** that are outside their frame (arguments are an exception)
 */
 static Tvalue pop(cyth_State *C) {
-  stkrel base = C->ci->func + 1;
-  if (C->top == base) {
+  stkrel base = C->ci->func.p + 1;
+  if (C->top.p == base) {
     /* For now it is better to raise an error */
     cythE_error(C, "Stack underflow.\n");
   } else {
@@ -112,20 +112,20 @@ static Tvalue pop(cyth_State *C) {
 }
 
 void cythV_dup(cyth_State *C) {
-  stkrel base = C->ci->func + 1;
-  if (C->top == base)
+  stkrel base = C->ci->func.p + 1;
+  if (C->top.p == base)
     cythE_error(C, "Stack underflow.\n");
-  objcopy(C->top, &C->top[-1]);
+  objcopy(C->top.p, &C->top.p[-1]);
   cythE_inctop(C);
 }
 
 void cythV_swap(cyth_State *C) {
-  stkrel base = C->ci->func + 1;
-  if (C->top - base <= 1)
+  stkrel base = C->ci->func.p + 1;
+  if (C->top.p - base <= 1)
     cythE_error(C, "Stack underflow.\n");
-  stkrel tmp = C->top-1;
-  objcopy(C->top-1, C->top - 2);
-  objcopy(C->top-2, tmp);
+  stkrel tmp = C->top.p-1;
+  objcopy(C->top.p-1, C->top.p - 2);
+  objcopy(C->top.p-2, tmp);
 }
 
 /* execute a cyth call */
@@ -142,7 +142,7 @@ returning:
   f = ci->u.cyth.f;
   pc = f->code + ci->u.cyth.pc;
   vars = ci->u.cyth.locvars;
-  base = ci->func + 1;
+  base = ci->func.p + 1;
   for (;;) {
     fetchinst();
     vmdispatch (getopcode(i)) {
@@ -150,7 +150,7 @@ returning:
         cythA_push(C, getk(f, getargz(i)));
       } vmbreak;
       vmcase(OP_POP) {
-        if (C->top == base)
+        if (C->top.p == base)
           cythE_error(C, "Stack underflow.\n");
         else
           cythE_dectop(C);
@@ -161,15 +161,15 @@ returning:
         cythA_pushint(C, obj2i(&l) + obj2i(&r));
       } vmbreak;
       vmcase(OP_SETVAR) {
-        if (C->top == base)
+        if (C->top.p == base)
           cythE_error(C, "No available value in "
                          "the stack for variable.\n");
-        Tvalue v = C->top[-1];
+        Tvalue v = C->top.p[-1];
         cythH_append(C, vars, getk(f, getargz(i)), v);
         cythE_dectop(C);
       } vmbreak;
       vmcase(OP_GETVAR) {
-        getvar(C, ci, getk(f, getargz(i)), C->top);
+        getvar(C, ci, getk(f, getargz(i)), C->top.p);
         cythE_inctop(C);
       } vmbreak;
       vmcase(OP_RETURN) {
@@ -225,7 +225,7 @@ returning:
       } break;
       vmcase(OP_CALL) {
         int f = -(getargz(i)+1); /* get relative index to the stack */
-        stkrel func = &C->top[f];
+        stkrel func = &C->top.p[f];
         if (func < base)
           cythE_error(C, "No function on the stack to call.");
         cythF_precall(C, func, getargz(i)); /* load function */

@@ -91,7 +91,7 @@ static void markphase(cyth_State *C) {
       markvalue(G, t2obj(ci->u.cyth.locvars));
     ci = ci->prev;
   }
-  for (stkrel v = C->base; v != C->top; v++) {
+  for (stkrel v = C->base.p; v != C->top.p; v++) {
     markvalue(G, *v);
   }
   markvalue(G, t2obj(C->gt));

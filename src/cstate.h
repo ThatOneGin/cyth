@@ -3,6 +3,9 @@
 #include <cobject.h>
 #include <cfunc.h>
 
+#define calculate_stack_offset(C, ptr) ((ptr) - ((C)->base.p))
+#define apply_stack_offset(C, off) (((C)->base.p) + off)
+
 #define MINSTACK 20
 #define MAXCALLS 100
 
@@ -36,10 +39,15 @@ typedef struct cyth_jmpbuf {
   struct cyth_jmpbuf *previous;
 } cyth_jmpbuf;
 
+typedef struct {
+  stkrel p; /* the pointer to the stack data */
+  ptrdiff_t offs; /* field used to save the stack offset when reallocating it */
+} stk_t;
+
 typedef struct Call_info {
   struct Call_info *prev;
-  stkrel top;
-  stkrel func; /* pointer to function in the stack */
+  stk_t top;
+  stk_t func; /* pointer to function in the stack */
   byte type; /* C or cyth */
   union {
     struct {
@@ -63,8 +71,8 @@ struct global_State {
 struct cyth_State {
   global_State *G;
   Table *gt; /* global table */
-  stkrel base; /* first stack element */
-  stkrel top; /* first empty slot */
+  stk_t base; /* first stack element */
+  stk_t top; /* first empty slot */
   cmem_t maxoff; /* maximum distance from base to top */
   byte main; /* is it the main state? */
   stringtable cache; /* string cache */
