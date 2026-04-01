@@ -200,8 +200,10 @@ returning:
         break;
         if ((pc-f->code) + az >= (int64_t)f->ncode)
           cythE_error(C, "Invalid jump trying to jump to offset %ld.\n", (pc-f->code) + az);
-        else
+        else {
           pc += az;
+          ci->u.cyth.pc += az;
+        }
       } vmbreak;
       vmcase(OP_FUNC) {
         cythA_push(C, getf(f, getargz(i)));
