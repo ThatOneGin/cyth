@@ -1,8 +1,8 @@
-(func _add()
+(func _add() -> 1
   (const 32)
   (const 23)
   (add))
 
-(func main()
+(func main() -> 0
   (getvar _add)
   (call 0))

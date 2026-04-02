@@ -1,4 +1,4 @@
-(func main()
+(func main() -> 0
   (const 1)
   (setvar x)
   (const 0)

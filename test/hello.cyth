@@ -1,4 +1,4 @@
-(func main()
+(func main() -> 0
   (getvar print)
   (const "Hello, world!")
   (call 1))
