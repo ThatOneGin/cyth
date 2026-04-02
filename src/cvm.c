@@ -174,7 +174,7 @@ returning:
       } vmbreak;
       vmcase(OP_RETURN) {
         if (ci->prev != NULL && ci->prev->type != CCALL) {
-          cythF_poscall(C);
+          cythF_poscall(C, f->nresults);
           ci = C->ci; /* return to caller */
           goto returning;
         } else return;

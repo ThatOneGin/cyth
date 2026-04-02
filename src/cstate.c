@@ -129,6 +129,7 @@ void cythE_inctop(cyth_State *C) {
   if (stksz+1 >= C->maxoff)
     realloc_stack(C);
   C->top.p++;
+  if (C->ci) C->ci->top.p++;
 }
 
 void cythE_dectop(cyth_State *C) {
@@ -138,6 +139,7 @@ void cythE_dectop(cyth_State *C) {
     cythE_error(C, "Stack underflow");
   }
   C->top.p--;
+  if (C->ci) C->ci->top.p--;
 }
 
 void cythE_throw(cyth_State *C, byte errcode, String *errmsg) {
