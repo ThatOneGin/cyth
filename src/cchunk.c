@@ -74,6 +74,7 @@ static void unload_function(Unloader *U, cyth_Function *f) {
   unload_int(U, f->ksize, sizeof(int16_t));
   unload_int(U, f->linesize, sizeof(int16_t));
   unload_int(U, f->fsize, sizeof(int16_t));
+  unload_byte(U, f->nresults);
   unload_vector(U, f->code, f->ncode);
   unload_vector(U, f->lineinfo, f->nline);
   unload_constants(U, f);
@@ -185,6 +186,7 @@ static void load_function(Loader *L, cyth_Function *f) {
   load_size(L, &f->ksize, sizeof(int16_t));
   load_size(L, &f->linesize, sizeof(int16_t));
   load_size(L, &f->fsize, sizeof(int16_t));
+  load_byte(L, &f->nresults);
   f->codesize = f->ncode;
   f->ksize = f->nk;
   f->linesize = f->nline;
@@ -321,7 +323,7 @@ static void print_code(cyth_Function *f) {
 }
 
 void cythL_print(cyth_Function *f) {
-  printf("Function %p (%lu):\n", (void*)f, f->ncode);
+  printf("Function %p (%d out):\n", (void*)f, f->nresults);
   print_code(f);
   printf("constants for %p (%lu):\n", (void*)f, f->nk);
   print_constants(f);

@@ -23,6 +23,7 @@ typedef int(*cyth_Writer)(cyth_State *, void *, size_t, void *);
 **  - f->ksize (2 bytes)
 **  - f->linesize (2 bytes)
 **  - f->fsize (2 bytes)
+**  - f->nresult (1 byte)
 **  - f->code (vector)
 **  - f->lineinfo (vector)
 **  - f->k (vector)

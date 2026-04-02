@@ -26,6 +26,7 @@ cyth_Function *cythF_newfunc(cyth_State *C) {
   f->f = NULL;
   f->nf = 0;
   f->fsize = 0;
+  f->nresults = 0;
   return f;
 }
 

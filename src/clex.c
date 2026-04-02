@@ -153,6 +153,12 @@ void cythL_next(lex_State *ls) {
     case '"':
       read_string(ls);
       break;
+    case '-':
+      next(ls);
+      expect(ls, '>', "Expected '>' character");
+      ls->t.type = TK_ARROW;
+      ls->t.value.i = TK_ARROW;
+      break;
     default:
       if (!iscntrl(ls->current)) {
         ls->t.value.i = ls->t.type = ls->current;

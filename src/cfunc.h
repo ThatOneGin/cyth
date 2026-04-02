@@ -4,6 +4,8 @@
 #include <cobject.h>
 #include <limits.h>
 
+#define MAXRESULT 200
+
 enum calltype {
   CYTHCALL,
   CCALL
@@ -23,6 +25,7 @@ struct cyth_Function {
   cyth_Function **f;
   cmem_t nf;
   cmem_t fsize;
+  byte nresults;
 };
 
 cyth_Function *cythF_newfunc(cyth_State *C);

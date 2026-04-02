@@ -329,7 +329,16 @@ static void funcparams(lex_State *ls) {
   }
 }
 
-/* '(' func params instlist ')' */
+/* '->' INT */
+static void funcresults(lex_State *ls) {
+  expect(ls, TK_ARROW, "Expected '->'");
+  int n = expect(ls, TK_INT, "Expected number of function results").value.i;
+  ls->fs->f->nresults = n;
+  if (ls->fs->f->nresults >= MAXRESULT)
+    cythL_syntaxerror(ls, "Function bypasses the maximum number of results allowed");
+}
+
+/* '(' func params funcresults instlist ')' */
 static void func(lex_State *ls) {
   func_State fs;
   openfunc(ls, &fs);
@@ -340,6 +349,7 @@ static void func(lex_State *ls) {
   expect(ls, TK_FUNC, "'func' keyword.");
   name = expect(ls, TK_NAME, "identifier").value.s;
   funcparams(ls);
+  funcresults(ls);
   blockbody(ls, ')');
   int end_line = saveline(ls);
   expect(ls, ')', "')'");
