@@ -151,7 +151,7 @@ void cythF_poscall(cyth_State *C, int nresults) {
 }
 
 void cythF_call(cyth_State *C, int i, int nargs) {
-  int cnres;
+  int cnres = 0;
   stkrel func = &C->top.p[i];
   cythF_precall(C, func, nargs);
   Call_info *ci = C->ci;

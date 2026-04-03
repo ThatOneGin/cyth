@@ -241,8 +241,11 @@ returning:
             cythE_error(C,
               "Trying to call userdata that doesn't "
               "represent a valid callable object.\n");
-          else
-            ud.u.cfunc(C);
+          else {
+            int cnres = ud.u.cfunc(C);
+            cythF_poscall(C, cnres);
+            ci = C->ci;
+          }
         }
       } vmbreak;
       vmcase(OP_DUP) {
