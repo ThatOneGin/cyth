@@ -315,6 +315,7 @@ static void funcparams(lex_State *ls) {
     emitC(ls, i, line);
     setvar(ls, vd);
     last_var++;
+    ls->fs->f->nparams++;
   }
   expect(ls, ')', "Expected ')' to close parameter list");
   last_var++;

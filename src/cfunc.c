@@ -27,6 +27,7 @@ cyth_Function *cythF_newfunc(cyth_State *C) {
   f->nf = 0;
   f->fsize = 0;
   f->nresults = 0;
+  f->nparams = 0;
   return f;
 }
 
@@ -93,6 +94,11 @@ void cythF_precall(cyth_State *C, stkrel func, int nargs) {
   if (ci->type == CCALL) {
     ci->u.c.nargs = nargs;
   } else {
+    if (nargs != obj2f(func)->nparams)
+      cythE_error(C,
+                  "number of arguments does "
+                  "not match (wanted %d, got %d)",
+                  obj2f(func)->nparams, nargs);
     ci->u.cyth.f = obj2f(func);
     ci->u.cyth.pc = 0;
     ci->u.cyth.locvars = cythH_new(C);

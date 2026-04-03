@@ -5,6 +5,7 @@
 #include <limits.h>
 
 #define MAXRESULT 200
+#define MAXPARAMS 200
 
 enum calltype {
   CYTHCALL,
@@ -26,6 +27,7 @@ struct cyth_Function {
   cmem_t nf;
   cmem_t fsize;
   byte nresults;
+  byte nparams;
 };
 
 cyth_Function *cythF_newfunc(cyth_State *C);
