@@ -9,6 +9,8 @@
 #include <caux.h>
 
 #define checkidx(idx) if (idx > 0) idx = -idx;
+#define auxcheck(C, e, msg) ((!(e)) ? cythE_error(C, "%s: %s", #e, msg) : ((void)0))
+
 
 /* remove value at position idx */
 void cythA_remove(cyth_State *C, int idx) {
@@ -183,4 +185,10 @@ char *cythA_type2str(int i) {
     assert(0);
     break;
   }
+}
+
+/* only works for C functions */
+Tvalue cythA_arg(cyth_State *C, int idx) {
+  auxcheck(C, idx > 0, "Invalid argument index");
+  return *cythE_peek(C, idx);
 }

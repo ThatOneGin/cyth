@@ -40,10 +40,14 @@ static int tostring(cyth_State *C) {
 }
 
 static int print(cyth_State *C) {
+  int n = cythE_gettop(C);
   String *s = NULL;
-  tostring(C);
-  s = cythA_popstr(C);
-  printf("%*s\n", (int)s->len, s->data);
+  for (int i = 0; i < n; i++) {
+    cythA_push(C, cythA_arg(C, i+1));
+    tostring(C);
+    s = cythA_popstr(C);
+    printf("%*s\n", (int)s->len, s->data);
+  }
   return 0;
 }
 

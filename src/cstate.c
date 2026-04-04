@@ -142,6 +142,28 @@ void cythE_dectop(cyth_State *C) {
   if (C->ci) C->ci->top.p--;
 }
 
+/*
+** if idx is greater than 0 then
+** return the value after the current call
+** info base (ci->func[idx])
+**
+** if idx is less than 0 then
+** return the value at idx starting
+** from the top of the stack (C->top - |idx|)
+*/
+Tvalue *cythE_peek(cyth_State *C, int idx) {
+  Call_info *ci = C->ci;
+  if (idx > 0) { /* positive index */
+    cyth_assert(ci != NULL);
+    if (idx <= C->top.p - (ci->func.p + 1)) return ci->func.p + idx;
+    else cythE_error(C, "Index too big (%d)", idx);
+  } else if (idx < 0) { /* negative index */
+    return C->top.p + idx;
+  } else /* zero index (throw an error) */
+    cythE_error(C, "Invalid index (%d)", idx);
+  return NULL; /* TODO: return none value */
+}
+
 void cythE_throw(cyth_State *C, byte errcode, String *errmsg) {
   if (C->errhandler != NULL) {
     C->errhandler->errmsg = errmsg;

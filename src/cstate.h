@@ -88,6 +88,7 @@ void cythE_closestate(cyth_State *C);
 void cythE_error(cyth_State *C, const char *f, ...);
 void cythE_inctop(cyth_State *C);
 void cythE_dectop(cyth_State *C);
+Tvalue *cythE_peek(cyth_State *C, int idx);
 void cythE_throw(cyth_State *C, byte errcode, String *errmsg);
 byte cythE_runprotected(cyth_State *C, cyth_Pfunction f, void *ud);
 #endif
