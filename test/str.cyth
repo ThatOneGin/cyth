@@ -1,2 +1,2 @@
 (func main() -> 0
-  (const "Hello, world!"))
+  const "Hello, world!")

@@ -2,11 +2,20 @@
 #include <cmem.h>
 #include <caux.h>
 
+#define NOPATCH 0
+#define NEEDPATCH 1
+
 /*
 ** Ok so, normally we should construct an AST and then compile it (2 steps)
 ** But for a language like this (unless we have more complex semantic analysis)
 ** we don't actually need to do that, just get some information and compile it.
 */
+
+/* carries current scope information */
+typedef struct {
+  int nlabels;
+  int nvars;
+} Symtab;
 
 /* Code generation */
 
@@ -21,36 +30,6 @@ static int emitC(lex_State *ls, Instruction i, int line) {
 static int emitK(lex_State *ls, Tvalue k) {
   cyth_Function *f = ls->fs->f;
   return cythF_emitK(f, k);
-}
-
-static int jmp(lex_State *ls, int i, int line) {
-  i = ((i << 1) | 0);
-  Instruction inst = 0;
-  setopcode(inst, OP_JMP);
-  setargz(inst, i);
-  return emitC(ls, inst, line);
-}
-
-static int jmpback(lex_State *ls, int i, int line) {
-  int offset = (i << 1) | 1;
-  Instruction inst = 0;
-  setopcode(inst, OP_JMP);
-  setargz(inst, offset);
-  return emitC(ls, inst, line);
-}
-
-static void patchjmp(lex_State *ls, unsigned int idx,
-                     int i, int back) {
-  func_State *fs = ls->fs;
-  if (idx >= fs->f->ncode) 
-    cythL_syntaxerror(ls, "Invalid jmp patch.\n");
-  setargz(fs->f->code[idx], ((i << 1) | (back?1:0)));
-}
-
-static void jt(lex_State *ls, int line) {
-  Instruction inst = 0;
-  setopcode(inst, OP_JT);
-  emitC(ls, inst, line);
 }
 
 static void function(lex_State *ls, int f, int line) {
@@ -69,15 +48,15 @@ static void setglobal(lex_State *ls, String *name, int line) {
 
 static void setvar(lex_State *ls, Vardsc v) {
   DataBlk *blk = (DataBlk*)ls->pdata;
-  if (blk->nvars >= blk->varsize)
-    cythM_vecgrow(ls->C, blk->vars, blk->varsize, Vardsc);
-  for (cmem_t i = 0; i < blk->nvars; i++) {
-    if (blk->vars[i].name == v.name) {
+  if (blk->vars.n >= blk->vars.s)
+    cythM_vecgrow(ls->C, blk->vars.vars, blk->vars.s, Vardsc);
+  for (cmem_t i = 0; i < blk->vars.n; i++) {
+    if (blk->vars.vars[i].name == v.name) {
       cythE_error(ls->C, "Trying to redefine variable '%*s'",
         (unsigned int)v.name->len, v.name->data);
     }
   }
-  blk->vars[blk->nvars++] = v;
+  blk->vars.vars[blk->vars.n++] = v;
 }
 
 static void getvar(lex_State *ls, String *name, Vardsc *v) {
@@ -85,9 +64,9 @@ static void getvar(lex_State *ls, String *name, Vardsc *v) {
   if (v == NULL) /* result is unused */
     v = &dummy;
   DataBlk *blk = (DataBlk*)ls->pdata;
-  for (cmem_t i = 0; i < blk->nvars; i++) {
-    if (blk->vars[i].name == name) {
-      *v = blk->vars[i];
+  for (cmem_t i = 0; i < blk->vars.n; i++) {
+    if (blk->vars.vars[i].name == name) {
+      *v = blk->vars.vars[i];
       return;
     }
   }
@@ -96,21 +75,62 @@ static void getvar(lex_State *ls, String *name, Vardsc *v) {
 }
 
 /* enter new scope */
-static void enter(lex_State *ls, cmem_t *nvars) {
+static void enter(lex_State *ls, Symtab *sym) {
   DataBlk *blk = (DataBlk*)ls->pdata;
-  *nvars = blk->nvars;
+  sym->nvars = blk->vars.n;
+  sym->nlabels = blk->labels.n;
 }
 
 /* leave scope (erase scope's local variables) */
-static void leave(lex_State *ls, cmem_t nvars) {
+static void leave(lex_State *ls, Symtab sym) {
   DataBlk *blk = (DataBlk*)ls->pdata;
-  blk->nvars = nvars;
+  blk->vars.n = sym.nvars;
+  blk->labels.n = sym.nlabels;
+}
+
+static inline int relpc(lex_State *ls) {
+  return ls->fs->f->ncode;
+}
+
+static void patchlab(lex_State *ls, int where, Labeldsc l) {
+  func_State *fs = ls->fs;
+  Instruction *i = &fs->f->code[where];
+  setargz(*i, cythC_imm_new(l.pc - where - 1));
+}
+
+static void setlabel(lex_State *ls, String *name, int pc, int patch) {
+  DataBlk *blk = (DataBlk *)ls->pdata;
+  Labeldsc l;
+  l.name = name;
+  l.patch = patch;
+  l.pc = pc;
+  if (blk->labels.n >= blk->labels.s)
+    cythM_vecgrow(ls->C, blk->labels.labels, blk->labels.s, Vardsc);
+  Labeldsc *pl;
+  for (cmem_t i = 0; i < blk->labels.n; i++) {
+    pl = blk->labels.labels + i;
+    if (pl->name == name && pl->patch) {
+      patchlab(ls, pl->pc, l);
+      *pl = l;
+      return;
+    } else if (pl->name == name && !pl->patch) {
+      cythE_error(ls->C, "Trying to redefine label '%*s'",
+                  (unsigned int)name->len, name->data);
+    }
+  }
+  blk->labels.labels[blk->labels.n++] = l;
+}
+
+static Labeldsc *getlabel(lex_State *ls, String *name) {
+  DataBlk *d = (DataBlk*)ls->pdata;
+  for (cmem_t i = 0; i < d->labels.n; i++) {
+    if (d->labels.labels[i].name == name)
+      return &d->labels.labels[i];
+  }
+  return NULL;
 }
 
 /* Parsing source */
-
-static void ifstat(lex_State *ls);
-static void whilestat(lex_State *ls);
 
 static void error_unknown(lex_State *ls, const char *what) {
   char buf[BUFFERSIZE];
@@ -182,6 +202,30 @@ static void value(lex_State *ls, Tvalue *res) {
   }
 }
 
+static int labelref(lex_State *ls) {
+  Labeldsc *l;
+  String *name;
+  name = expect(ls, TK_NAME, " label name").value.s;
+  l = getlabel(ls, name);
+  if (!l) { /* set to patch it later */
+    setlabel(ls, name, relpc(ls), NEEDPATCH);
+    return 0;
+  }
+  return cythC_imm_new(l->pc - relpc(ls) - 1);
+}
+
+/* check for any unpatched labels */
+static void check_labels(lex_State *ls) {
+  DataBlk *d = (DataBlk *)ls->pdata;
+  Labeldsc l;
+  for (cmem_t i = 0; i < d->labels.n; i++) {
+    l = d->labels.labels[i];
+    if (l.patch)
+      cythE_error(ls->C, "Unknown label '%*s'",
+        (unsigned int) l.name->len, l.name->data);
+  }
+}
+
 /* parse an instruction */
 static void instruction(lex_State *ls) {
   int line = saveline(ls);
@@ -222,6 +266,10 @@ static void instruction(lex_State *ls) {
   } break;
   case TK_EQ: setopcode(i, OP_EQ); break;
   case TK_NEQ: setopcode(i, OP_NEQ); break;
+  case TK_JF:
+    setopcode(i, OP_JF);
+    setargz(i, labelref(ls));
+    break;
   case TK_CALL: {
     int nargs = expect(ls, TK_INT,
       "Expected number of arguments"
@@ -229,8 +277,16 @@ static void instruction(lex_State *ls) {
     setopcode(i, OP_CALL);
     setargz(i, nargs);
   } break;
+  case TK_JT:
+    setopcode(i, OP_JT);
+    setargz(i, labelref(ls));
+    break;
   case TK_DUP: setopcode(i, OP_DUP); break;
   case TK_SWAP: setopcode(i, OP_SWAP); break;
+  case TK_JMP:
+    setopcode(i, OP_JMP);
+    setargz(i, labelref(ls));
+    break;
   default:
     error_unknown(ls, "instruction name");
     break;
@@ -238,63 +294,37 @@ static void instruction(lex_State *ls) {
   emitC(ls, i, line);
 }
 
+/* ':' NAME ':' */
+static void label(lex_State *ls) {
+  String *name;
+  int pc;
+  expect(ls, ':', "':' token");
+  pc = relpc(ls);
+  name = expect(ls, TK_NAME, "valid label name").value.s;
+  expect(ls, ':', "':' token");
+  setlabel(ls, name, pc, NOPATCH);
+}
+
+/* label | instruction */
 static void instblock(lex_State *ls) {
   switch (ls->t.type) {
-  case '(': /* a block */
-    next(ls);
-    switch (ls->t.type) {
-    case TK_IF:
-      ifstat(ls);
-      break;
-    case TK_WHILE:
-      whilestat(ls);
-      break;
-    default:
-      instruction(ls);
-      break;
-  } break;
+  case ':':
+    label(ls);
+    break;
   default:
-    cythL_syntaxerror(ls, "Expected instruction");
+    instruction(ls);
     break;
   }
-  expect(ls, ')', "Expected ')' to close instruction");
 }
 
 static void blockbody(lex_State *ls, int stop) {
-  cmem_t nvars = 0;
-  enter(ls, &nvars);
+  Symtab s = {0};
+  enter(ls, &s);
   while (!match(ls, stop) && !match(ls, TK_EOF)) {
     instblock(ls);
   }
-  leave(ls, nvars);
-}
-
-/* '(' if '('instlist')' instlist ')' */
-static void ifstat(lex_State *ls) {
-  expect(ls, TK_IF, "Expected 'if'.");
-  expect(ls, '(', "Expected condition");
-  blockbody(ls, ')');
-  expect(ls, ')', "Expected end of condition");
-  jt(ls, saveline(ls));
-  int to_patch = jmp(ls, 0, saveline(ls));
-  blockbody(ls, ')');
-  // expect(ls, ')', "Expected ')'");
-  setargz(ls->fs->f->code[to_patch], (ls->fs->f->ncode - to_patch - 1));
-}
-
-static void whilestat(lex_State *ls) {
-  func_State *fs = ls->fs;
-  expect(ls, TK_WHILE, "Expected 'while'.");
-  expect(ls, '(', "Expected condition");
-  int init = fs->f->ncode;
-  blockbody(ls, ')');
-  expect(ls, ')', "Expected end of condition");
-  jt(ls, saveline(ls));
-  int topatch = jmp(ls, 0, saveline(ls));
-  blockbody(ls, ')');
-  // expect(ls, ')', "Expected ')'");
-  jmpback(ls, fs->f->ncode - init + 1, saveline(ls));
-  patchjmp(ls, topatch, fs->f->ncode - topatch, 0);
+  check_labels(ls);
+  leave(ls, s);
 }
 
 /* '(' name list ')' */
@@ -412,7 +442,8 @@ cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
     f = obj2f(&C->top.p[-1]);
   }
   cythO_buffer_free(C, &ls.buf);
-  cythM_vecfree(C, blk.vars, blk.varsize, Vardsc);
+  cythM_vecfree(C, blk.vars.vars, blk.vars.s, Vardsc);
+  cythM_vecfree(C, blk.labels.labels, blk.labels.s, Labeldsc);
   return f; /* function is either null or the top */
 }
 

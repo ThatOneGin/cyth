@@ -1,0 +1,15 @@
+(func main() -> 0
+  const true # switch this
+  dup
+  jt stlabel
+  jf ndlabel
+:stlabel:
+  getvar print
+  const "1 Hello, world"
+  jmp end
+:ndlabel:
+  getvar print
+  const "2 label"
+:end:
+  call 1
+  return)

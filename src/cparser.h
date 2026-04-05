@@ -14,9 +14,26 @@ typedef struct {
 } Vardsc;
 
 typedef struct {
+  String *name;
+  int pc;
+  int patch;
+} Labeldsc;
+
+typedef struct {
   Vardsc *vars;
-  cmem_t nvars;
-  cmem_t varsize;
+  cmem_t n;
+  cmem_t s;
+} varlist;
+
+typedef struct {
+  Labeldsc *labels;
+  cmem_t n;
+  cmem_t s;
+} lablist;
+
+typedef struct {
+  varlist vars;
+  lablist labels;
 } DataBlk;
 
 /*
