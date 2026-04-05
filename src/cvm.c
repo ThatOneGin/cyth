@@ -3,6 +3,16 @@
 #include <cstring.h>
 #include <cgc.h>
 
+#define dojmp(az)                                 \
+  {if ((pc - f->code) + az >= (int64_t)f->ncode) \
+    cythE_error(C,                               \
+      "Invalid jump to offset %ld.\n",           \
+      (pc - f->code) + az);                      \
+  else {                                         \
+    pc += az;                                    \
+    ci->u.cyth.pc += az;                         \
+  }}
+
 #define fetchinst() {                     \
   if ((cmem_t)(pc - f->code) >= f->ncode) \
     cythE_error(C,                        \
@@ -190,20 +200,20 @@ returning:
         cythA_push(C, b2obj((!cythV_objequ(C, l, r))));
       } vmbreak;
       vmcase(OP_JT) {
+        int32_t az = cythC_imm2int(getargz(i));
         Tvalue val = pop(C);
         if (cythV_toboolean(val, NULL))
-          fetchinst();
+          dojmp(az);
       } vmbreak;
-      vmcase(OP_JMP) { /* the first bit determines the signedness */
-        int32_t _az = getargz(i);
-        int32_t az = _az & 0x01 ? -(_az >> 1) : _az;
-        break;
-        if ((pc-f->code) + az >= (int64_t)f->ncode)
-          cythE_error(C, "Invalid jump trying to jump to offset %ld.\n", (pc-f->code) + az);
-        else {
-          pc += az;
-          ci->u.cyth.pc += az;
-        }
+      vmcase(OP_JF) {
+        int32_t az = cythC_imm2int(getargz(i));
+        Tvalue val = pop(C);
+        if (!cythV_toboolean(val, NULL))
+          dojmp(az);
+      } vmbreak;
+      vmcase(OP_JMP) {
+        int32_t az = cythC_imm2int(getargz(i));
+        dojmp(az);
       } vmbreak;
       vmcase(OP_FUNC) {
         cythA_push(C, getf(f, getargz(i)));

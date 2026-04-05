@@ -281,6 +281,8 @@ static byte print_az_as_value[OP_COUNT] = {
   [OP_GETVAR] = 1,
   [OP_EQ] = 0,
   [OP_NEQ] = 0,
+  [OP_JT] = 0,
+  [OP_JF] = 0,
   [OP_JMP] = 0,
   [OP_FUNC] = 0,
   [OP_SETGLB] = 1,
@@ -308,9 +310,7 @@ static void print_code(cyth_Function *f) {
     else printf("#");
     printf("]\t");
     if (cythC_getmode(j) == iZs) {
-      int32_t azs = (int32_t)((az & 0x01) ?
-        -(az >> 1) :
-        (az >> 1));
+      int32_t azs = cythC_imm2int(az);
       printf("%s\t%d\t", cythC_getopcode(opcode), azs);
     } else
       printf("%s\t%d\t", cythC_getopcode(opcode), az);

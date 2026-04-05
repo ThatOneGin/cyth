@@ -26,7 +26,8 @@ enum opmode {
   /* OP_RETURN  iZ      return pop()                    */
   /* OP_EQ      iZ      pop() == pop()                  */
   /* OP_NEQ     iZ      pop() != pop()                  */
-  /* OP_JT      iZ      if pop() = true then pc++       */
+  /* OP_JT      iZs     if pop() = true then jmp        */
+  /* OP_JF      iZs     if pop() = false then jmp       */
   /* OP_JMP     iZs     pc += z                         */
   /* OP_FUNC    iZ      push(f[Z])                      */
   /* OP_SETGLB  iZ      gt[k[z]] = pop()                */
@@ -45,7 +46,8 @@ enum opmode {
   X(OP_RETURN, "RETURN", iZ) \
   X(OP_EQ, "EQ", iZ)         \
   X(OP_NEQ, "NEQ", iZ)       \
-  X(OP_JT, "JT", iZ)         \
+  X(OP_JT, "JT", iZs)        \
+  X(OP_JF, "JF", iZs)        \
   X(OP_JMP, "JMP", iZs)      \
   X(OP_FUNC, "FUNC", iZ)     \
   X(OP_SETGLB, "SETGLB", iZ) \
@@ -82,6 +84,20 @@ enum opcodes {
 #define setopcode(i, o) setfield(i, o, OPCODE_POS, MASK0)
 #define setargz(i, z) setfield(i, z, ARGZ_POS, MASK2)
 
+typedef int32_t Imm;
+
 int cythC_getmode(Instruction i);
 char *cythC_getopcode(Instruction i);
+
+/*
+** the first bit of i determines if the integer
+** is negative or positive
+*/
+static inline Imm cythC_imm_new(int32_t i) {
+  return (Imm)(i < 0 ? (((-i) << 1) + 1) : (i << 1));
+}
+
+static inline int32_t cythC_imm2int(Imm imm) {
+  return (int32_t)(imm & 0x01 ? (-(imm >> 1)) : (imm >> 1));
+}
 #endif
