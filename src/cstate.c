@@ -49,6 +49,7 @@ static void realloc_stack(cyth_State *C) {
     C->maxoff *= 2;
     restore_stack(C);
   }
+  C->rebase = 1;
 }
 
 static inline cmem_t stack_size(cyth_State *C) {
@@ -70,6 +71,7 @@ cyth_State *cythE_openstate(void) {
   C->ci = NULL;
   C->ncalls = 0;
   C->gt = cythH_new(C);
+  C->rebase = 0;
   cythA_push(C, t2obj(C->gt));
   cythS_init(C);
   if (main) main = 0;

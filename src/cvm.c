@@ -3,7 +3,12 @@
 #include <cstring.h>
 #include <cgc.h>
 
-#define dojmp(az)                                 \
+#define rebase(C)          \
+  {if ((C)->rebase) {      \
+    base = ci->func.p + 1; \
+    (C)->rebase = 0;}}
+
+#define dojmp(az)                                \
   {if ((pc - f->code) + az >= (int64_t)f->ncode) \
     cythE_error(C,                               \
       "Invalid jump to offset %ld.\n",           \
@@ -19,7 +24,8 @@
       "Function has no "                  \
       "return instruction.");             \
   i = *(pc++);                            \
-  ci->u.cyth.pc++;}
+  ci->u.cyth.pc++;                        \
+  rebase(C)}
 
 #if !defined(CYTH_USE_COMP_GOTOS)
 #  define vmdispatch(x) switch (x)

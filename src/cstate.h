@@ -79,6 +79,7 @@ struct cyth_State {
   cyth_jmpbuf *errhandler; /* recover point in case of errors */
   Call_info *ci; /* function call information */
   byte ncalls; /* how many function calls aren't finished */
+  byte rebase; /* signal VM to re assign the base variable at the main loop */
 };
 
 cyth_State *cythE_openstate(void);
