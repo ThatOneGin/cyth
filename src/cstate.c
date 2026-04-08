@@ -5,7 +5,7 @@
 #include <caux.h>
 #include <stdarg.h>
 
-global_State G = {0};
+static global_State G = {0};
 
 static void init_stack(cyth_State *C) {
   C->base.p = malloc(sizeof(*C->base.p) * MINSTACK);
@@ -74,7 +74,11 @@ cyth_State *cythE_openstate(void) {
   C->rebase = 0;
   cythA_push(C, t2obj(C->gt));
   cythS_init(C);
-  if (main) main = 0;
+  if (main) {
+    main = 0;
+    C->G->threshold = DEFAULTGCTHRESHOLD;
+    G.threshold = C->G->threshold;
+  }
   return C;
 }
 

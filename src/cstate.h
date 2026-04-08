@@ -66,6 +66,7 @@ struct global_State {
   gc_object *uncollectables; /* objects that live until the main state dies */
   cmem_t count; /* memory in use */
   cmem_t total; /* total memory allocated */
+  cmem_t threshold;
 };
 
 struct cyth_State {

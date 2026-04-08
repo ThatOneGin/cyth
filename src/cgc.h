@@ -3,11 +3,7 @@
 #include <cobject.h>
 #include <cstate.h>
 
-#ifndef CYTH_GCTHRESHOLD
-#  define GCTHRESHOLD 1000000
-#else
-#  define GCTHRESHOLD CYTH_GCTHRESHOLD
-#endif
+#define DEFAULTGCTHRESHOLD 1000000
 
 #define GCMAXSWEEP 20
 

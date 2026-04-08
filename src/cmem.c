@@ -30,7 +30,7 @@ static void *_realloc(void *ptr, cmem_t size) {
 */
 static void *tryagain(cyth_State *C, void *ptr, cmem_t size) {
   global_State *G = C->G;
-  if (G->count >= GCTHRESHOLD) {
+  if (G->count >= G->threshold) {
     cythG_full(C);
     return _realloc(ptr, size);
   }
