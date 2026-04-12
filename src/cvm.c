@@ -2,6 +2,7 @@
 #include <caux.h>
 #include <cstring.h>
 #include <cgc.h>
+#include <ctype.h>
 
 #define rebase(C)          \
   {if ((C)->rebase) {      \
@@ -144,6 +145,43 @@ void cythV_swap(cyth_State *C) {
   objcopy(C->top.p-2, tmp);
 }
 
+/*
+** try to convert value to an integer,
+** currently, only strings and integers can be converted
+*/
+static int tointeger(Tvalue t, cyth_integer *i) {
+  switch (t.tt_) {
+  case CYTH_INTEGER:
+    *i = obj2i(&t);
+    break;
+  case CYTH_STRING: {
+    String *s = obj2s(&t);
+    for (cmem_t j = 0; j < s->len; j++) {
+      if (!isdigit(s->data[j])) {
+        *i = 0;
+        return -1;
+      }
+      *i = (*i * 10) + (s->data[j] - '0');
+    }
+  } break;
+  default:
+    return -1;
+  }
+  return 0;
+}
+
+/* convert both hands to integers and do the operation */
+static int doadd(cyth_integer *res, Tvalue l, Tvalue r) {
+  cyth_integer lhs = 0;
+  cyth_integer rhs = 0;
+  int lres = tointeger(l, &lhs);
+  int rres = tointeger(r, &rhs);
+  if (lres < 0 || rres < 0)
+    return -1;
+  *res = lhs + rhs;
+  return 0;
+}
+
 /* execute a cyth call */
 void cythV_exec(cyth_State *C, Call_info *ci) {
   cyth_Function *f;
@@ -172,9 +210,12 @@ returning:
           cythE_dectop(C);
         } vmbreak;
       vmcase(OP_ADD) {
+        cyth_integer res = 0;
         Tvalue r = pop(C);
         Tvalue l = pop(C);
-        cythA_pushint(C, obj2i(&l) + obj2i(&r));
+        if (doadd(&res, l, r) < 0)
+          cythE_error(C, "Could not do addition");
+        cythA_pushint(C, res);
       } vmbreak;
       vmcase(OP_SETVAR) {
         if (C->top.p == base)
