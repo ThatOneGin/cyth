@@ -204,11 +204,8 @@ returning:
         cythA_push(C, getk(f, getargz(i)));
       } vmbreak;
       vmcase(OP_POP) {
-        if (C->top.p == base)
-          cythE_error(C, "Stack underflow.\n");
-        else
-          cythE_dectop(C);
-        } vmbreak;
+        cythE_dectop(C);
+      } vmbreak;
       vmcase(OP_ADD) {
         cyth_integer res = 0;
         Tvalue r = pop(C);

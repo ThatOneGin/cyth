@@ -12,7 +12,8 @@
 /* don't change order. */
 static char *reserved[] = {
   "func", "const", "return", "add", "setvar",
-  "getvar", "eq", "neq", "jf", "call", "jt", "dup", "swap", "true", "false", "jmp"
+  "getvar", "eq", "neq", "jf", "call", "jt",
+  "dup", "swap", "true", "false", "jmp", "pop"
 };
 
 /*

@@ -287,6 +287,7 @@ static void instruction(lex_State *ls) {
     setopcode(i, OP_JMP);
     setargz(i, labelref(ls));
     break;
+  case TK_POP: setopcode(i, OP_POP); break;
   default:
     error_unknown(ls, "instruction name");
     break;
