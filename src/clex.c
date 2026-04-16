@@ -72,8 +72,31 @@ static void read_string(lex_State *ls) {
   while (ls->current != '"' &&
          ls->current != '\n' &&
          ls->current != EOS) {
-    cythO_buffer_appendchar(ls->C, &ls->buf, ls->current);
-    next(ls);
+    switch (ls->current) {
+    case '\\':
+      next(ls);
+      switch (ls->current) {
+      case 'n': cythO_buffer_appendchar(ls->C, &ls->buf, '\n'); break;
+      case 'r': cythO_buffer_appendchar(ls->C, &ls->buf, '\r'); break;
+      case 'f': cythO_buffer_appendchar(ls->C, &ls->buf, '\f'); break;
+      case 't': cythO_buffer_appendchar(ls->C, &ls->buf, '\t'); break;
+      case 'b': cythO_buffer_appendchar(ls->C, &ls->buf, '\b'); break;
+      case 'a': cythO_buffer_appendchar(ls->C, &ls->buf, '\a'); break;
+      case 'v': cythO_buffer_appendchar(ls->C, &ls->buf, '\v'); break;
+      case '\\': cythO_buffer_appendchar(ls->C, &ls->buf, '\\'); break;
+      case '\"': cythO_buffer_appendchar(ls->C, &ls->buf, '\"'); break;
+      default:
+        cythL_syntaxerror(ls, s2cstr(
+          cythS_sprintf(ls->C, "Unknown escape sequence '\\%c'", ls->current)));
+        break;
+      }
+      next(ls);
+      break;
+    default:
+      cythO_buffer_appendchar(ls->C, &ls->buf, ls->current);
+      next(ls);
+      break;
+    }
   }
   if (ls->current != '"') {
     cythL_syntaxerror(ls, "Unfinished string.");

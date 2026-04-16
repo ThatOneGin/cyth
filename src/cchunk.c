@@ -239,6 +239,7 @@ static void print_string(String *s) {
     case '\r': printf("\\r"); break;
     case '\t': printf("\\t"); break;
     case '\v': printf("\\v"); break;
+    case '\\': printf("\\\\"); break;
     default: Putc(*p); break;
   }
  }
