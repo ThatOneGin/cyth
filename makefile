@@ -1,5 +1,5 @@
 CC = cc
-CFLAGS = -ggdb -Wall -Wextra -pedantic -std=c99 -I src/
+CFLAGS = -ggdb -Wall -Wextra -pedantic -std=c99 -I include/
 BIN = cyth
 SOURCE = $(wildcard src/*.c)
 OBJECT = $(patsubst %.c, build/%.o, $(notdir $(SOURCE)))
