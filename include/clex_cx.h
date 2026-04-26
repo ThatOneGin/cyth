@@ -25,7 +25,7 @@ enum tkreserved {
   TK_EOF,
 /* begin reserved */
   TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN,
-  TK_TRUE, TK_FALSE,
+  TK_TRUE, TK_FALSE, TK_DO, TK_END,
 /* end reserved */
   TK_NAME, TK_INT, TK_STR,
 

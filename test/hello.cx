@@ -1,0 +1,7 @@
+func add(x y) do
+  return x + y
+end
+
+func main() do
+  print("Hello, world")
+end

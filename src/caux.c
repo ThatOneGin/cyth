@@ -112,11 +112,16 @@ String *cythA_popstr(cyth_State *C) {
 }
 
 /* parse stream with a recover point set */
+#define fileext(file, wanted) (strcmp(strrchr(file, '.'), wanted) == 0)
+
 static int pparse(cyth_State *C, void *aux) {
   Stream *s = (Stream*)aux;
   char *name = s2cstr(cythA_popstr(C));
   stkrel top = C->top.p;
-  cyth_Function *f = cythP_parse_cyth(C, s, name);
+  cyth_Function *f = NULL;
+  if (fileext(name, ".cyth")) f = cythP_parse_cyth(C, s, name);
+  else if (fileext(name, ".cx")) f = cythP_parse_cx(C, s, name);
+  else cythE_error(C, "Unknown file extension for %s", name);
   if (f == NULL) {
     /*
     ** message is on the stack
@@ -130,6 +135,8 @@ static int pparse(cyth_State *C, void *aux) {
   }
   return 0;
 }
+
+#undef fileext
 
 int cythA_load(cyth_State *C, Stream *s, char *name) {
   String *sname = cythS_new(C, name);

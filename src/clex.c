@@ -43,8 +43,9 @@ String *cythL_createstring(lex_State *ls, char *s) {
 }
 
 void cythL_syntaxerror(lex_State *ls, const char *s) {
-  cythE_error(ls->C, "%s: Syntax error near line %d: %s",
-    s2cstr(ls->sourcename), ls->line, s);
+  char *modename = ls->mode == LEXMCYTH ? "cyth" : "cx";
+  cythE_error(ls->C, "%s: %s: Syntax error near line %d: %s",
+    modename, s2cstr(ls->sourcename), ls->line, s);
 }
 
 /* get next token stored in ls->t */
