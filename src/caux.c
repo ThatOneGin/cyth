@@ -116,7 +116,7 @@ static int pparse(cyth_State *C, void *aux) {
   Stream *s = (Stream*)aux;
   char *name = s2cstr(cythA_popstr(C));
   stkrel top = C->top.p;
-  cyth_Function *f = cythP_parse(C, s, name);
+  cyth_Function *f = cythP_parse_cyth(C, s, name);
   if (f == NULL) {
     /*
     ** message is on the stack

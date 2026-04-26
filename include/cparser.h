@@ -2,6 +2,7 @@
 #define CPARSER_H
 #include <clex.h>
 #include <cobject.h>
+#include <cio.h>
 
 #define VKLOC 0
 #define VKFUN 1
@@ -10,7 +11,7 @@
 typedef struct {
   byte k; /* VKLOC or VKFUN */
   String *name;
-  int i; /* for function variables */
+  int i; /* info about the variable (could be an index, a type or simply nothing) */
 } Vardsc;
 
 typedef struct {
@@ -46,5 +47,6 @@ struct func_State {
   lex_State *ls;
 };
 
-cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname);
+cyth_Function *cythP_parse_cx(cyth_State *C, Stream *input, char *chunkname);
+cyth_Function *cythP_parse_cyth(cyth_State *C, Stream *input, char *chunkname);
 #endif

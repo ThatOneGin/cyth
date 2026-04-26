@@ -1,35 +1,13 @@
-/*
-** order of reserved words:
-** TK_FUNC, TK_CONST, TK_RETURN, TK_ADD,
-** TK_SETVAR, TK_GETVAR, TK_EQ, TK_NEQ,
-** TK_JF, TK_CALL, TK_JT, TK_DUP, TK_SWAP, TK_TRUE, TK_FALSE, TK_JMP, TK_POP
-** last reserved kind must be before TK_NAME
-*/
 #ifndef CLEX_H
 #define CLEX_H
 #include <cstring.h>
 #include <cobject.h>
 #include <cio.h>
+#include <ctype.h>
 
-/*
-** Terminal symbols that are also single chars
-** are represented by their numeric values
-** and other tokens such as reserved keywords
-**  start at UCHAR_MAX + 1.
-*/
-#define FIRSTRESERVED (UCHAR_MAX + 1)
-#define NUMRESERVED (TK_NAME - FIRSTRESERVED)
-#define maxidentsize 256
-
-enum tkreserved {
-  TK_EOF,
-  TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN, TK_ADD, TK_SETVAR, TK_GETVAR,
-  TK_EQ, TK_NEQ, TK_JF, TK_CALL, TK_JT, TK_DUP, TK_SWAP, TK_TRUE, TK_FALSE, TK_JMP,
-  TK_POP,
-
-  TK_NAME, TK_INT, TK_STR,
-
-  TK_ARROW /* -> */
+enum LEXMODE {
+  LEXMCYTH,
+  LEXMCX
 };
 
 typedef union {
@@ -55,9 +33,15 @@ typedef struct {
   String *sourcename;
   SBuffer buf; /* buffer for string building */
   void *pdata; /* used by the paser (set later) */
+  const int mode; /* LEXMODE */
 } lex_State;
 
-lex_State cythL_new(cyth_State *C, char *name, Stream *input);
+static inline int c_isident(int c) {return isalpha(c) || c == '_';}
+static inline int c_isnum(int c) {return isdigit(c);}
+static inline int c_isspace(int c) {return isspace(c);}
+
+lex_State cythL_new(cyth_State *C, int mode, char *name, Stream *input);
+void cythL_anchorstring(lex_State *ls, String *s);
 String *cythL_createstring(lex_State *ls, char *s);
 void cythL_syntaxerror(lex_State *ls, const char *s);
 void cythL_next(lex_State *ls);

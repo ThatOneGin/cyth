@@ -1,4 +1,6 @@
 #include <cparser.h>
+#include <clex_cyth.h>
+#include <cio.h>
 #include <cmem.h>
 #include <caux.h>
 
@@ -431,10 +433,10 @@ static int pmainfunc(cyth_State *C, void *aux) {
 }
 
 /* parse the main function of a chunk */
-cyth_Function *cythP_parse(cyth_State *C, Stream *input, char *chunkname) {
+cyth_Function *cythP_parse_cyth(cyth_State *C, Stream *input, char *chunkname) {
   cyth_Function *f = NULL;
   DataBlk blk = {0};
-  lex_State ls = cythL_new(C, chunkname, input);
+  lex_State ls = cythL_new(C, LEXMCYTH, chunkname, input);
   ls.pdata = (void*)&blk;
   cythL_next(&ls);
   cythE_runprotected(C, pmainfunc, &ls);
