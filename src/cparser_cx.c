@@ -4,6 +4,12 @@
 #include <cmem.h>
 #include <caux.h>
 
+#define ensure(ls, e, msg) ((e) ? ((void)0) : cythL_syntaxerror(ls, msg))
+#define saveline(ls) ((ls)->line)
+#define freturn(ls, line) emitC(ls, (OP_RETURN<<OPCODE_POS), line)
+#define emitInstl(ls, line, opcode, argz) emitInst_(ls, line, opcode, argz)
+#define emitInst(ls, opcode, argz) emitInst_(ls, -1, opcode, argz)
+
 /* types */
 
 enum BINOPR {
@@ -38,9 +44,6 @@ static void error_expect(lex_State *ls, const char *what) {
 }
 
 /* auxiliary functions */
-
-#define saveline(ls) ((ls)->line)
-#define freturn(ls, line) emitC(ls, (OP_RETURN<<OPCODE_POS), line)
 
 static int emitC(lex_State *ls, Instruction i, int line) {
   cyth_Function *f = ls->fs->f;
@@ -94,8 +97,6 @@ static void emitfunction(lex_State *ls, int f, int line) {
   emitC(ls, inst, line);
 }
 
-#define emitInstl(ls, line, opcode, argz) emitInst_(ls, line, opcode, argz)
-#define emitInst(ls, opcode, argz) emitInst_(ls, -1, opcode, argz)
 static int emitInst_(lex_State *ls, int line, int opcode, int argz) {
   Instruction i = 0;
   setopcode(i, opcode);
@@ -227,7 +228,9 @@ static void xexp(lex_State *ls, expdsc *e) {
     case '(': {
       next(ls);
       free_exp(ls, e);
-      int n = explist(ls, e);
+      int n = 0;
+      if (ls->t.type != ')')
+        n = explist(ls, e);
       expect(ls, ')', "')' to close argument list");
       emitInst(ls, OP_CALL, n);
       e->k = EXPCALL;
@@ -282,13 +285,32 @@ static void ret(lex_State *ls) {
   freturn(ls, saveline(ls));
 }
 
-/* exprstat = call */
+/* assign = xexp '=' expr */
+static void assign(lex_State *ls, expdsc *e) {
+  Vardsc v;
+  String *name;
+  name = e->u.s;
+  getvar(ls, name, &v);
+  expect(ls, '=', "'='");
+  expr(ls, e);
+  free_exp(ls, e);
+  int k = emitK(ls, s2obj(name));
+  emitInst(ls, OP_SETVAR, k);
+  v.k = VKLOC;
+  setvar(ls, v);
+}
+
+/* exprstat = call | assign */
 static void exprstat(lex_State *ls) {
   expdsc e;
   xexp(ls, &e);
-  if (e.k != EXPCALL)
-    cythL_syntaxerror(ls, "Expected statement");
-  free_exp(ls, &e);
+  if (ls->t.type == '=') {
+    ensure(ls, e.k == EXPNAME, "invalid left-hand on assignment");
+    assign(ls, &e);
+  } else {
+    ensure(ls, e.k == EXPCALL, "expected statement");
+    free_exp(ls, &e);
+  }
 }
 
 static void stat(lex_State *ls) {
