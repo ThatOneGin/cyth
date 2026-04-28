@@ -14,6 +14,9 @@
 
 enum BINOPR {
   OPR_ADD,
+  OPR_SUB,
+  OPR_DIV,
+  OPR_MUL,
   OPR_INVALID
 };
 
@@ -135,15 +138,14 @@ static void free_exp(lex_State *ls, expdsc *e) {
 }
 
 static void expbin(lex_State *ls, int op, expdsc *e1, expdsc *e2) {
+  free_exp(ls, e1);
+  free_exp(ls, e2);
   switch (op) {
-  case OPR_ADD:
-    free_exp(ls, e1);
-    free_exp(ls, e2);
-    emitInst(ls, OP_ADD, 0);
-    break;
-  default:
-    cyth_assert(0);
-    break;
+  case OPR_ADD: emitInst(ls, OP_ADD, 0); break;
+  case OPR_SUB: emitInst(ls, OP_SUB, 0); break;
+  case OPR_DIV: emitInst(ls, OP_DIV, 0); break;
+  case OPR_MUL: emitInst(ls, OP_MUL, 0); break;
+  default: cyth_assert(0); break;
   }
 }
 
@@ -209,13 +211,17 @@ static void pexp(lex_State *ls, expdsc *e) {
 }
 
 static int prec[] = {
-  [OPR_ADD] = 1,
+  [OPR_MUL] = 2, [OPR_DIV] = 2, /* *, / */
+  [OPR_ADD] = 1, [OPR_SUB] = 1, /* +, - */
   [OPR_INVALID] = 0
 };
 
 static int getopr(lex_State *ls) {
   switch (ls->t.type) {
   case '+': return OPR_ADD;
+  case '-': return OPR_SUB;
+  case '/': return OPR_DIV;
+  case '*': return OPR_MUL;
   default: return OPR_INVALID;
   }
 }

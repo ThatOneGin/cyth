@@ -1,6 +1,6 @@
 /*
 ** order of reserved words:
-** TK_FUNC, TK_CONST, TK_RETURN, TK_ADD,
+** TK_FUNC, TK_CONST, TK_RETURN, TK_ADD, TK_SUB, TK_DIV, TK_MUL
 ** TK_SETVAR, TK_GETVAR, TK_EQ, TK_NEQ,
 ** TK_JF, TK_CALL, TK_JT, TK_DUP, TK_SWAP, TK_TRUE, TK_FALSE, TK_JMP, TK_POP
 ** last reserved kind must be before TK_NAME
@@ -22,7 +22,8 @@
 enum tkreserved {
   TK_EOF,
 /* begin reserved */
-  TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN, TK_ADD, TK_SETVAR, TK_GETVAR,
+  TK_FUNC = FIRSTRESERVED, TK_CONST, TK_RETURN, TK_ADD, TK_SUB, TK_DIV, TK_MUL,
+  TK_SETVAR, TK_GETVAR,
   TK_EQ, TK_NEQ, TK_JF, TK_CALL, TK_JT, TK_DUP, TK_SWAP, TK_TRUE, TK_FALSE, TK_JMP,
   TK_POP,
 /* end reserved */

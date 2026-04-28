@@ -244,6 +244,9 @@ static void instruction(lex_State *ls) {
   } break;
   case TK_RETURN: setopcode(i, OP_RETURN); break;
   case TK_ADD: setopcode(i, OP_ADD); break;
+  case TK_SUB: setopcode(i, OP_SUB); break;
+  case TK_DIV: setopcode(i, OP_DIV); break;
+  case TK_MUL: setopcode(i, OP_MUL); break;
   case TK_SETVAR: {
     Vardsc var = {0};
     String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;

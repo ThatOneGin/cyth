@@ -131,9 +131,11 @@ void lexx(lex_State *ls) {
       break;
     case '-':
       next(ls);
-      expect(ls, '>', "Expected '>' character");
-      ls->t.type = TK_ARROW;
-      ls->t.value.i = TK_ARROW;
+      if (ls->current == '>') {
+        ls->t.type = TK_ARROW;
+        ls->t.value.i = TK_ARROW;
+      } else
+        ls->t.type = ls->t.value.i = '-';
       break;
     default:
       if (!iscntrl(ls->current)) {
