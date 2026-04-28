@@ -171,14 +171,20 @@ static int tointeger(Tvalue t, cyth_integer *i) {
 }
 
 /* convert both hands to integers and do the operation */
-static int doadd(cyth_integer *res, Tvalue l, Tvalue r) {
+static int dobinop(cyth_integer *res, int op, Tvalue l, Tvalue r) {
   cyth_integer lhs = 0;
   cyth_integer rhs = 0;
   int lres = tointeger(l, &lhs);
   int rres = tointeger(r, &rhs);
   if (lres < 0 || rres < 0)
     return -1;
-  *res = lhs + rhs;
+  switch (op) {
+  case OPR_ADD: *res = (cyth_integer)lhs + rhs; break;
+  case OPR_SUB: *res = (cyth_integer)lhs - rhs; break;
+  case OPR_MUL: *res = (cyth_integer)lhs * rhs; break;
+  case OPR_DIV: *res = (cyth_integer)lhs / rhs; break;
+  default: cyth_assert(0); break;
+  }
   return 0;
 }
 
@@ -210,8 +216,32 @@ returning:
         cyth_integer res = 0;
         Tvalue r = pop(C);
         Tvalue l = pop(C);
-        if (doadd(&res, l, r) < 0)
-          cythE_error(C, "Could not do addition");
+        if (dobinop(&res, OPR_ADD, l, r) < 0)
+          cythE_error(C, "could not do addition");
+        cythA_pushint(C, res);
+      } vmbreak;
+      vmcase(OP_SUB) {
+        cyth_integer res = 0;
+        Tvalue r = pop(C);
+        Tvalue l = pop(C);
+        if (dobinop(&res, OPR_SUB, l, r) < 0)
+          cythE_error(C, "could not do subtraction");
+        cythA_pushint(C, res);
+      } vmbreak;
+      vmcase(OP_DIV) {
+        cyth_integer res = 0;
+        Tvalue r = pop(C);
+        Tvalue l = pop(C);
+        if (dobinop(&res, OPR_DIV, l, r) < 0)
+          cythE_error(C, "could not do division");
+        cythA_pushint(C, res);
+      } vmbreak;
+      vmcase(OP_MUL) {
+        cyth_integer res = 0;
+        Tvalue r = pop(C);
+        Tvalue l = pop(C);
+        if (dobinop(&res, OPR_MUL, l, r) < 0)
+          cythE_error(C, "could not do multiplication");
         cythA_pushint(C, res);
       } vmbreak;
       vmcase(OP_SETVAR) {

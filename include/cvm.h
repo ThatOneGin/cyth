@@ -4,6 +4,13 @@
 #include <cfunc.h>
 #include <cstate.h>
 
+enum BINOPR {
+  OPR_ADD,
+  OPR_SUB,
+  OPR_MUL,
+  OPR_DIV,
+};
+
 int cythV_objequ(cyth_State *C, Tvalue t1, Tvalue t2);
 int cythV_toboolean(Tvalue v, Tvalue *res);
 void cythV_setglobal(cyth_State *C, String *name, Tvalue v);
