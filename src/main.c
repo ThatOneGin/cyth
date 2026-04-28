@@ -83,6 +83,7 @@ static void help(void) {
   printf("\t-p -- print: print bytecode file.\n");
   printf("\t-c -- compile: compile source.\n");
   printf("\t-h -- help: print this message\n");
+  printf("\tsupported file extensions: .cyth, .cx\n");
 }
 
 int main(int argc, char **argv) {
