@@ -147,6 +147,10 @@ void cythF_poscall(cyth_State *C, int nresults) {
     break;
   }
   if (prev_ci) {
+    if (nresults == 0) {
+      *ci->func.p = NONE;
+      nresults++;
+    }
     prev_ci->top.p = ci->func.p + nresults;
     C->top.p = prev_ci->top.p;
   }
