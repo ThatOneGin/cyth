@@ -196,7 +196,7 @@ void cythV_exec(cyth_State *C, Call_info *ci) {
   Table *vars;
   stkrel base;
 #if defined(CYTH_USE_COMP_GOTOS)
-#include <disptab.h>
+#include "disptab.h"
 #endif
 returning:
   f = ci->u.cyth.f;
@@ -308,7 +308,7 @@ returning:
         if (cyth_tt(&v) == CYTH_NONE)
           cythE_error(C, "Unknown global variable '%s'.\n", s2cstr(obj2s(&k)));
         cythA_push(C, v);
-      } break;
+      } vmbreak;
       vmcase(OP_CALL) {
         int f = -(getargz(i)+1); /* get relative index to the stack */
         stkrel func = &C->top.p[f];

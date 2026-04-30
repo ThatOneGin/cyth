@@ -5,11 +5,11 @@
 ** it is only available for some C compilers like gcc
 */
 
-#define vmcase(c) LCASE_##c:
 #define vmdispatch(c) goto *disptab[c];
 #define vmbreak fetchinst(); vmdispatch(getopcode(i))
 
-#define casename(X) LCASE_##X
+#define casename(c) LCASE_##c
+#define vmcase(c) casename(c):
 
 static const void *const disptab[OP_COUNT] = {
 #define X(name, string, opmode) &&casename(name),
