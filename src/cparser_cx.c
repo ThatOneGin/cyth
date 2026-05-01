@@ -38,6 +38,10 @@ typedef struct {
   } u;
 } expdsc;
 
+typedef struct {
+  int nvars;
+} Symtab;
+
 /* error functions */
 
 static void error_expect(lex_State *ls, const char *what) {
@@ -91,6 +95,18 @@ static void getvar(lex_State *ls, String *name, Vardsc *v) {
   }
   v->k = VKGLB;
   v->name = name;
+}
+
+/* enter new scope */
+static void enter(lex_State *ls, Symtab *sym) {
+  DataBlk *blk = (DataBlk*)ls->pdata;
+  sym->nvars = blk->vars.n;
+}
+
+/* leave scope (erase scope's local variables) */
+static void leave(lex_State *ls, Symtab sym) {
+  DataBlk *blk = (DataBlk*)ls->pdata;
+  blk->vars.n = sym.nvars;
 }
 
 static void emitfunction(lex_State *ls, int f, int line) {
@@ -281,6 +297,20 @@ static int explist(lex_State *ls, expdsc *e) {
   return i;
 }
 
+static void stat(lex_State *ls);
+
+/* block = 'do' stat list 'end' */
+static void block(lex_State *ls) {
+  Symtab s = {0};
+  enter(ls, &s);
+  expect(ls, TK_DO, "do-end block");
+  while (ls->t.type != TK_EOF && ls->t.type != TK_END) {
+    stat(ls);
+  }
+  expect(ls, TK_END, "end keyword");
+  leave(ls, s);
+}
+
 /* ret = 'return' expr */
 static void ret(lex_State *ls) {
   expdsc e;
@@ -319,10 +349,14 @@ static void exprstat(lex_State *ls) {
   }
 }
 
+/* stat = return | block | exprstat */
 static void stat(lex_State *ls) {
   switch (ls->t.type) {
   case TK_RETURN:
     ret(ls);
+    break;
+  case TK_DO:
+    block(ls);
     break;
   default:
     exprstat(ls);
@@ -363,15 +397,6 @@ static void funcparams(lex_State *ls) {
   }
 }
 
-/* funcbody = 'do' stat list 'end' */
-static void funcbody(lex_State *ls) {
-  expect(ls, TK_DO, "do-end block");
-  while (ls->t.type != TK_EOF && ls->t.type != TK_END) {
-    stat(ls);
-  }
-  expect(ls, TK_END, "end keyword");
-}
-
 /* func = 'func' NAME funcparams funcbody */
 static void func(lex_State *ls) {
   func_State fs;
@@ -382,7 +407,7 @@ static void func(lex_State *ls) {
   expect(ls, TK_FUNC, "'func' keyword.");
   name = expect(ls, TK_NAME, "identifier").value.s;
   funcparams(ls);
-  funcbody(ls);
+  block(ls);
   int end_line = saveline(ls);
   freturn(ls, end_line); /* last instruction (return) */
   closefunc(ls);
