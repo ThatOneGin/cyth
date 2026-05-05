@@ -5,10 +5,17 @@
 #include <caux.h>
 #include <stdarg.h>
 
+/*
+** as we have a limit of how many stack slot should exist
+** we must have some extra space (3-5 slots) to pass the error
+** around in case of stack overflows
+*/
+#define EXTRASTACK 5
+
 static global_State G = {0};
 
 static void init_stack(cyth_State *C) {
-  C->base.p = malloc(sizeof(*C->base.p) * MINSTACK);
+  C->base.p = malloc(sizeof(*C->base.p) * (MINSTACK + EXTRASTACK));
   if (C->base.p == NULL)
     cythE_error(C, "Couldn't allocate stack.\n");
   C->top.p = C->base.p;
@@ -39,8 +46,10 @@ static void restore_stack(cyth_State *C) {
 
 /* reallocate stack as a vector */
 static void realloc_stack(cyth_State *C) {
+  if (C->top.p - C->base.p >= MAXSTACK)
+    cythE_error(C, "stack overflow");
   save_stack(C);
-  stkrel newbase = realloc(C->base.p, sizeof(*C->base.p)*(C->maxoff*2));
+  stkrel newbase = realloc(C->base.p, sizeof(*C->base.p)*((C->maxoff*2) + EXTRASTACK));
   if (newbase == NULL) {
     restore_stack(C);
     cythE_error(C, "Couldn't reallocate stack.\n");
@@ -151,7 +160,8 @@ void cythE_dectop(cyth_State *C) {
 /*
 ** if idx is greater than 0 then
 ** return the value after the current call
-** info base (ci->func[idx])
+** info base (ci->func[idx]) or if there is no
+** active call, use the absolute C->base stack pointer
 **
 ** if idx is less than 0 then
 ** return the value at idx starting
@@ -160,13 +170,13 @@ void cythE_dectop(cyth_State *C) {
 Tvalue *cythE_peek(cyth_State *C, int idx) {
   Call_info *ci = C->ci;
   if (idx > 0) { /* positive index */
-    cyth_assert(ci != NULL);
-    if (idx <= C->top.p - (ci->func.p + 1)) return ci->func.p + idx;
-    else cythE_error(C, "Index too big (%d)", idx);
+    if (ci == NULL && idx <= (C->top.p - C->base.p)) return C->base.p + idx;
+    else if (idx <= C->top.p - (ci->func.p + 1)) return ci->func.p + idx;
+    else cythE_error(C, "index too big (tried to access stack slot %d)", idx);
   } else if (idx < 0) { /* negative index */
     return C->top.p + idx;
   } else /* zero index (throw an error) */
-    cythE_error(C, "Invalid index (%d)", idx);
+    cythE_error(C, "invalid index (tried to access 0th stack slot)", idx);
   return NULL; /* TODO: return none value */
 }
 

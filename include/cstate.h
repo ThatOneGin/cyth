@@ -7,6 +7,7 @@
 #define apply_stack_offset(C, off) (((C)->base.p) + off)
 
 #define MINSTACK 20
+#define MAXSTACK 1000
 #define MAXCALLS 100
 
 #define GCOS 0
