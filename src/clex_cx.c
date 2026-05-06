@@ -9,7 +9,7 @@
 
 static char *reserved[] = {
   "func", "const", "return",
-  "true", "false", "do", "end"
+  "true", "false", "do", "end", "if"
 };
 
 static void read_string(lex_State *ls) {

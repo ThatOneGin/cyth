@@ -6,6 +6,7 @@
 
 #define ensure(ls, e, msg) ((e) ? ((void)0) : cythL_syntaxerror(ls, msg))
 #define saveline(ls) ((ls)->line)
+#define savepc(ls) ((ls)->fs->f->ncode)
 #define freturn(ls, line) emitC(ls, (OP_RETURN<<OPCODE_POS), line)
 #define emitInstl(ls, line, opcode, argz) emitInst_(ls, line, opcode, argz)
 #define emitInst(ls, opcode, argz) emitInst_(ls, -1, opcode, argz)
@@ -107,6 +108,22 @@ static void enter(lex_State *ls, Symtab *sym) {
 static void leave(lex_State *ls, Symtab sym) {
   DataBlk *blk = (DataBlk*)ls->pdata;
   blk->vars.n = sym.nvars;
+}
+
+/* set any kind of jump at 'pc' to point at 'target' */
+static void patch(lex_State *ls, cmem_t pc, cmem_t target) {
+  if (pc > ls->fs->f->ncode)
+    cyth_assert(0);
+  switch (getopcode(ls->fs->f->code[pc])) {
+  case OP_JF:
+  case OP_JMP:
+  case OP_JT:
+    setargz(ls->fs->f->code[pc], cythC_imm_new(target));
+    break;
+  default:
+    cyth_assert(0);
+    break;
+  }
 }
 
 static void emitfunction(lex_State *ls, int f, int line) {
@@ -349,7 +366,19 @@ static void exprstat(lex_State *ls) {
   }
 }
 
-/* stat = return | block | exprstat */
+/* ifdo = 'if' expr block */
+static void ifdo(lex_State *ls) {
+  int line = saveline(ls);
+  expdsc e = {0};
+  expect(ls, TK_IF, "'if' token");
+  expr(ls, &e);
+  free_exp(ls, &e);
+  int pc = emitInstl(ls, line, OP_JF, 0);
+  block(ls);
+  patch(ls, pc, savepc(ls) - 2);
+}
+
+/* stat = return | block | ifdo | exprstat */
 static void stat(lex_State *ls) {
   switch (ls->t.type) {
   case TK_RETURN:
@@ -357,6 +386,9 @@ static void stat(lex_State *ls) {
     break;
   case TK_DO:
     block(ls);
+    break;
+  case TK_IF:
+    ifdo(ls);
     break;
   default:
     exprstat(ls);
