@@ -378,6 +378,19 @@ static void ifdo(lex_State *ls) {
   patch(ls, pc, savepc(ls) - 2);
 }
 
+static void whiledo(lex_State *ls) {
+  int cond, jf, out;
+  expdsc e = {0};
+  expect(ls, TK_WHILE, "'while'");
+  cond = savepc(ls);
+  expr(ls, &e);
+  free_exp(ls, &e);
+  jf = emitInst(ls, OP_JF, 0);
+  block(ls);
+  out = emitInst(ls, OP_JMP, cythC_imm_new(cond - savepc(ls) - 1));
+  patch(ls, jf, out-1);
+}
+
 /* stat = return | block | ifdo | exprstat */
 static void stat(lex_State *ls) {
   switch (ls->t.type) {
@@ -389,6 +402,9 @@ static void stat(lex_State *ls) {
     break;
   case TK_IF:
     ifdo(ls);
+    break;
+  case TK_WHILE:
+    whiledo(ls);
     break;
   default:
     exprstat(ls);
