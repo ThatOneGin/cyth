@@ -9,15 +9,24 @@
     base = ci->func.p + 1; \
     (C)->rebase = 0;}}
 
-#define dojmp(az)                                \
-  {if ((pc - f->code) + az >= (int64_t)f->ncode) \
-    cythE_error(C,                               \
-      "Invalid jump to offset %ld.\n",           \
-      (pc - f->code) + az);                      \
-  else {                                         \
-    pc += az;                                    \
-    ci->u.cyth.pc += az;                         \
-  }}
+
+/*
+** there are some cases which you want to jump
+** to a negative address (-1) and those are
+** completely safe, due to how jumps are done
+** in the main loop, but we also need to check for
+** those invalid and negative jumps (less than -1 and greater
+** than the size of the instruction list)
+*/
+#define checkjmp(pc, f, target) \
+  if ((pc - f->code) + target >= (int64_t)f->ncode || (pc - f->code) < -1)\
+    cythE_error(f->C, "Trying to make an out-of-bounds jump (pc=%lu, target=%u)",\
+      (pc - f->code), target)
+
+#define dojmp(az)        \
+  {checkjmp(pc, f, az);  \
+   pc += az;             \
+   ci->u.cyth.pc += az;}
 
 #define fetchinst() {                     \
   if ((cmem_t)(pc - f->code) >= f->ncode) \
