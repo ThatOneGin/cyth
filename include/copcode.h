@@ -31,7 +31,7 @@ enum opmode {
   /* OP_MUL     iZ      push(pop() * pop())             */
   /* OP_SETVAR  iZ      vars[k[z]] = pop()              */
   /* OP_GETVAR  iZ      push(vars[k[z]])                */
-  /* OP_RETURN  iAb     return                          */
+  /* OP_RETURN  iZ      return                          */
   /* OP_EQ      iZ      pop() == pop()                  */
   /* OP_NEQ     iZ      pop() != pop()                  */
   /* OP_JT      iZs     if pop() = true then jmp        */
@@ -46,25 +46,25 @@ enum opmode {
   /* OP_COUNT (guard)                                   */
   /* opcode   | mode |  desc                            */
 #define OPCODES \
-  X(OP_PUSH, "PUSH", iZ)      \
-  X(OP_POP, "POP", iZ)        \
-  X(OP_ADD, "ADD", iZ)        \
-  X(OP_SUB, "SUB", iZ)        \
-  X(OP_DIV, "DIV", iZ)        \
-  X(OP_MUL, "MUL", iZ)        \
-  X(OP_SETVAR, "SETVAR", iZ)  \
-  X(OP_GETVAR, "GETVAR", iZ)  \
-  X(OP_RETURN, "RETURN", iAb) \
-  X(OP_EQ, "EQ", iZ)          \
-  X(OP_NEQ, "NEQ", iZ)        \
-  X(OP_JT, "JT", iZs)         \
-  X(OP_JF, "JF", iZs)         \
-  X(OP_JMP, "JMP", iZs)       \
-  X(OP_FUNC, "FUNC", iZ)      \
-  X(OP_SETGLB, "SETGLB", iZ)  \
-  X(OP_GETGLB, "GETGLB", iZ)  \
-  X(OP_CALL, "CALL", iAb)     \
-  X(OP_DUP, "DUP", iZ)        \
+  X(OP_PUSH, "PUSH", iZ)     \
+  X(OP_POP, "POP", iZ)       \
+  X(OP_ADD, "ADD", iZ)       \
+  X(OP_SUB, "SUB", iZ)       \
+  X(OP_DIV, "DIV", iZ)       \
+  X(OP_MUL, "MUL", iZ)       \
+  X(OP_SETVAR, "SETVAR", iZ) \
+  X(OP_GETVAR, "GETVAR", iZ) \
+  X(OP_RETURN, "RETURN", iZ) \
+  X(OP_EQ, "EQ", iZ)         \
+  X(OP_NEQ, "NEQ", iZ)       \
+  X(OP_JT, "JT", iZs)        \
+  X(OP_JF, "JF", iZs)        \
+  X(OP_JMP, "JMP", iZs)      \
+  X(OP_FUNC, "FUNC", iZ)     \
+  X(OP_SETGLB, "SETGLB", iZ) \
+  X(OP_GETGLB, "GETGLB", iZ) \
+  X(OP_CALL, "CALL", iAb)    \
+  X(OP_DUP, "DUP", iZ)       \
   X(OP_SWAP, "SWAP", iZ)
 
 enum opcodes {
@@ -94,15 +94,15 @@ enum opcodes {
 #define getopcode(i) ((i)&MASK0)
 #define getargz(i) (getfield(i, ARGZ_POS, MASK2))
 
-#define getarga(i) (getfield(i, ARGA_POS, MASK2))
-#define getargb(i) (getfield(i, ARGB_POS, MASK1))
+#define getarga(i) (getfield(i, ARGA_POS, MASK1))
+#define getargb(i) (getfield(i, ARGB_POS, MASK0))
 
 #define setfield(i, v, pos, m) ((i) = ((i) & ~(m << pos)) | ((v & m) << pos))
 #define setopcode(i, o) (setfield(i, o, OPCODE_POS, MASK0))
 #define setargz(i, z) (setfield(i, z, ARGZ_POS, MASK2))
 
-#define setarga(i, a) (setfield(i, a, ARGA_POS, MASK2))
-#define setargb(i, b) (setfield(i, b, ARGB_POS, MASK1))
+#define setarga(i, a) (setfield(i, a, ARGA_POS, MASK1))
+#define setargb(i, b) (setfield(i, b, ARGB_POS, MASK0))
 
 typedef int32_t Imm;
 

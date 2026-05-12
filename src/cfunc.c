@@ -75,7 +75,7 @@ void cythF_freefunc(cyth_Function *f) {
   cythM_free(f->C, f, sizeof(cyth_Function));
 }
 
-void cythF_precall(cyth_State *C, stkrel func, int nargs) {
+void cythF_precall(cyth_State *C, stkrel func, int nargs, int nwanted) {
   if (cyth_tt(func) == CYTH_USERDATA) {
     if (obj2ud(func).type != UDFUN) {
       cythE_error(C,
@@ -102,6 +102,7 @@ void cythF_precall(cyth_State *C, stkrel func, int nargs) {
     ci->u.cyth.f = obj2f(func);
     ci->u.cyth.pc = 0;
     ci->u.cyth.locvars = cythH_new(C);
+    ci->u.cyth.callnres = nwanted;
   }
   C->top.p = ci->top.p;
 }
@@ -111,7 +112,7 @@ static void move_values(cyth_State *C, Call_info *ci, int nresult, int nwanted) 
     nresult = nwanted;
   int top = cythE_gettop(C);
   int i = 0;
-  for (int i = 0; i < top; i++)
+  for (; i < top; i++)
     objcopy(ci->func.p + i, ci->top.p - i - 1);
   Tvalue *none = &NONE;
   for (; i < nwanted; i++)
@@ -133,6 +134,8 @@ static void move_C_results(cyth_State *C, Call_info *ci, int nresults, int nwant
 void cythF_poscall(cyth_State *C, int nresults, int nwanted) {
   Call_info *ci = C->ci;
   Call_info *prev_ci = ci->prev;
+  if (nwanted < 0)
+    cyth_assert(0);
   switch (ci->type) {
   case CYTHCALL:
     move_cyth_results(C, ci, nwanted);
@@ -154,7 +157,7 @@ void cythF_poscall(cyth_State *C, int nresults, int nwanted) {
 void cythF_call(cyth_State *C, int i, int nargs, int nresults) {
   int cnres = 0;
   stkrel func = &C->top.p[i];
-  cythF_precall(C, func, nargs);
+  cythF_precall(C, func, nargs, nresults);
   Call_info *ci = C->ci;
   if (ci->type == CYTHCALL) {
     cythV_exec(C, C->ci);

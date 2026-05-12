@@ -55,6 +55,7 @@ typedef struct Call_info {
       cyth_Function *f; /* function prototype */
       int pc; /* function program counter */
       Table *locvars; /* local variables */
+      int callnres; /* for the case of OP_CALL ... OP_RETURN things */
     } cyth;
     struct {
       int nargs;

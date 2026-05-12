@@ -267,7 +267,7 @@ returning:
       } vmbreak;
       vmcase(OP_RETURN) {
         if (ci->prev != NULL && ci->prev->type != CCALL) {
-          cythF_poscall(C, f->nresults, getargb(i));
+          cythF_poscall(C, f->nresults, ci->u.cyth.callnres);
           ci = C->ci; /* return to caller */
           goto returning;
         } else return;
@@ -323,7 +323,7 @@ returning:
         stkrel func = &C->top.p[f];
         if (func < base)
           cythE_error(C, "No function on the stack to call.");
-        cythF_precall(C, func, getarga(i)); /* load function */
+        cythF_precall(C, func, getarga(i), getargb(i)); /* load function */
         C->ci->prev = ci;
         ci = C->ci; /* replace old frame with the new one */
         if (ci->type == CYTHCALL)
