@@ -112,7 +112,11 @@ static void move_values(cyth_State *C, Call_info *ci, int nresult, int nwanted) 
     nresult = nwanted;
   int top = cythE_gettop(C);
   int i = 0;
-  for (; i < top; i++)
+  if (nresult > top) {
+    nwanted += nresult - top;
+    nresult = top;
+  }
+  for (; i < nresult; i++)
     objcopy(ci->func.p + i, ci->top.p - i - 1);
   Tvalue *none = &NONE;
   for (; i < nwanted; i++)

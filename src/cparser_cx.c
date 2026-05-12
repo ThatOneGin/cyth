@@ -8,8 +8,10 @@
 #define saveline(ls) ((ls)->line)
 #define savepc(ls) ((ls)->fs->f->ncode)
 #define freturn(ls, line) emitC(ls, (OP_RETURN<<OPCODE_POS), line)
-#define emitInstl(ls, line, opcode, argz) emitInst_(ls, line, opcode, argz)
-#define emitInst(ls, opcode, argz) emitInst_(ls, -1, opcode, argz)
+#define emitInstlZ(ls, line, opcode, argz) emitInstz_(ls, line, opcode, argz)
+#define emitInstZ(ls, opcode, argz) emitInstz_(ls, -1, opcode, argz)
+#define emitInstlab(ls, line, opcode, arga, argb) emitInstab_(ls, line, opcode, arga, argb)
+#define emitInstab(ls, opcode, arga, argb) emitInstab_(ls, -1, opcode, arga, argb)
 
 /* types */
 
@@ -35,6 +37,10 @@ typedef struct {
   union {
     cyth_integer i;
     String *s;
+    struct {
+      int idx;
+      int nargs;
+    } c;
     int info;
   } u;
 } expdsc;
@@ -133,10 +139,18 @@ static void emitfunction(lex_State *ls, int f, int line) {
   emitC(ls, inst, line);
 }
 
-static int emitInst_(lex_State *ls, int line, int opcode, int argz) {
+static int emitInstz_(lex_State *ls, int line, int opcode, int argz) {
   Instruction i = 0;
   setopcode(i, opcode);
   setargz(i, argz);
+  return emitC(ls, i, (line == -1) ? saveline(ls) : line);
+}
+
+static int emitInstab_(lex_State *ls, int line, int opcode, int arga, int argb) {
+  Instruction i = 0;
+  setopcode(i, opcode);
+  setarga(i, arga);
+  setargb(i, argb);
   return emitC(ls, i, (line == -1) ? saveline(ls) : line);
 }
 
@@ -144,19 +158,19 @@ static void free_exp(lex_State *ls, expdsc *e) {
   int i = 0;
   switch (e->k) {
   case EXPINT:
-    i = emitInst(ls, OP_PUSH, emitK(ls, i2obj(e->u.i)));
+    i = emitInstZ(ls, OP_PUSH, emitK(ls, i2obj(e->u.i)));
     break;
   case EXPSTR:
-    i = emitInst(ls, OP_PUSH, emitK(ls, s2obj(e->u.s)));
+    i = emitInstZ(ls, OP_PUSH, emitK(ls, s2obj(e->u.s)));
     break;
   case EXPBOOL:
-    i = emitInst(ls, OP_PUSH, emitK(ls, b2obj(e->u.info)));
+    i = emitInstZ(ls, OP_PUSH, emitK(ls, b2obj(e->u.info)));
     break;
   case EXPNAME: {
     Vardsc v;
     getvar(ls, e->u.s, &v);
     int opc = v.k == VKGLB ? OP_GETGLB : OP_GETVAR;
-    i = emitInst(ls, opc, emitK(ls, s2obj(e->u.s)));
+    i = emitInstZ(ls, opc, emitK(ls, s2obj(e->u.s)));
   } break;
   case EXPCALL:
     break;
@@ -174,10 +188,10 @@ static void expbin(lex_State *ls, int op, expdsc *e1, expdsc *e2) {
   free_exp(ls, e1);
   free_exp(ls, e2);
   switch (op) {
-  case OPR_ADD: emitInst(ls, OP_ADD, 0); break;
-  case OPR_SUB: emitInst(ls, OP_SUB, 0); break;
-  case OPR_DIV: emitInst(ls, OP_DIV, 0); break;
-  case OPR_MUL: emitInst(ls, OP_MUL, 0); break;
+  case OPR_ADD: emitInstZ(ls, OP_ADD, 0); break;
+  case OPR_SUB: emitInstZ(ls, OP_SUB, 0); break;
+  case OPR_DIV: emitInstZ(ls, OP_DIV, 0); break;
+  case OPR_MUL: emitInstZ(ls, OP_MUL, 0); break;
   default: cyth_assert(0); break;
   }
 }
@@ -271,9 +285,10 @@ static void xexp(lex_State *ls, expdsc *e) {
       if (ls->t.type != ')')
         n = explist(ls, e);
       expect(ls, ')', "')' to close argument list");
-      emitInst(ls, OP_CALL, n);
+      int idx = emitInstab(ls, OP_CALL, n, 1);
       e->k = EXPCALL;
-      e->u.info = n;
+      e->u.c.nargs = n;
+      e->u.c.idx = idx;
     } break;
     default:
       return;
@@ -348,7 +363,7 @@ static void assign(lex_State *ls, expdsc *e) {
   expr(ls, e);
   free_exp(ls, e);
   int k = emitK(ls, s2obj(name));
-  emitInst(ls, OP_SETVAR, k);
+  emitInstZ(ls, OP_SETVAR, k);
   v.k = VKLOC;
   setvar(ls, v);
 }
@@ -362,6 +377,7 @@ static void exprstat(lex_State *ls) {
     assign(ls, &e);
   } else {
     ensure(ls, e.k == EXPCALL, "expected statement");
+    setargb(ls->fs->f->code[e.u.c.idx], 0); /* as statement it won't use any results */
     free_exp(ls, &e);
   }
 }
@@ -373,7 +389,7 @@ static void ifdo(lex_State *ls) {
   expect(ls, TK_IF, "'if' token");
   expr(ls, &e);
   free_exp(ls, &e);
-  int pc = emitInstl(ls, line, OP_JF, 0);
+  int pc = emitInstlZ(ls, line, OP_JF, 0);
   block(ls);
   patch(ls, pc, savepc(ls) - 2);
 }
@@ -385,9 +401,9 @@ static void whiledo(lex_State *ls) {
   cond = savepc(ls);
   expr(ls, &e);
   free_exp(ls, &e);
-  jf = emitInst(ls, OP_JF, 0);
+  jf = emitInstZ(ls, OP_JF, 0);
   block(ls);
-  out = emitInst(ls, OP_JMP, cythC_imm_new(cond - savepc(ls) - 1));
+  out = emitInstZ(ls, OP_JMP, cythC_imm_new(cond - savepc(ls) - 1));
   patch(ls, jf, out-1);
 }
 

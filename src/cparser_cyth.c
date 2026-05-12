@@ -279,8 +279,12 @@ static void instruction(lex_State *ls) {
     int nargs = expect(ls, TK_INT,
       "Expected number of arguments"
       " for call instruction.").value.i;
+    int nresults = expect(ls, TK_INT,
+      "Expected number of results"
+      " for call instruction.").value.i;
     setopcode(i, OP_CALL);
-    setargz(i, nargs);
+    setarga(i, nargs);
+    setargb(i, nresults);
   } break;
   case TK_JT:
     setopcode(i, OP_JT);
