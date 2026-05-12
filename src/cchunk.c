@@ -322,7 +322,7 @@ static void print_code(cyth_Function *f) {
       printf("%s\t%d", cythC_getopcode(opcode), az);
       break;
     case iAb:
-      printf("%s\t%d\t%d", cythC_getopcode(opcode), getarga(j), getargb(j));
+      printf("%s\t%d %d", cythC_getopcode(opcode), getarga(j), getargb(j));
       break;
     default:
       cyth_assert(0);

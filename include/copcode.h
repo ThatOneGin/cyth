@@ -31,7 +31,7 @@ enum opmode {
   /* OP_MUL     iZ      push(pop() * pop())             */
   /* OP_SETVAR  iZ      vars[k[z]] = pop()              */
   /* OP_GETVAR  iZ      push(vars[k[z]])                */
-  /* OP_RETURN  iZ      return pop()                    */
+  /* OP_RETURN  iAb     return                          */
   /* OP_EQ      iZ      pop() == pop()                  */
   /* OP_NEQ     iZ      pop() != pop()                  */
   /* OP_JT      iZs     if pop() = true then jmp        */
@@ -40,31 +40,31 @@ enum opmode {
   /* OP_FUNC    iZ      push(f[Z])                      */
   /* OP_SETGLB  iZ      gt[k[z]] = pop()                */
   /* OP_GETGLB  iZ      push(gt[k[z]])                  */
-  /* OP_CALL    iZ      call(-(z+1))                    */
+  /* OP_CALL    iAb     call(-(a+1),b)                  */
   /* OP_DUP     iZ      x=pop() push(x) push(x)         */
   /* OP_SWAP    iZ      x,y=pop(),pop() push(y) push(x) */
   /* OP_COUNT (guard)                                   */
   /* opcode   | mode |  desc                            */
 #define OPCODES \
-  X(OP_PUSH, "PUSH", iZ)     \
-  X(OP_POP, "POP", iZ)       \
-  X(OP_ADD, "ADD", iZ)       \
-  X(OP_SUB, "SUB", iZ)       \
-  X(OP_DIV, "DIV", iZ)       \
-  X(OP_MUL, "MUL", iZ)       \
-  X(OP_SETVAR, "SETVAR", iZ) \
-  X(OP_GETVAR, "GETVAR", iZ) \
-  X(OP_RETURN, "RETURN", iZ) \
-  X(OP_EQ, "EQ", iZ)         \
-  X(OP_NEQ, "NEQ", iZ)       \
-  X(OP_JT, "JT", iZs)        \
-  X(OP_JF, "JF", iZs)        \
-  X(OP_JMP, "JMP", iZs)      \
-  X(OP_FUNC, "FUNC", iZ)     \
-  X(OP_SETGLB, "SETGLB", iZ) \
-  X(OP_GETGLB, "GETGLB", iZ) \
-  X(OP_CALL, "CALL", iZ)     \
-  X(OP_DUP, "DUP", iZ)       \
+  X(OP_PUSH, "PUSH", iZ)      \
+  X(OP_POP, "POP", iZ)        \
+  X(OP_ADD, "ADD", iZ)        \
+  X(OP_SUB, "SUB", iZ)        \
+  X(OP_DIV, "DIV", iZ)        \
+  X(OP_MUL, "MUL", iZ)        \
+  X(OP_SETVAR, "SETVAR", iZ)  \
+  X(OP_GETVAR, "GETVAR", iZ)  \
+  X(OP_RETURN, "RETURN", iAb) \
+  X(OP_EQ, "EQ", iZ)          \
+  X(OP_NEQ, "NEQ", iZ)        \
+  X(OP_JT, "JT", iZs)         \
+  X(OP_JF, "JF", iZs)         \
+  X(OP_JMP, "JMP", iZs)       \
+  X(OP_FUNC, "FUNC", iZ)      \
+  X(OP_SETGLB, "SETGLB", iZ)  \
+  X(OP_GETGLB, "GETGLB", iZ)  \
+  X(OP_CALL, "CALL", iAb)     \
+  X(OP_DUP, "DUP", iZ)        \
   X(OP_SWAP, "SWAP", iZ)
 
 enum opcodes {
