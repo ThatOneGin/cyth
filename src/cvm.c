@@ -267,7 +267,7 @@ returning:
       } vmbreak;
       vmcase(OP_RETURN) {
         if (ci->prev != NULL && ci->prev->type != CCALL) {
-          cythF_poscall(C, f->nresults);
+          cythF_poscall(C, f->nresults, getargb(i));
           ci = C->ci; /* return to caller */
           goto returning;
         } else return;
@@ -319,11 +319,11 @@ returning:
         cythA_push(C, v);
       } vmbreak;
       vmcase(OP_CALL) {
-        int f = -(getargz(i)+1); /* get relative index to the stack */
+        int f = -(getarga(i)+1); /* get relative index to the stack */
         stkrel func = &C->top.p[f];
         if (func < base)
           cythE_error(C, "No function on the stack to call.");
-        cythF_precall(C, func, getargz(i)); /* load function */
+        cythF_precall(C, func, getarga(i)); /* load function */
         C->ci->prev = ci;
         ci = C->ci; /* replace old frame with the new one */
         if (ci->type == CYTHCALL)
@@ -336,7 +336,7 @@ returning:
               "represent a valid callable object.\n");
           else {
             int cnres = ud.u.cfunc(C);
-            cythF_poscall(C, cnres);
+            cythF_poscall(C, cnres, getargb(i));
             ci = C->ci;
           }
         }

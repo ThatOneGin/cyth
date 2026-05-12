@@ -54,7 +54,7 @@ static int print(cyth_State *C) {
 static int load(cyth_State *C) {
   String *s = cythA_popstr(C);
   cythI_loadfile(C, s2cstr(s));
-  cythF_call(C, -1, 0);
+  cythF_call(C, -1, 0, 0);
   return 0;
 }
 

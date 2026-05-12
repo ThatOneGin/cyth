@@ -104,7 +104,7 @@ defer:
     if (prog == NULL) cythE_error(C, "No input file.");
     cythB_openlib(C);
     cythI_loadfile(C, prog);
-    cythF_call(C, -1, 0);
+    cythF_call(C, -1, 0, 0);
   } else if (print) {
     if (prog == NULL) cythE_error(C, "No input file.");
     cythI_loadfile(C, prog);
