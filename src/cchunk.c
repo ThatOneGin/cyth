@@ -313,13 +313,23 @@ static void print_code(cyth_Function *f) {
     if (line > 0) printf("%d", line);
     else printf("#");
     printf("]\t");
-    if (cythC_getmode(j) == iZs) {
+    switch (cythC_getmode(j)) {
+    case iZs: {
       int32_t azs = cythC_imm2int(az);
-      printf("%s\t%d\t", cythC_getopcode(opcode), azs);
-    } else
-      printf("%s\t%d\t", cythC_getopcode(opcode), az);
+      printf("%s\t%d", cythC_getopcode(opcode), azs);
+    } break;
+    case iZ:
+      printf("%s\t%d", cythC_getopcode(opcode), az);
+      break;
+    case iAb:
+      printf("%s\t%d\t%d", cythC_getopcode(opcode), getarga(j), getargb(j));
+      break;
+    default:
+      cyth_assert(0);
+      break;
+    }
     if (opcode < OP_COUNT && print_az_as_value[opcode]) {
-      printf("; ");
+      printf("\t; ");
       print_value(f->k[az]);
       Putc('\n');
     } else {

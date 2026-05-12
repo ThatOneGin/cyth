@@ -8,14 +8,19 @@
 ** |**** ****|**** ****|**** ****|**** ****|
 ** | opcode  | argZ                        | iZ
 ** | opcode  | argZ(signed)                | iZs
-** | 0-7     | 8-31                        |
+** | opcode  | argA              | argb    | iAb
+** | 0-7     | 8-15    | 16-23   | 24-31   |
 */
 typedef uint32_t Instruction;
 typedef uint32_t argZ; /* actually 24 bits */
 
+typedef uint8_t argb;
+typedef uint16_t argA;
+
 enum opmode {
-  iZ, /* z is an unsigned integer */
-  iZs /* z is a signed integer */
+  iZ,  /* 1 i24       */
+  iZs, /* 1 u24       */
+  iAb  /* 1 i16, 1 i8 */
 };
 
   /* OP_PUSH    iZ      push(k[z])                      */
@@ -80,15 +85,24 @@ enum opcodes {
 #define OPCODE_POS 0
 #define ARGZ_POS 8
 
+#define ARGA_POS 8
+#define ARGB_POS 24
+
 /* get and set fields */
 
 #define getfield(i, pos, mask) (((i) >> pos) & mask)
 #define getopcode(i) ((i)&MASK0)
 #define getargz(i) (getfield(i, ARGZ_POS, MASK2))
 
+#define getarga(i) (getfield(i, ARGA_POS, MASK2))
+#define getargb(i) (getfield(i, ARGB_POS, MASK1))
+
 #define setfield(i, v, pos, m) ((i) = ((i) & ~(m << pos)) | ((v & m) << pos))
-#define setopcode(i, o) setfield(i, o, OPCODE_POS, MASK0)
-#define setargz(i, z) setfield(i, z, ARGZ_POS, MASK2)
+#define setopcode(i, o) (setfield(i, o, OPCODE_POS, MASK0))
+#define setargz(i, z) (setfield(i, z, ARGZ_POS, MASK2))
+
+#define setarga(i, a) (setfield(i, a, ARGA_POS, MASK2))
+#define setargb(i, b) (setfield(i, b, ARGB_POS, MASK1))
 
 typedef int32_t Imm;
 
