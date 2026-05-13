@@ -3,6 +3,7 @@
 #include <cio.h>
 #include <cmem.h>
 #include <caux.h>
+#include <cvm.h>
 
 #define ensure(ls, e, msg) ((e) ? ((void)0) : cythL_syntaxerror(ls, msg))
 #define saveline(ls) ((ls)->line)
@@ -15,13 +16,7 @@
 
 /* types */
 
-enum BINOPR {
-  OPR_ADD,
-  OPR_SUB,
-  OPR_DIV,
-  OPR_MUL,
-  OPR_INVALID
-};
+#define OPR_INVALID OPR_COUNT
 
 enum expdsck {
   EXPINT,  /* e->u.i    */
@@ -154,6 +149,31 @@ static int emitInstab_(lex_State *ls, int line, int opcode, int arga, int argb) 
   return emitC(ls, i, (line == -1) ? saveline(ls) : line);
 }
 
+static int ei2v(expdsc *e, Tvalue *v) {
+  if (e->k == EXPINT) {
+    *v = i2obj(e->u.i);
+    return 1;
+  } else
+    return 0;
+}
+
+/*
+** this is a very simple constant folding function
+** for now, it only can fold integer literals, also,
+** it would be really good in the future if it could
+** also try to detect constant variables too
+*/
+static int constfold(cyth_State *C, expdsc *res, expdsc *l, expdsc *r, int op) {
+  Tvalue v1, v2, obj_res;
+  if (!ei2v(l, &v1) || !ei2v(r, &v2))
+    return 0;
+  if (!cythV_arith(C, &obj_res, v1, v2, op))
+    return 0;
+  res->k = EXPINT;
+  res->u.i = obj2i(&obj_res);
+  return 1;
+}
+
 static void free_exp(lex_State *ls, expdsc *e) {
   int i = 0;
   switch (e->k) {
@@ -185,15 +205,19 @@ static void free_exp(lex_State *ls, expdsc *e) {
 }
 
 static void expbin(lex_State *ls, int op, expdsc *e1, expdsc *e2) {
-  free_exp(ls, e1);
-  free_exp(ls, e2);
-  switch (op) {
-  case OPR_ADD: emitInstZ(ls, OP_ADD, 0); break;
-  case OPR_SUB: emitInstZ(ls, OP_SUB, 0); break;
-  case OPR_DIV: emitInstZ(ls, OP_DIV, 0); break;
-  case OPR_MUL: emitInstZ(ls, OP_MUL, 0); break;
-  default: cyth_assert(0); break;
-  }
+  expdsc res;
+  if (!constfold(ls->C, &res, e1, e2, op)) {
+    free_exp(ls, e1);
+    free_exp(ls, e2);
+    switch (op) {
+    case OPR_ADD: emitInstZ(ls, OP_ADD, 0); break;
+    case OPR_SUB: emitInstZ(ls, OP_SUB, 0); break;
+    case OPR_DIV: emitInstZ(ls, OP_DIV, 0); break;
+    case OPR_MUL: emitInstZ(ls, OP_MUL, 0); break;
+    default: cyth_assert(0); break;
+    }
+  } else
+    *e1 = res;
 }
 
 static inline int match(lex_State *ls, int type) {

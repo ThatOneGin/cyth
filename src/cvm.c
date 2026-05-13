@@ -197,6 +197,14 @@ static int dobinop(cyth_integer *res, int op, Tvalue l, Tvalue r) {
   return 0;
 }
 
+int cythV_arith(cyth_State *C, Tvalue *res, Tvalue l, Tvalue r, int op) {
+  (void)C;
+  *res = i2obj(0);
+  if (dobinop(&obj2i(res), op, l, r) < 0)
+    return 0;
+  return 1;
+}
+
 /* execute a cyth call */
 void cythV_exec(cyth_State *C, Call_info *ci) {
   cyth_Function *f;
