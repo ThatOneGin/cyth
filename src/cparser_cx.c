@@ -322,6 +322,7 @@ static int explist(lex_State *ls, expdsc *e) {
   expr(ls, e);
   free_exp(ls, e);
   while (ls->t.type == ',') {
+    next(ls);
     expr(ls, e);
     free_exp(ls, e);
     ++i;
