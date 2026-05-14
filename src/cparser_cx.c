@@ -174,6 +174,19 @@ static int constfold(cyth_State *C, expdsc *res, expdsc *l, expdsc *r, int op) {
   return 1;
 }
 
+static int expname(lex_State *ls, expdsc *e) {
+  Vardsc v;
+  getvar(ls, e->u.s, &v);
+  int opc;
+  switch (v.k) {
+  case VKFUN:
+  case VKGLB: opc = OP_GETGLB; break;
+  case VKLOC: opc = OP_GETVAR; break;
+  default: cyth_assert(0);
+  }
+  return emitInstZ(ls, opc, emitK(ls, s2obj(e->u.s)));
+}
+
 static void free_exp(lex_State *ls, expdsc *e) {
   int i = 0;
   switch (e->k) {
@@ -186,12 +199,9 @@ static void free_exp(lex_State *ls, expdsc *e) {
   case EXPBOOL:
     i = emitInstZ(ls, OP_PUSH, emitK(ls, b2obj(e->u.info)));
     break;
-  case EXPNAME: {
-    Vardsc v;
-    getvar(ls, e->u.s, &v);
-    int opc = v.k == VKGLB ? OP_GETGLB : OP_GETVAR;
-    i = emitInstZ(ls, opc, emitK(ls, s2obj(e->u.s)));
-  } break;
+  case EXPNAME:
+    i = expname(ls, e);
+    break;
   case EXPCALL:
     break;
   case EXPUSED:
