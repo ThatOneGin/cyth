@@ -520,12 +520,40 @@ static void func(lex_State *ls) {
   setvar(ls, var);
 }
 
+/* globvar = NAME '=' expr */
+static void globvar(lex_State *ls) {
+  expdsc e;
+  Vardsc v = {0};
+  String *name;
+  name = expect(ls, TK_NAME, "global variable name").value.s;
+  getvar(ls, name, &v);
+  expect(ls, '=', "'='");
+  expr(ls, &e);
+  free_exp(ls, &e);
+  int k = emitK(ls, s2obj(name));
+  emitInstZ(ls, OP_SETGLB, k);
+  v.k = VKGLB;
+  setvar(ls, v);
+}
+
+/* toplevel = func | globvar */
+static void toplevel(lex_State *ls) {
+  switch (ls->t.type) {
+  case TK_FUNC:
+    func(ls);
+    break;
+  default:
+    globvar(ls);
+    break;
+  }
+}
+
 static void mainfunc(lex_State *ls) {
   func_State fs = {0};
   openfunc(ls, &fs);
   cyth_Function *f = fs.f;
   while (ls->t.type != TK_EOF) {
-    func(ls);
+    toplevel(ls);
   }
   expect(ls, TK_EOF, "End-of-file");
     Vardsc v;
