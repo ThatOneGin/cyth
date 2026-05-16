@@ -75,10 +75,13 @@ static void setvar(lex_State *ls, Vardsc v) {
   DataBlk *blk = (DataBlk*)ls->pdata;
   if (blk->vars.n >= blk->vars.s)
     cythM_vecgrow(ls->C, blk->vars.vars, blk->vars.s, Vardsc);
+  Vardsc curr;
   for (cmem_t i = 0; i < blk->vars.n; i++) {
-    if (blk->vars.vars[i].name == v.name) {
-      cythE_error(ls->C, "Trying to redefine variable '%*s'",
-        (unsigned int)v.name->len, v.name->data);
+    curr = blk->vars.vars[i];
+    if (curr.name == v.name) {
+      if (curr.k == VKGLB || curr.k == VKFUN)
+        cythE_error(ls->C, "Trying to redefine variable '%*s'",
+          (unsigned int)v.name->len, v.name->data);
     }
   }
   blk->vars.vars[blk->vars.n++] = v;
