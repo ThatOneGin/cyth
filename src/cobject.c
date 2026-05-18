@@ -96,7 +96,7 @@ void cythO_buffer_appendstr(cyth_State *C, SBuffer *s,
 void cythO_buffer_rewind(cyth_State *C, SBuffer *s) {
   (void)C;
   s->n = 0;
-  s->data[0] = '\0';
+  if (s->data) s->data[0] = '\0';
 }
 
 void cythO_buffer_free(cyth_State *C, SBuffer *s) {
