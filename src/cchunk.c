@@ -36,7 +36,16 @@ static void unload_int(Unloader *U, cyth_integer i, int size) {
 
 static void unload_string(Unloader *U, String *s) {
   unload_int(U, s->len, DEFAULTINTSIZE);
-  unload_bytearray(U, s->data, s->len);
+  if (s->len > 0) unload_bytearray(U, s->data, s->len);
+  else {
+    /*
+    ** put a 0 byte because
+    ** if s->len is 0 it could
+    ** lead to false errors
+    ** in some situations
+    */
+    unload_byte(U, 0);
+  }
 }
 
 static void unload_value(Unloader *U, Tvalue *v) {
@@ -138,7 +147,8 @@ static void load_string(Loader *L, String **s) {
   cmem_t len;
   load_size(L, &len, DEFAULTINTSIZE);
   *s = cythS_newstrobj(L->C, len);
-  load_bytearray(L, (*s)->data, len);
+  if (len > 0) load_bytearray(L, (*s)->data, len);
+  else *(*s)->data = 0;
   (*s)->len = len;
   cythS_finishstrobj(L->C, s);
 }
