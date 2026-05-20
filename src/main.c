@@ -105,12 +105,14 @@ defer:
     cythB_openlib(C);
     cythI_loadfile(C, prog);
     cythF_call(C, -1, 0, 0);
-  } else if (print) {
+  }
+  if (print) {
     if (prog == NULL) cythE_error(C, "No input file.");
     cythI_loadfile(C, prog);
     Tvalue f = cythA_pop(C);
     cythL_print(obj2f(&f));
-  } else /* or helpmsg = 1 */
+  }
+  if (helpmsg) /* or helpmsg = 1 */
     help();
 close:
   cythE_closestate(C);
