@@ -15,15 +15,15 @@ extern void lexc(lex_State *ls);
 ** so it won't get collected by the GC
 */
 void cythL_anchorstring(lex_State *ls, String *s) {
-  cythH_append(ls->C, ls->tab, i2obj(ls->tab->len), s2obj(s));
+  cythR_push(ls->C, ls->tab, ls->tab->narray, s2obj(s));
 }
 
 lex_State cythL_new(cyth_State *C, int mode, char *name, Stream *input) {
   lex_State ls = {.mode = mode};
   ls.C = C;
-  ls.tab = cythH_new(C);
+  ls.tab = cythR_new(C);
   /* put the table where the GC can see */
-  cythA_push(C, t2obj(ls.tab));
+  cythA_push(C, a2obj(ls.tab));
   cythO_buffer_new(&ls.buf);
   ls.line = 1;
   ls.fs = NULL;

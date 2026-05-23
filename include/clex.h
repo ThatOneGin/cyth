@@ -26,13 +26,13 @@ typedef struct {
   int line;
   int current; /* current char */
   Token t; /* current token */
-  Table *tab; /* anchor for strings */
+  Array *tab; /* anchor for strings */
   func_State *fs; /* used by the parser */
   cyth_State *C;
   Stream *input;
   String *sourcename;
   SBuffer buf; /* buffer for string building */
-  void *pdata; /* used by the paser (set later) */
+  void *pdata; /* used by the parser (set later) */
   const int mode; /* LEXMODE */
 } lex_State;
 
