@@ -17,6 +17,7 @@ typedef struct {
 ** that is, every value can be used as keys.
 */
 typedef struct Table Table;
+typedef struct Array Array;
 
 #define VALUES \
   X(CYTH_NONE, "none", 0) \
@@ -81,6 +82,12 @@ struct Table {
   int len;
 };
 
+struct Array {
+  Tvalue *data;
+  cmem_t narray;
+  cmem_t arraysize;
+};
+
 #define cyth_tt(o) ((o)->tt_)
 #define obj2i(o) (o)->v.integer
 #define obj2s(o) (o)->v.string
@@ -115,6 +122,13 @@ int cythH_append(cyth_State *C, Table *t, Tvalue i, Tvalue v);
 void cythH_get(cyth_State *C, Table *t, Tvalue i, Tvalue *res);
 int cythH_remove(cyth_State *C, Table *t, Tvalue i);
 void cythH_free(cyth_State *C, Table *t);
+
+Array *cythR_new(cyth_State *C);
+void cythR_push(cyth_State *C, Array *a, cyth_integer k, Tvalue v);
+void cythR_get(cyth_State *C, Array *a, cyth_integer k, Tvalue *res);
+void cythR_remove(cyth_State *C, Array *a, cyth_integer k);
+void cythR_free(cyth_State *C, Array *a);
+
 void cythO_buffer_new(SBuffer *s);
 void cythO_buffer_appendstr(cyth_State *C, SBuffer *s, char *str, cmem_t len);
 void cythO_buffer_appendchar(cyth_State *C, SBuffer *s, char c);

@@ -34,7 +34,7 @@ static void freeobj(cyth_State *C, gc_object *o) {
   switch (o->tt_) {
   case GCOS:
     cythM_free(C, o->v.s->data, o->v.s->len);
-    cythM_free(C, o->v.s, sizeof(o->v.s));
+    cythM_free(C, o->v.s, sizeof(*o->v.s));
     break;
   case GCOT:
     cythH_free(C, o->v.t);
@@ -49,6 +49,9 @@ static void freeobj(cyth_State *C, gc_object *o) {
     else
       cythM_free(C, o->v.u.u.val.data, o->v.u.u.val.size);
     break;
+  case GCOA:
+    cythR_free(C, o->v.a);
+    cythM_free(C, o->v.a, sizeof(*o->v.a));
   }
   cythM_free(C, o, sizeof(gc_object));
 }

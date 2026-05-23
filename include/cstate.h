@@ -14,6 +14,7 @@
 #define GCOT 1
 #define GCOF 2
 #define GCOU 3
+#define GCOA 4
 
 struct gc_object {
   byte tt_;
@@ -22,6 +23,7 @@ struct gc_object {
     Table *t;
     cyth_Function *f;
     userdata u;
+    Array *a;
   } v;
   byte mark;
   struct gc_object *next;

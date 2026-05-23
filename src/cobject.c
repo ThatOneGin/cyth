@@ -77,6 +77,47 @@ void cythH_free(cyth_State *C, Table *t) {
   t->len = 0;
 }
 
+Array *cythR_new(cyth_State *C) {
+  gc_object *ref = cythG_newobj(C, GCOA);
+  Array *a = cythM_malloc(C, sizeof(Array));
+  a->arraysize = 2;
+  a->narray = 0;
+  cythM_vecnew(C, a->data, a->arraysize, Tvalue);
+  ref->v.a = a;
+  return a;
+}
+
+void cythR_push(cyth_State *C, Array *a,
+               cyth_integer k, Tvalue v) {
+  if (k < 0 || (cmem_t)k > a->narray)
+    cythE_error(C, "index %ld is out of range", k);
+  if (a->narray >= a->arraysize)
+    cythM_vecgrow(C, a->data, a->arraysize, Tvalue);
+  a->data[k] = v;
+  if ((cmem_t)k == a->narray)
+    a->narray++;
+}
+
+void cythR_get(cyth_State *C, Array *a, cyth_integer k, Tvalue *res) {
+  if (k < 0 || (cmem_t)k > a->narray)
+    cythE_error(C, "index %ld is out of range", k);
+  *res = a->data[k];
+}
+
+void cythR_remove(cyth_State *C, Array *a, cyth_integer k) {
+  if (k < 0 || (cmem_t)k > a->narray)
+    cythE_error(C, "index %ld is out of range", k);
+  for (cmem_t i = (cmem_t)k; i < a->narray - 1; i++) {
+    a->data[i] = a->data[i+1];
+  }
+  a->narray--;
+}
+
+void cythR_free(cyth_State *C, Array *a) {
+  cythM_vecfree(C, a->data, a->arraysize, Tvalue);
+  a->narray = 0;
+}
+
 void cythO_buffer_new(SBuffer *s) {
   s->data = NULL;
   s->n = 0;
