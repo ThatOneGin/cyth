@@ -26,7 +26,8 @@ typedef struct Array Array;
   X(CYTH_TABLE, "table", 3) \
   X(CYTH_FUNCTION, "function", 4) \
   X(CYTH_USERDATA, "userdata", 5) \
-  X(CYTH_BOOL, "bool", 6)
+  X(CYTH_BOOL, "bool", 6) \
+  X(CYTH_ARRAY, "array", 7)
 
 enum CYTH_VALUES {
 #define X(name, str, value) name = value,
@@ -63,6 +64,7 @@ typedef union {
   Table *table;
   cyth_Function *function;
   userdata userdata;
+  Array *array;
   byte boolean;
 } Value;
 
@@ -95,6 +97,7 @@ struct Array {
 #define obj2f(o) (o)->v.function
 #define obj2ud(o) (o)->v.userdata
 #define obj2b(o) (o)->v.boolean
+#define obj2a(o) (o)->v.array
 #define objcopy(s1, s2) {\
   cyth_tt(s1) = cyth_tt(s2); \
   (s1)->v = (s2)->v;}
@@ -108,6 +111,7 @@ typedef Tvalue *stkrel;
 #define f2obj(f) ((Tvalue){.tt_=CYTH_FUNCTION,.v.function=(f)})
 #define ud2obj(ud) ((Tvalue){.tt_=CYTH_USERDATA,.v.userdata=(ud)})
 #define b2obj(b) ((Tvalue){.tt_=CYTH_BOOL,.v.boolean=(b)})
+#define a2obj(a) ((Tvalue){.tt_=CYTH_ARRAY,.v.array=(a)})
 
 typedef int(*cyth_Pfunction)(cyth_State*, void*);
 

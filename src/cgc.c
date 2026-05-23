@@ -16,6 +16,7 @@ static void *val2ptr(Tvalue v) {
   case CYTH_TABLE: return obj2t(&v);
   case CYTH_FUNCTION: return obj2f(&v);
   case CYTH_USERDATA: return obj2ud(&v).type == UDVAL ? obj2ud(&v).u.val.data : NULL;
+  case CYTH_ARRAY: return obj2a(&v);
   default: return NULL;
   }
 }
@@ -26,6 +27,7 @@ static void *gco2ptr(gc_object *o) {
   case GCOT: return o->v.t;
   case GCOF: return o->v.f;
   case GCOU: return (o->v.u.type == UDVAL) ? o->v.u.u.val.data : NULL;
+  case GCOA: return o->v.a;
   default: return NULL;
   }
 }
@@ -75,6 +77,10 @@ static void markvalue(global_State *G, Tvalue v) {
       markvalue(G, l->val);
       l = l->next;
     }
+  } else if (cyth_tt(&v) == CYTH_ARRAY) {
+    Array *a = obj2a(&v);
+    for (cmem_t i = 0; i < a->narray; i++)
+      markvalue(G, a->data[i]);
   } else if (cyth_tt(&v) == CYTH_FUNCTION) {
     cyth_Function *f = obj2f(&v);
     for (cmem_t i = 0; i < f->nk; i++)

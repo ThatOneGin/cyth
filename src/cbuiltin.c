@@ -10,12 +10,14 @@ static int tostring(cyth_State *C) {
   static String *table = NULL;
   static String *function = NULL;
   static String *userdata = NULL;
+  static String *array = NULL;
   if (!init) {
     /* to avoid the overhead of searching strings */
     none = cythS_new(C, "none");
     table = cythS_new(C, "table");
     function = cythS_new(C, "function");
     userdata = cythS_new(C, "userdata");
+    array = cythS_new(C, "array");
     init = 1;
   }
   if (cythE_gettop(C) == 0)
@@ -29,6 +31,7 @@ static int tostring(cyth_State *C) {
   case CYTH_TABLE: cythA_pushstr(C, table); break;
   case CYTH_FUNCTION: cythA_pushstr(C, function); break;
   case CYTH_USERDATA: cythA_pushstr(C, userdata); break;
+  case CYTH_ARRAY: cythA_pushstr(C, array); break;
   case CYTH_STRING: cythA_pushstr(C, obj2s(&v)); break;
   case CYTH_BOOL: cyth_pushcstr(C, (obj2b(&v) ? "true" : "false")); break;
   case CYTH_INTEGER:
