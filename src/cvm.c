@@ -81,10 +81,10 @@ static Tvalue getf(cyth_Function *f, argZ az) {
 }
 
 /* get a local variable (checks for outer environments) */
-static void getvar(cyth_State *C, Call_info *ci, Tvalue name, Tvalue *res) {
-  cythH_get(C, ci->u.cyth.locvars, name, res);
-  if (res->tt_ == CYTH_NONE)
-    cythE_error(C, "Unknown variable '%s'.\n", s2cstr(obj2s(&name)));
+static void getvar(cyth_State *C, Call_info *ci, argZ key, Tvalue *res) {
+  if ((argZ)ci->u.cyth.locvars->narray >= key)
+    cythE_error(C, "invalid variable index %u.\n", key);
+  cythR_get(C, ci->u.cyth.locvars, (cyth_integer)key, res);
 }
 
 /* transform value to a boolean */
@@ -210,7 +210,7 @@ void cythV_exec(cyth_State *C, Call_info *ci) {
   cyth_Function *f;
   Instruction i;
   Instruction *pc;
-  Table *vars;
+  Array *vars;
   stkrel base;
 #if defined(CYTH_USE_COMP_GOTOS)
 #include "disptab.h"
@@ -266,11 +266,11 @@ returning:
           cythE_error(C, "No available value in "
                          "the stack for variable.\n");
         Tvalue v = C->top.p[-1];
-        cythH_append(C, vars, getk(f, getargz(i)), v);
+        cythR_push(C, vars, getargz(i), v);
         cythE_dectop(C);
       } vmbreak;
       vmcase(OP_GETVAR) {
-        getvar(C, ci, getk(f, getargz(i)), C->top.p);
+        getvar(C, ci, getargz(i), C->top.p);
         cythE_inctop(C);
       } vmbreak;
       vmcase(OP_RETURN) {

@@ -101,7 +101,7 @@ void cythF_precall(cyth_State *C, stkrel func, int nargs, int nwanted) {
                   obj2f(func)->nparams, nargs);
     ci->u.cyth.f = obj2f(func);
     ci->u.cyth.pc = 0;
-    ci->u.cyth.locvars = cythH_new(C);
+    ci->u.cyth.locvars = cythR_new(C);
     ci->u.cyth.callnres = nwanted;
   }
   C->top.p = ci->top.p;

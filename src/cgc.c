@@ -97,7 +97,7 @@ static void markphase(cyth_State *C) {
   Call_info *ci = C->ci;
   while (ci != NULL) {
     if (ci->type == CYTHCALL) /* ci->func is on the stack */
-      markvalue(G, t2obj(ci->u.cyth.locvars));
+      markvalue(G, a2obj(ci->u.cyth.locvars));
     ci = ci->prev;
   }
   for (stkrel v = C->base.p; v != C->top.p; v++) {
