@@ -35,6 +35,7 @@ typedef struct {
 typedef struct {
   varlist vars;
   lablist labels;
+  int nlocvars;
 } DataBlk;
 
 /*

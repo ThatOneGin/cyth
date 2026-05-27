@@ -82,7 +82,7 @@ static Tvalue getf(cyth_Function *f, argZ az) {
 
 /* get a local variable (checks for outer environments) */
 static void getvar(cyth_State *C, Call_info *ci, argZ key, Tvalue *res) {
-  if ((argZ)ci->u.cyth.locvars->narray >= key)
+  if ((argZ)ci->u.cyth.locvars->narray < key)
     cythE_error(C, "invalid variable index %u.\n", key);
   cythR_get(C, ci->u.cyth.locvars, (cyth_integer)key, res);
 }

@@ -17,6 +17,7 @@
 typedef struct {
   int nlabels;
   int nvars;
+  int nlocvars;
 } Symtab;
 
 /* Code generation */
@@ -58,6 +59,8 @@ static void setvar(lex_State *ls, Vardsc v) {
         (unsigned int)v.name->len, v.name->data);
     }
   }
+  if (v.k == VKLOC)
+    blk->nlocvars++;
   blk->vars.vars[blk->vars.n++] = v;
 }
 
@@ -81,6 +84,7 @@ static void enter(lex_State *ls, Symtab *sym) {
   DataBlk *blk = (DataBlk*)ls->pdata;
   sym->nvars = blk->vars.n;
   sym->nlabels = blk->labels.n;
+  sym->nlocvars = blk->nlocvars;
 }
 
 /* leave scope (erase scope's local variables) */
@@ -88,6 +92,7 @@ static void leave(lex_State *ls, Symtab sym) {
   DataBlk *blk = (DataBlk*)ls->pdata;
   blk->vars.n = sym.nvars;
   blk->labels.n = sym.nlabels;
+  blk->nlocvars = sym.nlocvars;
 }
 
 static inline int relpc(lex_State *ls) {
@@ -252,10 +257,10 @@ static void instruction(lex_State *ls) {
     String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;
     var.k = VKLOC;
     var.name = name;
-    var.i = 0;
+    var.i = ((DataBlk*)ls->pdata)->nlocvars;
     setvar(ls, var);
     setopcode(i, OP_SETVAR);
-    setargz(i, emitK(ls, s2obj(name)));
+    setargz(i, var.i);
   } break;
   case TK_GETVAR: {
     Vardsc v;
@@ -263,7 +268,7 @@ static void instruction(lex_State *ls) {
     getvar(ls, name, &v);
     if (v.k == VKLOC) {
       setopcode(i, OP_GETVAR);
-      setargz(i, emitK(ls, s2obj(name)));
+      setargz(i, v.i);
     } else { /* a function */
       setopcode(i, OP_GETGLB);
       setargz(i, emitK(ls, s2obj(name)));

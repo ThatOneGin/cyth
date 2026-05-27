@@ -42,6 +42,7 @@ typedef struct {
 
 typedef struct {
   int nvars;
+  int nlocvars;
 } Symtab;
 
 /* error functions */
@@ -84,6 +85,8 @@ static void setvar(lex_State *ls, Vardsc v) {
           (unsigned int)v.name->len, v.name->data);
     }
   }
+  if (v.k == VKLOC)
+    blk->nlocvars++;
   blk->vars.vars[blk->vars.n++] = v;
 }
 
@@ -106,12 +109,14 @@ static void getvar(lex_State *ls, String *name, Vardsc *v) {
 static void enter(lex_State *ls, Symtab *sym) {
   DataBlk *blk = (DataBlk*)ls->pdata;
   sym->nvars = blk->vars.n;
+  sym->nlocvars = blk->nlocvars;
 }
 
 /* leave scope (erase scope's local variables) */
 static void leave(lex_State *ls, Symtab sym) {
   DataBlk *blk = (DataBlk*)ls->pdata;
   blk->vars.n = sym.nvars;
+  blk->nlocvars = sym.nlocvars;
 }
 
 /* set any kind of jump at 'pc' to point at 'target' */
@@ -180,14 +185,18 @@ static int constfold(cyth_State *C, expdsc *res, expdsc *l, expdsc *r, int op) {
 static int expname(lex_State *ls, expdsc *e) {
   Vardsc v;
   getvar(ls, e->u.s, &v);
-  int opc;
+  int k;
   switch (v.k) {
   case VKFUN:
-  case VKGLB: opc = OP_GETGLB; break;
-  case VKLOC: opc = OP_GETVAR; break;
+  case VKGLB:
+    k = emitInstZ(ls, OP_GETGLB, emitK(ls, s2obj(e->u.s)));
+    break;
+  case VKLOC:
+    k = emitInstZ(ls, OP_GETVAR, v.i);
+    break;
   default: cyth_assert(0);
   }
-  return emitInstZ(ls, opc, emitK(ls, s2obj(e->u.s)));
+  return k;
 }
 
 static void free_exp(lex_State *ls, expdsc *e) {
@@ -395,14 +404,15 @@ static void ret(lex_State *ls) {
 static void assign(lex_State *ls, expdsc *e) {
   Vardsc v;
   String *name;
+  int k = ((DataBlk*)ls->pdata)->nlocvars;
   name = e->u.s;
-  getvar(ls, name, &v);
+  v.name = name;
   expect(ls, '=', "'='");
   expr(ls, e);
   free_exp(ls, e);
-  int k = emitK(ls, s2obj(name));
   emitInstZ(ls, OP_SETVAR, k);
   v.k = VKLOC;
+  v.i = k;
   setvar(ls, v);
 }
 
