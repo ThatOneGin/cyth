@@ -287,10 +287,7 @@ static void print_constants(cyth_Function *f) {
 static byte print_az_as_value[OP_COUNT] = {
   [OP_PUSH] = 1,
   [OP_POP] = 0,
-  [OP_ADD] = 0,
-  [OP_SUB] = 0,
-  [OP_DIV] = 0,
-  [OP_MUL] = 0,
+  [OP_BINOP] = 0,
   [OP_SETVAR] = 0,
   [OP_GETVAR] = 0,
   [OP_EQ] = 0,
@@ -332,15 +329,19 @@ static void print_code(cyth_Function *f) {
       printf("%s\t%d", cythC_getopcode(opcode), az);
       break;
     case iAb:
-      printf("%s\t%d %d", cythC_getopcode(opcode), getarga(j), getargb(j));
+      printf("%s\t%d\t%d", cythC_getopcode(opcode), getarga(j), getargb(j));
       break;
     default:
       cyth_assert(0);
       break;
     }
     if (opcode < OP_COUNT && print_az_as_value[opcode]) {
-      printf("\t; ");
+      printf("\t;\t");
       print_value(f->k[az]);
+      Putc('\n');
+    } else if (opcode == OP_BINOP) {
+      printf("\t;\t");
+      printf("%s", cythC_getbinopname(getargz(j)));
       Putc('\n');
     } else {
       Putc('\n');

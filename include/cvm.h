@@ -7,8 +7,8 @@
 enum BINOPR {
   OPR_ADD,
   OPR_SUB,
-  OPR_MUL,
   OPR_DIV,
+  OPR_MUL,
   OPR_COUNT
 };
 

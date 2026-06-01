@@ -229,36 +229,12 @@ returning:
       vmcase(OP_POP) {
         cythE_dectop(C);
       } vmbreak;
-      vmcase(OP_ADD) {
+      vmcase(OP_BINOP) {
         cyth_integer res = 0;
         Tvalue r = pop(C);
         Tvalue l = pop(C);
-        if (dobinop(&res, OPR_ADD, l, r) < 0)
-          cythE_error(C, "could not do addition");
-        cythA_pushint(C, res);
-      } vmbreak;
-      vmcase(OP_SUB) {
-        cyth_integer res = 0;
-        Tvalue r = pop(C);
-        Tvalue l = pop(C);
-        if (dobinop(&res, OPR_SUB, l, r) < 0)
-          cythE_error(C, "could not do subtraction");
-        cythA_pushint(C, res);
-      } vmbreak;
-      vmcase(OP_DIV) {
-        cyth_integer res = 0;
-        Tvalue r = pop(C);
-        Tvalue l = pop(C);
-        if (dobinop(&res, OPR_DIV, l, r) < 0)
-          cythE_error(C, "could not do division");
-        cythA_pushint(C, res);
-      } vmbreak;
-      vmcase(OP_MUL) {
-        cyth_integer res = 0;
-        Tvalue r = pop(C);
-        Tvalue l = pop(C);
-        if (dobinop(&res, OPR_MUL, l, r) < 0)
-          cythE_error(C, "could not do multiplication");
+        if (dobinop(&res, getargz(i), l, r) < 0)
+          cythE_error(C, "could not do binary operation");
         cythA_pushint(C, res);
       } vmbreak;
       vmcase(OP_SETVAR) {

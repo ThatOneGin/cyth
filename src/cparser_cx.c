@@ -231,13 +231,7 @@ static void expbin(lex_State *ls, int op, expdsc *e1, expdsc *e2) {
   if (!constfold(ls->C, &res, e1, e2, op)) {
     free_exp(ls, e1);
     free_exp(ls, e2);
-    switch (op) {
-    case OPR_ADD: emitInstZ(ls, OP_ADD, 0); break;
-    case OPR_SUB: emitInstZ(ls, OP_SUB, 0); break;
-    case OPR_DIV: emitInstZ(ls, OP_DIV, 0); break;
-    case OPR_MUL: emitInstZ(ls, OP_MUL, 0); break;
-    default: cyth_assert(0); break;
-    }
+    emitInstZ(ls, OP_BINOP, op);
   } else
     *e1 = res;
 }

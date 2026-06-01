@@ -3,6 +3,7 @@
 #include <cio.h>
 #include <cmem.h>
 #include <caux.h>
+#include <cvm.h>
 
 #define NOPATCH 0
 #define NEEDPATCH 1
@@ -248,10 +249,13 @@ static void instruction(lex_State *ls) {
     setargz(i, argz);
   } break;
   case TK_RETURN: setopcode(i, OP_RETURN); break;
-  case TK_ADD: setopcode(i, OP_ADD); break;
-  case TK_SUB: setopcode(i, OP_SUB); break;
-  case TK_DIV: setopcode(i, OP_DIV); break;
-  case TK_MUL: setopcode(i, OP_MUL); break;
+  case TK_ADD:
+  case TK_SUB:
+  case TK_DIV:
+  case TK_MUL:
+    setopcode(i, OP_BINOP);
+    setargz(i, (opcode.type - TK_ADD));
+    break;
   case TK_SETVAR: {
     Vardsc var = {0};
     String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;

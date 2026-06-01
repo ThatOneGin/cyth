@@ -25,10 +25,7 @@ enum opmode {
 
   /* OP_PUSH    iZ      push(k[z])                      */
   /* OP_POP     iZ      pop()                           */
-  /* OP_ADD     iZ      push(pop() + pop())             */
-  /* OP_SUB     iZ      push(pop() - pop())             */
-  /* OP_DIV     iZ      push(pop() / pop())             */
-  /* OP_MUL     iZ      push(pop() * pop())             */
+  /* OP_BINOP   iZ      arith(pop(), pop(), z as binop) */
   /* OP_SETVAR  iZ      vars[k[z]] = pop()              */
   /* OP_GETVAR  iZ      push(vars[k[z]])                */
   /* OP_RETURN  iZ      return                          */
@@ -48,10 +45,7 @@ enum opmode {
 #define OPCODES \
   X(OP_PUSH, "PUSH", iZ)     \
   X(OP_POP, "POP", iZ)       \
-  X(OP_ADD, "ADD", iZ)       \
-  X(OP_SUB, "SUB", iZ)       \
-  X(OP_DIV, "DIV", iZ)       \
-  X(OP_MUL, "MUL", iZ)       \
+  X(OP_BINOP, "BINOP", iZ)   \
   X(OP_SETVAR, "SETVAR", iZ) \
   X(OP_GETVAR, "GETVAR", iZ) \
   X(OP_RETURN, "RETURN", iZ) \
@@ -108,6 +102,7 @@ typedef int32_t Imm;
 
 int cythC_getmode(Instruction i);
 char *cythC_getopcode(Instruction i);
+char *cythC_getbinopname(int o);
 
 /*
 ** the first bit of i determines if the integer
