@@ -1,8 +1,17 @@
 #include <cbuiltin.h>
 #include <cstring.h>
+#include <cgc.h>
 
 #define cyth_builtinerr(C, f) cythE_error(C, "%s: " f, __func__)
 #define cyth_pushcstr(C, s) (cythA_pushstr(C, cythS_new(C, s)))
+
+/* allocate a string */
+static String *alloc_static_string(cyth_State *C, char *data) {
+  String *s = cythS_new(C, data);
+  cyth_assert(C->G->list->tt_ == GCOS && C->G->list->v.s == s);
+  cythG_uncoll(C, C->G->list);
+  return s;
+}
 
 static int tostring(cyth_State *C) {
   static int init = 0;
@@ -13,11 +22,11 @@ static int tostring(cyth_State *C) {
   static String *array = NULL;
   if (!init) {
     /* to avoid the overhead of searching strings */
-    none = cythS_new(C, "none");
-    table = cythS_new(C, "table");
-    function = cythS_new(C, "function");
-    userdata = cythS_new(C, "userdata");
-    array = cythS_new(C, "array");
+    none = alloc_static_string(C, "none");
+    table = alloc_static_string(C, "table");
+    function = alloc_static_string(C, "function");
+    userdata = alloc_static_string(C, "userdata");
+    array = alloc_static_string(C, "array");
     init = 1;
   }
   if (cythE_gettop(C) == 0)
