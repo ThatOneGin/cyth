@@ -306,6 +306,16 @@ static void instruction(lex_State *ls) {
     setargz(i, labelref(ls));
     break;
   case TK_POP: setopcode(i, OP_POP); break;
+  case TK_GETF: {
+    String *name = expect(ls, TK_NAME, "expected field name").value.s;
+    setopcode(i, OP_GETF);
+    setargz(i, emitK(ls, s2obj(name)));
+  } break;
+  case TK_SETF: {
+    String *name = expect(ls, TK_NAME, "expected field name").value.s;
+    setopcode(i, OP_SETF);
+    setargz(i, emitK(ls, s2obj(name)));
+  } break;
   default:
     error_unknown(ls, "instruction name");
     break;
