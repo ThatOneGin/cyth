@@ -25,6 +25,7 @@ enum expdsck {
   EXPNAME, /* e->u.s    */
   EXPCALL, /* e->u.info */
   EXPUSED, /* e->u.info */
+  EXPKEY   /* e->u.s    */
 };
 
 typedef struct {
@@ -218,6 +219,9 @@ static void free_exp(lex_State *ls, expdsc *e) {
     break;
   case EXPUSED:
     return;
+  case EXPKEY:
+    i = emitInstZ(ls, OP_GETF, emitK(ls, s2obj(e->u.s)));
+    break;;
   default:
     cyth_assert(0);
     break;
@@ -330,6 +334,13 @@ static void xexp(lex_State *ls, expdsc *e) {
       e->u.c.nargs = n;
       e->u.c.idx = idx;
     } break;
+    case '.': {
+      next(ls);
+      free_exp(ls, e);
+      String *name = expect(ls, TK_NAME, "expected field").value.s;
+      e->k = EXPKEY;
+      e->u.s = name;
+    } break;
     default:
       return;
     }
@@ -402,12 +413,19 @@ static void assign(lex_State *ls, expdsc *e) {
   name = e->u.s;
   v.name = name;
   expect(ls, '=', "'='");
-  expr(ls, e);
-  free_exp(ls, e);
-  emitInstZ(ls, OP_SETVAR, k);
-  v.k = VKLOC;
-  v.i = k;
-  setvar(ls, v);
+  if (e->k == EXPNAME) {
+    expr(ls, e);
+    free_exp(ls, e);
+    emitInstZ(ls, OP_SETVAR, k);
+    v.k = VKLOC;
+    v.i = k;
+    setvar(ls, v);
+  } else if (e->k == EXPKEY) {
+    expdsc rhs;
+    expr(ls, &rhs);
+    free_exp(ls, &rhs);
+    emitInstZ(ls, OP_SETF, emitK(ls, s2obj(e->u.s)));
+  } else cyth_assert(0);
 }
 
 /* exprstat = call | assign */
@@ -415,7 +433,7 @@ static void exprstat(lex_State *ls) {
   expdsc e;
   xexp(ls, &e);
   if (ls->t.type == '=') {
-    ensure(ls, e.k == EXPNAME, "invalid left-hand on assignment");
+    ensure(ls, e.k == EXPNAME || e.k == EXPKEY, "invalid left-hand on assignment");
     assign(ls, &e);
   } else {
     ensure(ls, e.k == EXPCALL, "expected statement");
