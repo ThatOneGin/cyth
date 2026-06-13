@@ -19,5 +19,7 @@ int cythV_getglobal(cyth_State *C, String *name, Tvalue *res);
 void cythV_dup(cyth_State *C);
 void cythV_swap(cyth_State *C);
 int cythV_arith(cyth_State *C, Tvalue *res, Tvalue l, Tvalue r, int op);
+void cythV_getf(cyth_State *C, Tvalue *res, Tvalue k);
+void cythV_setf(cyth_State *C, Tvalue k);
 void cythV_exec(cyth_State *C, Call_info *ci);
 #endif

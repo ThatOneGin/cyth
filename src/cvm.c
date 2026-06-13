@@ -205,6 +205,57 @@ int cythV_arith(cyth_State *C, Tvalue *res, Tvalue l, Tvalue r, int op) {
   return 1;
 }
 
+/* get the field of a table or an array */
+void cythV_getf(cyth_State *C, Tvalue *res, Tvalue k)
+{
+  /* top[-1] = table/array
+  ** k = key/field
+  */
+  Tvalue t = cythA_pop(C);
+  switch (t.tt_) {
+  case CYTH_ARRAY:
+    if (k.tt_ != CYTH_INTEGER)
+      cythE_error(C,
+        "an array only accepts integer keys");
+    cythR_get(C, obj2a(&t), obj2i(&k), res);
+    break;
+  case CYTH_TABLE:
+    cythH_get(C, obj2t(&t), k, res);
+    break;
+  default:
+    cythE_error(C,
+      "trying to get the value of an "
+      "invalid kind of target (not an array nor object)");
+  }
+}
+
+/* set the field of a table or an array */
+void cythV_setf(cyth_State *C, Tvalue k)
+{
+  /* top[-1] = value to set
+  ** top[-2] = table/array
+  ** k = key/field
+  */
+  Tvalue v, t;
+  v = cythA_pop(C);
+  t = cythA_pop(C);
+  switch (t.tt_) {
+  case CYTH_ARRAY:
+    if (k.tt_ != CYTH_INTEGER)
+      cythE_error(C,
+        "an array only accepts integer keys");
+    cythR_push(C, obj2a(&t), obj2i(&k), v);
+    break;
+  case CYTH_TABLE:
+    cythH_append(C, obj2t(&t), k, v);
+    break;
+  default:
+    cythE_error(C,
+      "trying to set the value of an "
+      "invalid kind of target (not an array nor object)");
+  }
+}
+
 /* execute a cyth call */
 void cythV_exec(cyth_State *C, Call_info *ci) {
   cyth_Function *f;
@@ -330,6 +381,14 @@ returning:
       } vmbreak;
       vmcase(OP_SWAP) {
         cythV_swap(C);
+      } vmbreak;
+      vmcase(OP_GETF) {
+        Tvalue res;
+        cythV_getf(C, &res, getk(f, getargz(i)));
+        cythA_push(C, res);
+      } vmbreak;
+      vmcase(OP_SETF) {
+        cythV_setf(C, getk(f, getargz(i)));
       } vmbreak;
     }
   }

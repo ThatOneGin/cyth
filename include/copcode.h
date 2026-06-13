@@ -40,6 +40,8 @@ enum opmode {
   /* OP_CALL    iAb     call(-(a+1),b)                  */
   /* OP_DUP     iZ      x=pop() push(x) push(x)         */
   /* OP_SWAP    iZ      x,y=pop(),pop() push(y) push(x) */
+  /* OP_GETF    iZ      push(pop()[k[z]])               */
+  /* OP_SETF    iZ      x,y=pop(); x[k[z]] = y          */
   /* OP_COUNT (guard)                                   */
   /* opcode   | mode |  desc                            */
 #define OPCODES \
@@ -59,7 +61,9 @@ enum opmode {
   X(OP_GETGLB, "GETGLB", iZ) \
   X(OP_CALL, "CALL", iAb)    \
   X(OP_DUP, "DUP", iZ)       \
-  X(OP_SWAP, "SWAP", iZ)
+  X(OP_SWAP, "SWAP", iZ)     \
+  X(OP_GETF, "GETF", iZ)     \
+  X(OP_SETF, "SETF", iZ)
 
 enum opcodes {
 #define X(name, string, opmode) name,
