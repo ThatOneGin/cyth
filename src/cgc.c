@@ -59,10 +59,10 @@ static void freeobj(cyth_State *C, gc_object *o) {
 }
 
 /* mark a tagged value */
-static void markvalue(global_State *G, Tvalue v) {
+static void markvalue(global_State *G, void *root, Tvalue v) {
   gc_object *l = G->list;
   void *vptr = val2ptr(v);
-  if (vptr == NULL) return; /* avoid work */
+  if (vptr == root || vptr == NULL) return; /* avoid work */
   while (l != NULL) {
     void *optr = gco2ptr(l);
     if (optr == vptr)
@@ -73,18 +73,18 @@ static void markvalue(global_State *G, Tvalue v) {
     Table *t = obj2t(&v);
     Node *l = t->list;
     while (l != NULL) {
-      markvalue(G, l->key);
-      markvalue(G, l->val);
+      markvalue(G, vptr, l->key);
+      markvalue(G, vptr, l->val);
       l = l->next;
     }
   } else if (cyth_tt(&v) == CYTH_ARRAY) {
     Array *a = obj2a(&v);
     for (cmem_t i = 0; i < a->narray; i++)
-      markvalue(G, a->data[i]);
+      markvalue(G, vptr, a->data[i]);
   } else if (cyth_tt(&v) == CYTH_FUNCTION) {
     cyth_Function *f = obj2f(&v);
     for (cmem_t i = 0; i < f->nk; i++)
-      markvalue(G, f->k[i]);
+      markvalue(G, vptr, f->k[i]);
   }
 }
 
@@ -97,13 +97,13 @@ static void markphase(cyth_State *C) {
   Call_info *ci = C->ci;
   while (ci != NULL) {
     if (ci->type == CYTHCALL) /* ci->func is on the stack */
-      markvalue(G, a2obj(ci->u.cyth.locvars));
+      markvalue(G, NULL, a2obj(ci->u.cyth.locvars));
     ci = ci->prev;
   }
   for (stkrel v = C->base.p; v != C->top.p; v++) {
-    markvalue(G, *v);
+    markvalue(G, NULL, *v);
   }
-  markvalue(G, t2obj(C->gt));
+  markvalue(G, NULL, t2obj(C->gt));
 }
 
 /*
@@ -128,10 +128,10 @@ static void sweeplist(cyth_State *C, gc_object **l, size_t count) {
 /* perform a full cycle */
 void cythG_full(cyth_State *C) {
   global_State *G = C->G;
-  if (G->count >= G->threshold) {
+  // if (G->count >= G->threshold) {
     markphase(C);
     sweeplist(C, &G->list, GCMAXSWEEP);
-  }
+  // }
 }
 
 cmem_t cythG_total(cyth_State *C) {
