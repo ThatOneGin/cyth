@@ -1,6 +1,7 @@
 #include <cgc.h>
 #include <cmem.h>
 #include <cobject.h>
+#include <cstring.h>
 
 /*
 ** This garbage collector should be incremental,
@@ -35,7 +36,7 @@ static void *gco2ptr(gc_object *o) {
 static void freeobj(cyth_State *C, gc_object *o) {
   switch (o->tt_) {
   case GCOS:
-    cythM_free(C, o->v.s->data, o->v.s->len);
+    cythS_free(C, o->v.s);
     cythM_free(C, o->v.s, sizeof(*o->v.s));
     break;
   case GCOT:
@@ -54,6 +55,7 @@ static void freeobj(cyth_State *C, gc_object *o) {
   case GCOA:
     cythR_free(C, o->v.a);
     cythM_free(C, o->v.a, sizeof(*o->v.a));
+    break;
   }
   cythM_free(C, o, sizeof(gc_object));
 }

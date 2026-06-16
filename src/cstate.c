@@ -122,9 +122,9 @@ void cythE_closestate(cyth_State *C) {
   C->base.p = NULL;
   C->maxoff = 0;
   C->errhandler = NULL;
-  cythS_clear(C);
   closecalls(C);
   if (C->main) cythG_freeall(C);
+  cythS_clear(C);
   free(C);
   C = NULL;
 }

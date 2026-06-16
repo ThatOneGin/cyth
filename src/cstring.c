@@ -8,13 +8,13 @@
 void cythS_init(cyth_State *C) {
   C->cache.nstrings = 0;
   C->cache.stringsize = INCSIZE;
-  cythM_vecnew(C, C->cache.strings, C->cache.stringsize, String*);
+  cythM_vecnew(C, C->cache.strings, C->cache.stringsize, String);
 }
 
 /* clear cyth_State cache */
 void cythS_clear(cyth_State *C) {
   /* GC will take care of the strings */
-  cythM_vecfree(C, C->cache.strings, C->cache.stringsize, String*);
+  cythM_vecfree(C, C->cache.strings, C->cache.stringsize, String);
 }
 
 /* create a string and search for it in cache */
@@ -37,7 +37,7 @@ String *cythS_new(cyth_State *C, char *data) {
   ref = cythG_newobj(C, GCOS);
   ref->v.s = s;
   if (C->cache.nstrings >= C->cache.stringsize)
-    cythM_vecgrow(C, C->cache.strings, C->cache.stringsize, String*);
+    cythM_vecgrow(C, C->cache.strings, C->cache.stringsize, String);
   C->cache.strings[C->cache.nstrings++] = s;
   return s;
 }
@@ -84,6 +84,32 @@ void cythS_finishstrobj(cyth_State *C, String **s) {
     }
   }
   if (C->cache.nstrings >= C->cache.stringsize)
-    cythM_vecgrow(C, C->cache.strings, C->cache.stringsize, String*);
+    cythM_vecgrow(C, C->cache.strings, C->cache.stringsize, String);
   C->cache.strings[C->cache.nstrings++] = *s;
+}
+
+/*
+** erase string from the string table and
+** free its memory
+*/
+void cythS_free(cyth_State *C, String *s) {
+  cythS_erase(C, s);
+  cythM_free(C, s->data, s->len+1);
+}
+
+/*
+** remove string from string table
+** warning: this does not free the string pointer
+*/
+void cythS_erase(cyth_State *C, String *s) {
+  stringtable *cache = &C->cache;
+  for (cmem_t i = 0; i < cache->nstrings; i++) {
+    if (s == cache->strings[i]) {
+      for (cmem_t j = i; j < cache->nstrings - 1; j++)
+        cache->strings[j] = cache->strings[j+1];
+      cache->nstrings--;
+      return;
+    }
+  }
+  return;
 }
