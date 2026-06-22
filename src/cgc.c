@@ -130,10 +130,10 @@ static void sweeplist(cyth_State *C, gc_object **l, size_t count) {
 /* perform a full cycle */
 void cythG_full(cyth_State *C) {
   global_State *G = C->G;
-  // if (G->count >= G->threshold) {
+  if (G->count >= G->threshold) {
     markphase(C);
     sweeplist(C, &G->list, GCMAXSWEEP);
-  // }
+  }
 }
 
 cmem_t cythG_total(cyth_State *C) {

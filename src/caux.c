@@ -11,7 +11,6 @@
 #define checkidx(idx) if (idx > 0) idx = -idx;
 #define auxcheck(C, e, msg) ((!(e)) ? cythE_error(C, "%s: %s", #e, msg) : ((void)0))
 
-
 /* remove value at position idx */
 void cythA_remove(cyth_State *C, int idx) {
   checkidx(idx);
@@ -194,8 +193,35 @@ char *cythA_type2str(int i) {
   }
 }
 
+int cythA_typeof(cyth_State *C, int i) {
+  return cyth_tt(cythE_peek(C, i));
+}
+
 /* only works for C functions */
 Tvalue cythA_arg(cyth_State *C, int idx) {
   auxcheck(C, idx > 0, "Invalid argument index");
   return *cythE_peek(C, idx);
+}
+
+static userdata cf2ud(cyth_Cfunction cf) {
+  userdata ud;
+  ud.destructor = NULL;
+  ud.type = UDFUN;
+  ud.u.cfunc = cf;
+  return ud;
+}
+
+void cythA_newlib(cyth_State *C, cyth_reg *funcs) {
+  String *s;
+  userdata ud;
+  Table *t = cythH_new(C);
+  int i = 0;
+  cythA_push(C, t2obj(t));
+  while (funcs[i].func != NULL &&
+         funcs[i].name != NULL) {
+    s = cythS_new(C, funcs[i].name);
+    ud = cf2ud(funcs[i].func);
+    cythH_append(C, t, s2obj(s), ud2obj(ud));
+    i++;
+  }
 }

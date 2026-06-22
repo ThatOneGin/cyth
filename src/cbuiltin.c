@@ -8,7 +8,6 @@
 /* allocate a string */
 static String *alloc_static_string(cyth_State *C, char *data) {
   String *s = cythS_new(C, data);
-  cyth_assert(C->G->list->tt_ == GCOS && C->G->list->v.s == s);
   cythG_uncoll(C, C->G->list);
   return s;
 }
@@ -70,10 +69,7 @@ static int load(cyth_State *C) {
   return 0;
 }
 
-static struct {
-  char *name;
-  cyth_Cfunction f;
-} funcs[] = {
+static cyth_reg funcs[] = {
   {"print", print},
   {"tostring", tostring},
   {"load", load},
@@ -85,9 +81,9 @@ void cythB_openlib(cyth_State *C) {
   int i = 0;
   if (init) return;
   init = 1;
-  while (funcs[i].f != NULL &&
+  while (funcs[i].func != NULL &&
          funcs[i].name != NULL) {
-    cythA_regcf(C, funcs[i].f, funcs[i].name);
+    cythA_regcf(C, funcs[i].func, funcs[i].name);
     i++;
   }
 }
