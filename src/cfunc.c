@@ -105,6 +105,7 @@ void cythF_precall(cyth_State *C, stkrel func, int nargs, int nwanted) {
     ci->u.cyth.callnres = nwanted;
   }
   C->top.p = ci->top.p;
+  cythE_hookcall(C, CYTH_HOOK_CALL);
 }
 
 static void move_values(cyth_State *C, Call_info *ci, int nresult, int nwanted) {
@@ -138,8 +139,8 @@ static void move_C_results(cyth_State *C, Call_info *ci, int nresults, int nwant
 void cythF_poscall(cyth_State *C, int nresults, int nwanted) {
   Call_info *ci = C->ci;
   Call_info *prev_ci = ci->prev;
-  if (nwanted < 0)
-    cyth_assert(0);
+  cyth_assert(nwanted >= 0);
+  cythE_hookcall(C, CYTH_HOOK_RET);
   switch (ci->type) {
   case CYTHCALL:
     move_cyth_results(C, ci, nwanted);

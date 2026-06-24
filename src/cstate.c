@@ -81,6 +81,9 @@ cyth_State *cythE_openstate(void) {
   C->ncalls = 0;
   C->gt = cythH_new(C);
   C->rebase = 0;
+  C->hookmask = 0;
+  C->hook = NULL;
+  C->runhook = 1;
   cythA_push(C, t2obj(C->gt));
   cythS_init(C);
   if (main) {
@@ -203,4 +206,27 @@ byte cythE_runprotected(cyth_State *C,
   cyth_try(C, f, ud);
   C->errhandler = C->errhandler->previous;
   return newhandler.errcode;
+}
+
+void cythE_sethook(cyth_State *C, cyth_hook hook, int mask) {
+  C->hook = hook;
+  C->hookmask = mask;
+}
+
+/* Execute C->hook if C->hookmask is set active to the given events  */
+void cythE_hookcall(cyth_State *C, int event) {
+  cyth_hook hook = C->hook;
+  if (!(C->hookmask & event))
+    return;
+  if (hook && C->runhook) {
+    Call_info *ci = C->ci;
+    stkrel c_top = C->top.p;
+    stkrel ci_top = ci->top.p;
+    C->runhook = 0; /* can't run a hook inside a hook */
+    hook(C, event);
+    cyth_assert(!C->runhook);
+    C->runhook = 1;
+    C->top.p = c_top;
+    ci->top.p = ci_top;
+  }
 }

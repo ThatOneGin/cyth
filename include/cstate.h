@@ -29,6 +29,13 @@ struct gc_object {
   struct gc_object *next;
 };
 
+/* hooks (primarly used for debugging) */
+
+#define CYTH_HOOK_CALL (1 << 0)
+#define CYTH_HOOK_RET (1 << 1)
+
+typedef void (*cyth_hook)(cyth_State *, int);
+
 typedef struct {
   String **strings;
   cmem_t nstrings;
@@ -83,8 +90,11 @@ struct cyth_State {
   stringtable cache; /* string cache */
   cyth_jmpbuf *errhandler; /* recover point in case of errors */
   Call_info *ci; /* function call information */
+  cyth_hook hook; /* the hook function pointer */
   byte ncalls; /* how many function calls aren't finished */
   byte rebase; /* signal VM to re assign the base variable at the main loop */
+  byte hookmask; /* mask to check if the hook is active for certain events */
+  byte runhook; /* if a hook is callable in the current environment (hooks are not recursive) */
 };
 
 cyth_State *cythE_openstate(void);
@@ -97,4 +107,6 @@ void cythE_dectop(cyth_State *C);
 Tvalue *cythE_peek(cyth_State *C, int idx);
 void cythE_throw(cyth_State *C, byte errcode, String *errmsg);
 byte cythE_runprotected(cyth_State *C, cyth_Pfunction f, void *ud);
+void cythE_sethook(cyth_State *C, cyth_hook hook, int mask);
+void cythE_hookcall(cyth_State *C, int event);
 #endif
