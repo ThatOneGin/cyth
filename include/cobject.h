@@ -25,9 +25,10 @@ typedef struct Array Array;
   X(CYTH_STRING, "string", 2) \
   X(CYTH_TABLE, "table", 3) \
   X(CYTH_FUNCTION, "function", 4) \
-  X(CYTH_USERDATA, "userdata", 5) \
-  X(CYTH_BOOL, "bool", 6) \
-  X(CYTH_ARRAY, "array", 7)
+  X(CYTH_CFUNCTION, "function", 5) \
+  X(CYTH_USERDATA, "userdata", 6) \
+  X(CYTH_BOOL, "bool", 7) \
+  X(CYTH_ARRAY, "array", 8)
 
 enum CYTH_VALUES {
 #define X(name, str, value) name = value,
@@ -41,20 +42,10 @@ typedef struct cyth_Function cyth_Function;
 typedef int (*cyth_Cfunction)(cyth_State *);
 typedef void (*cyth_Destructor)(void*, void*); /* params: userdata, pointer */
 
-/* types of user data */
-#define UDFUN 0
-#define UDVAL 1
-
 typedef struct {
-  byte type;
-  union {
-    cyth_Cfunction cfunc;
-    struct {
-      void *data;
-      cmem_t size;
-      gc_object *ref;
-    } val;
-  } u;
+  void *data;
+  cmem_t size;
+  gc_object *ref;
   cyth_Destructor destructor;
 } userdata;
 
@@ -63,6 +54,7 @@ typedef union {
   String *string;
   Table *table;
   cyth_Function *function;
+  cyth_Cfunction cfunction;
   userdata userdata;
   Array *array;
   byte boolean;
@@ -95,6 +87,7 @@ struct Array {
 #define obj2s(o) (o)->v.string
 #define obj2t(o) (o)->v.table
 #define obj2f(o) (o)->v.function
+#define obj2cf(o) (o)->v.cfunction
 #define obj2ud(o) (o)->v.userdata
 #define obj2b(o) (o)->v.boolean
 #define obj2a(o) (o)->v.array
@@ -109,6 +102,7 @@ typedef Tvalue *stkrel;
 #define s2obj(s) ((Tvalue){.tt_=CYTH_STRING,.v.string=(s)})
 #define t2obj(t) ((Tvalue){.tt_=CYTH_TABLE,.v.table=(t)})
 #define f2obj(f) ((Tvalue){.tt_=CYTH_FUNCTION,.v.function=(f)})
+#define cf2obj(f) ((Tvalue){.tt_=CYTH_CFUNCTION,.v.cfunction=(f)})
 #define ud2obj(ud) ((Tvalue){.tt_=CYTH_USERDATA,.v.userdata=(ud)})
 #define b2obj(b) ((Tvalue){.tt_=CYTH_BOOL,.v.boolean=(b)})
 #define a2obj(a) ((Tvalue){.tt_=CYTH_ARRAY,.v.array=(a)})

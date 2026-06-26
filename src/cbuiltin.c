@@ -37,6 +37,7 @@ static int tostring(cyth_State *C) {
   switch (v.tt_) {
   case CYTH_NONE: cythA_pushstr(C, none); break;
   case CYTH_TABLE: cythA_pushstr(C, table); break;
+  case CYTH_CFUNCTION:
   case CYTH_FUNCTION: cythA_pushstr(C, function); break;
   case CYTH_USERDATA: cythA_pushstr(C, userdata); break;
   case CYTH_ARRAY: cythA_pushstr(C, array); break;

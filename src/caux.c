@@ -149,37 +149,29 @@ void *cythA_udnew(cyth_State *C, cmem_t n) {
   gc_object *ref;
   userdata ud = {0};
   ud.destructor = NULL;
-  ud.type = UDVAL;
-  ud.u.val.data = cythM_malloc(C, n);
-  ud.u.val.size = n;
+  ud.data = cythM_malloc(C, n);
+  ud.size = n;
   ref = cythG_newobj(C, GCOU);
-  ud.u.val.ref = ref;
+  ud.ref = ref;
   ref->v.u = ud;
   cythA_push(C, ud2obj(ud));
-  return ud.u.val.data;
+  return ud.data;
 }
 
 /* set the destruct method of userdata at top-i */
 void cythA_udsetdestructor(cyth_State *C, int i, cyth_Destructor d) {
   checkidx(i);
-  if (cyth_tt(&C->top.p[i]) != CYTH_USERDATA) return;
-  else {
-    /* only values can have destructors */
-    if (obj2ud(&C->top.p[i]).type != UDVAL) return;
-    userdata ud = obj2ud(&C->top.p[i]);
+  if (cyth_isuserdata(C, i)) {
+    userdata ud = obj2ud(cythE_peek(C, i));
     ud.destructor = d;
-    gc_object *ref = ud.u.val.ref;
+    gc_object *ref = ud.ref;
     ref->v.u.destructor = d;
   }
 }
 
 /* put function 'u' as 'name' in global table */
 void cythA_regcf(cyth_State *C, cyth_Cfunction f, char *name) {
-  userdata u;
-  u.destructor = NULL;
-  u.type = UDFUN;
-  u.u.cfunc = f;
-  cythV_setglobal(C, cythS_new(C, name), ud2obj(u));
+  cythV_setglobal(C, cythS_new(C, name), cf2obj(f));
 }
 
 char *cythA_type2str(int i) {
@@ -203,25 +195,17 @@ Tvalue cythA_arg(cyth_State *C, int idx) {
   return *cythE_peek(C, idx);
 }
 
-static userdata cf2ud(cyth_Cfunction cf) {
-  userdata ud;
-  ud.destructor = NULL;
-  ud.type = UDFUN;
-  ud.u.cfunc = cf;
-  return ud;
-}
-
 void cythA_newlib(cyth_State *C, cyth_reg *funcs) {
   String *s;
-  userdata ud;
+  cyth_Cfunction f;
   Table *t = cythH_new(C);
   int i = 0;
   cythA_push(C, t2obj(t));
   while (funcs[i].func != NULL &&
          funcs[i].name != NULL) {
     s = cythS_new(C, funcs[i].name);
-    ud = cf2ud(funcs[i].func);
-    cythH_append(C, t, s2obj(s), ud2obj(ud));
+    f = funcs[i].func;
+    cythH_append(C, t, s2obj(s), cf2obj(f));
     i++;
   }
 }

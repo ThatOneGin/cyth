@@ -16,7 +16,7 @@ static void *val2ptr(Tvalue v) {
   case CYTH_STRING: return obj2s(&v);
   case CYTH_TABLE: return obj2t(&v);
   case CYTH_FUNCTION: return obj2f(&v);
-  case CYTH_USERDATA: return obj2ud(&v).type == UDVAL ? obj2ud(&v).u.val.data : NULL;
+  case CYTH_USERDATA: return obj2ud(&v).data;
   case CYTH_ARRAY: return obj2a(&v);
   default: return NULL;
   }
@@ -27,7 +27,7 @@ static void *gco2ptr(gc_object *o) {
   case GCOS: return o->v.s;
   case GCOT: return o->v.t;
   case GCOF: return o->v.f;
-  case GCOU: return (o->v.u.type == UDVAL) ? o->v.u.u.val.data : NULL;
+  case GCOU: return o->v.u.data;
   case GCOA: return o->v.a;
   default: return NULL;
   }
@@ -48,9 +48,9 @@ static void freeobj(cyth_State *C, gc_object *o) {
     break;
   case GCOU:
     if (o->v.u.destructor != NULL)
-      o->v.u.destructor(C, o->v.u.u.val.data);
+      o->v.u.destructor(C, o->v.u.data);
     else
-      cythM_free(C, o->v.u.u.val.data, o->v.u.u.val.size);
+      cythM_free(C, o->v.u.data, o->v.u.size);
     break;
   case GCOA:
     cythR_free(C, o->v.a);

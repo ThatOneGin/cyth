@@ -9,7 +9,6 @@
     base = ci->func.p + 1; \
     (C)->rebase = 0;}}
 
-
 /*
 ** there are some cases which you want to jump
 ** to a negative address (-1) and those are
@@ -55,13 +54,14 @@ int cythV_objequ(cyth_State *C,
     return cythS_streq(obj2s(&t1), obj2s(&t2));
   case CYTH_FUNCTION:
     return obj2f(&t1) == obj2f(&t2);
+  case CYTH_CFUNCTION:
+    return obj2cf(&t1) == obj2cf(&t2);
   case CYTH_TABLE:
     return obj2t(&t1) == obj2t(&t2);
   case CYTH_BOOL:
     return obj2b(&t1) == obj2b(&t2);
   case CYTH_USERDATA:
-    if (obj2ud(&t1).type == UDFUN) return 0;
-    return obj2ud(&t1).u.val.data == obj2ud(&t2).u.val.data;
+    return obj2ud(&t1).data == obj2ud(&t2).data;
   default:
     return 0;
   }
@@ -364,16 +364,10 @@ returning:
         if (ci->type == CYTHCALL)
           goto returning;
         else {
-          userdata ud = obj2ud(func);
-          if (ud.type != UDFUN)
-            cythE_error(C,
-              "Trying to call userdata that doesn't "
-              "represent a valid callable object.\n");
-          else {
-            int cnres = ud.u.cfunc(C);
-            cythF_poscall(C, cnres, getargb(i));
-            ci = C->ci;
-          }
+          cyth_Cfunction cf = obj2cf(func);
+          int cnres = cf(C);
+          cythF_poscall(C, cnres, getargb(i));
+          ci = C->ci;
         }
       } vmbreak;
       vmcase(OP_DUP) {
