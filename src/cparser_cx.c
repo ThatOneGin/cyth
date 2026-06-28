@@ -295,6 +295,10 @@ static void pexp(lex_State *ls, expdsc *e) {
     e->k = EXPBOOL;
     e->u.info = t.type == TK_TRUE;
     break;
+  case '(':
+    expr(ls, e);
+    expect(ls, ')', "closing parenthesis");
+    break;
   default:
     error_expect(ls, "expression");
     break;
