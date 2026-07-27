@@ -164,14 +164,22 @@ static int tointeger(Tvalue t, cyth_integer *i) {
     *i = obj2i(&t);
     break;
   case CYTH_STRING: {
+    int neg = 0;
     String *s = obj2s(&t);
     for (cmem_t j = 0; j < s->len; j++) {
-      if (!isdigit(s->data[j])) {
+      if (s->data[j] == '-') {
+        if (neg) /* double '-' (invalid) */
+          return -1;
+        neg = 1;
+        continue;
+      } else  if (!isdigit(s->data[j])) {
         *i = 0;
         return -1;
       }
       *i = (*i * 10) + (s->data[j] - '0');
     }
+    if (neg)
+      *i *= -1;
   } break;
   default:
     return -1;
