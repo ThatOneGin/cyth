@@ -88,8 +88,16 @@ static void help(void) {
 
 int main(int argc, char **argv) {
   cyth_State *C = cythE_openstate();
+  if (!C) {
+    printf("[Error]: could not initialize cyth\n");
+    return 1;
+  }
   if (!handle_short_args(++argv, --argc))
     goto close;
+  if (helpmsg) {
+    help();
+    goto close;
+  }
   if (compile) {
     if (prog == NULL) cythE_error(C, "No input file.");
     cythI_loadfile(C, prog);
@@ -112,9 +120,8 @@ defer:
     Tvalue f = cythA_pop(C);
     cythL_print(obj2f(&f));
   }
-  if (helpmsg) /* or helpmsg = 1 */
-    help();
 close:
-  cythE_closestate(C);
+  if (C)
+    cythE_closestate(C);
   return 0;
 }
