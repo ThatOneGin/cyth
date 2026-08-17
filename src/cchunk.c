@@ -290,6 +290,7 @@ static byte print_az_as_value[OP_COUNT] = {
   [OP_BINOP] = 0,
   [OP_SETVAR] = 0,
   [OP_GETVAR] = 0,
+  [OP_RETURN] = 0,
   [OP_EQ] = 0,
   [OP_NEQ] = 0,
   [OP_JT] = 0,
