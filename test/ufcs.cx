@@ -1,0 +1,28 @@
+func mul(self x)
+do
+  return self * x
+end
+
+func main() do
+  x = 32
+  y = 12
+
+
+  x:mul(3)
+   :print()
+
+  x:mul(2)
+   :mul(2)
+   :print()
+
+# semicolon is expected in this case
+# because if there is no delimiter where the statement ends
+# the parser could read it as something like:
+#   x:mul(y):print()((x - y) * 2 + 7):print()
+# which is not what we meant here
+
+  x:mul(y)
+   :print();
+
+  ((x - y) * 2 + 7):print()
+end

@@ -149,9 +149,11 @@ void cythV_swap(cyth_State *C) {
   stkrel base = C->ci->func.p + 1;
   if (C->top.p - base <= 1)
     cythE_error(C, "Stack underflow.\n");
-  stkrel tmp = C->top.p-1;
-  objcopy(C->top.p-1, C->top.p - 2);
-  objcopy(C->top.p-2, tmp);
+  Tvalue *s2 = cythE_peek(C, -2);
+  Tvalue *s1 = cythE_peek(C, -1);
+  Tvalue tmp = *s1;
+  *s1 = *s2;
+  *s2 = tmp;
 }
 
 /*

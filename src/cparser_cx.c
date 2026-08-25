@@ -13,16 +13,20 @@
 #define emitInstZ(ls, opcode, argz) emitInstz_(ls, -1, opcode, argz)
 #define emitInstlab(ls, line, opcode, arga, argb) emitInstab_(ls, line, opcode, arga, argb)
 #define emitInstab(ls, opcode, arga, argb) emitInstab_(ls, -1, opcode, arga, argb)
+#define isconstexpr(k) ((k) >= EXPINT && (k) <= EXPNAME)
 
 /* types */
 
 #define OPR_INVALID OPR_COUNT
 
+
 enum expdsck {
+/* constant expressions */
   EXPINT,  /* e->u.i    */
   EXPSTR,  /* e->u.s    */
   EXPBOOL, /* e->u.info */
   EXPNAME, /* e->u.s    */
+/* not constants */
   EXPCALL, /* e->u.info */
   EXPUSED, /* e->u.info */
   EXPKEY   /* e->u.s    */
@@ -338,6 +342,34 @@ static void xexp(lex_State *ls, expdsc *e) {
       e->u.c.nargs = n;
       e->u.c.idx = idx;
     } break;
+    case ':': {
+      int n = 1;
+      expdsc e2;
+      next(ls);
+      pexp(ls, &e2);
+      /*
+      ** if expression has already compiled,
+      ** we have to put a swap instruction because
+      ** the VM will try to use 'e' as the caller
+      */
+      if (isconstexpr(e->k)) {
+        free_exp(ls, e);   /* first arg */
+        free_exp(ls, &e2); /* caller */
+        emitInstZ(ls, OP_SWAP, 0);
+      } else {
+        free_exp(ls, &e2); /* caller */
+        free_exp(ls, e);   /* first arg */
+      }
+      expect(ls, '(', "'(' to open argument list");
+      if (ls->t.type != ')')
+        n += explist(ls, e);
+      expect(ls, ')', "')' to close argument list");
+      /* swap solves all the problem with already used expressions */
+      int idx = emitInstab(ls, OP_CALL, n, 1);
+      e->k = EXPCALL;
+      e->u.c.nargs = n;
+      e->u.c.idx = idx;
+    } break;
     case '.': {
       next(ls);
       free_exp(ls, e);
@@ -444,6 +476,10 @@ static void exprstat(lex_State *ls) {
     setargb(ls->fs->f->code[e.u.c.idx], 0); /* as statement it won't use any results */
     free_exp(ls, &e);
   }
+  if (ls->t.type == ';') {
+    while (ls->t.type == ';')
+      next(ls);
+  }
 }
 
 /* ifdo = 'if' expr block */
@@ -506,11 +542,12 @@ static void funcparams(lex_State *ls) {
     line = saveline(ls);
     name = s2obj(expect(ls, TK_NAME, "Expected parameter name").value.s);
     vd.name = obj2s(&name);
-    setargz(i, emitK(ls, name));
+    setargz(i, vd.i);
     emitC(ls, i, line);
     setvar(ls, vd);
     last_var++;
     ls->fs->f->nparams++;
+    vd.i++;
   }
   expect(ls, ')', "Expected ')' to close parameter list");
   last_var++;
@@ -534,8 +571,11 @@ static void func(lex_State *ls) {
   int start_line = saveline(ls);
   expect(ls, TK_FUNC, "'func' keyword.");
   name = expect(ls, TK_NAME, "identifier").value.s;
+  Symtab s = {0};
+  enter(ls, &s);
   funcparams(ls);
   block(ls);
+  leave(ls, s);
   int end_line = saveline(ls);
   freturn(ls, end_line); /* last instruction (return) */
   closefunc(ls);
