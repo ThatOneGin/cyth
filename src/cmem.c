@@ -50,6 +50,8 @@ void cythM_error(cyth_State *C, const char *type, cmem_t size) {
 /* helper function to reallocate vectors */
 void cythM_grow(cyth_State *C, void **ptr,
                 cmem_t *size, cmem_t scalar, const char *type) {
+  if (*size == 0)
+    *size = INCSIZE;
   cmem_t old_size = *size;
   *size *= 2;
   void *tmp = _realloc(*ptr, (*size)*scalar);
