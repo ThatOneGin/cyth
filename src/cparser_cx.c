@@ -352,7 +352,7 @@ static void xexp(lex_State *ls, expdsc *e) {
       ** we have to put a swap instruction because
       ** the VM will try to use 'e' as the caller
       */
-      if (isconstexpr(e->k)) {
+      if (!isconstexpr(e->k)) {
         free_exp(ls, e);   /* first arg */
         free_exp(ls, &e2); /* caller */
         emitInstZ(ls, OP_SWAP, 0);
