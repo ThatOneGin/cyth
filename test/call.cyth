@@ -5,4 +5,4 @@
 
 (func main() -> 0
   getvar _add
-  call 0)
+  call 0 0)
