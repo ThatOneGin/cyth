@@ -165,6 +165,7 @@ void cythE_dectop(cyth_State *C) {
 ** return the value after the current call
 ** info base (ci->func[idx]) or if there is no
 ** active call, use the absolute C->base stack pointer
+** and subtract idx by 1
 **
 ** if idx is less than 0 then
 ** return the value at idx starting
@@ -173,10 +174,14 @@ void cythE_dectop(cyth_State *C) {
 Tvalue *cythE_peek(cyth_State *C, int idx) {
   Call_info *ci = C->ci;
   if (idx > 0) { /* positive index */
-    if (ci == NULL && idx <= (C->top.p - C->base.p)) return C->base.p + idx;
+    if (ci == NULL && idx <= (C->top.p - C->base.p)) return C->base.p + (idx-1);
     else if (idx <= C->top.p - (ci->func.p + 1)) return ci->func.p + idx;
     else cythE_error(C, "index too big (tried to access stack slot %d)", idx);
   } else if (idx < 0) { /* negative index */
+    int top = cythE_gettop(C);
+    if (top + idx < 0)
+      cythE_error(C, "invalid relative "
+                     "stack index (below stack base)");
     return C->top.p + idx;
   } else /* zero index (throw an error) */
     cythE_error(C, "invalid index (tried to access 0th stack slot)", idx);
