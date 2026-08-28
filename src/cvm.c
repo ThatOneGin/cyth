@@ -83,7 +83,7 @@ static Tvalue getf(cyth_Function *f, argZ az) {
 /* get a local variable (checks for outer environments) */
 static void getvar(cyth_State *C, Call_info *ci, argZ key, Tvalue *res) {
   if ((argZ)ci->u.cyth.locvars->narray < key)
-    cythE_error(C, "invalid variable index %u.\n", key);
+    cythE_error(C, "invalid variable index %u", key);
   cythR_get(C, ci->u.cyth.locvars, (cyth_integer)key, res);
 }
 
@@ -130,7 +130,7 @@ static Tvalue pop(cyth_State *C) {
   stkrel base = C->ci->func.p + 1;
   if (C->top.p == base) {
     /* For now it is better to raise an error */
-    cythE_error(C, "Stack underflow.\n");
+    cythE_error(C, "Stack underflow");
   } else {
     return cythA_pop(C);
   }
@@ -140,15 +140,15 @@ static Tvalue pop(cyth_State *C) {
 void cythV_dup(cyth_State *C) {
   stkrel base = C->ci->func.p + 1;
   if (C->top.p == base)
-    cythE_error(C, "Stack underflow.\n");
+    cythE_error(C, "Stack underflow");
   objcopy(C->top.p, &C->top.p[-1]);
   cythE_inctop(C);
 }
 
 void cythV_swap(cyth_State *C) {
-  stkrel base = C->ci->func.p + 1;
-  if (C->top.p - base <= 1)
-    cythE_error(C, "Stack underflow.\n");
+  // stkrel base = C->ci->func.p + 1;
+  // if (C->top.p - base <= 1)
+  //   cythE_error(C, "Stack underflow");
   Tvalue *s2 = cythE_peek(C, -2);
   Tvalue *s1 = cythE_peek(C, -1);
   Tvalue tmp = *s1;
@@ -301,9 +301,9 @@ returning:
       vmcase(OP_SETVAR) {
         if (C->top.p == base)
           cythE_error(C, "No available value in "
-                         "the stack for variable.\n");
-        Tvalue v = C->top.p[-1];
-        cythR_push(C, vars, getargz(i), v);
+                         "the stack for variable");
+        Tvalue *v = cythE_peek(C, -1);
+        cythR_push(C, vars, getargz(i), *v);
         cythE_dectop(C);
       } vmbreak;
       vmcase(OP_GETVAR) {
@@ -349,18 +349,22 @@ returning:
       vmcase(OP_SETGLB) {
         Tvalue k = getk(f, getargz(i));
         if (cyth_tt(&k) != CYTH_STRING)
-          cythE_error(C, "Invalid global variable name.\n");
+          cythE_error(C, "setglb argument should be "
+                         "a string, not a '%s' object",
+                         cythA_type2str(k.tt_));
         Tvalue v = pop(C);
         cythV_setglobal(C, obj2s(&k), v);
       } vmbreak;
       vmcase(OP_GETGLB) {
         Tvalue k = getk(f, getargz(i));
         if (cyth_tt(&k) != CYTH_STRING)
-          cythE_error(C, "Invalid global variable name.\n");
+          cythE_error(C, "getglb argument should be "
+                         "a string, not a '%s' object",
+                         cythA_type2str(k.tt_));
         Tvalue v;
         cythV_getglobal(C, obj2s(&k), &v);
         if (cyth_tt(&v) == CYTH_NONE)
-          cythE_error(C, "Unknown global variable '%s'.\n", s2cstr(obj2s(&k)));
+          cythE_error(C, "Unknown global variable '%s'", s2cstr(obj2s(&k)));
         cythA_push(C, v);
       } vmbreak;
       vmcase(OP_CALL) {
