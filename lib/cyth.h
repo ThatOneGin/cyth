@@ -1,6 +1,7 @@
 #ifndef LIBCYTH_H
 #define LIBCYTH_H
 #include <stdint.h>
+#include <stddef.h>
 
 #define CYTH_INTEGER_MAX INT64_MAX
 
@@ -9,6 +10,7 @@
 typedef struct cyth_State cyth_State;
 typedef int64_t cyth_integer;
 typedef int (*cyth_Cfunction)(cyth_State *);
+typedef void (*cyth_Destructor)(cyth_State *, void *);
 #endif
 
 #ifdef CYTH_INTERNAL
@@ -17,15 +19,26 @@ typedef int (*cyth_Cfunction)(cyth_State *);
 #define CYTH_API extern
 #endif
 
-#define cyth_dup(C) cyth_over(C, -1)
+#define cyth_dup(C) cyth_copy(C, -1)
 #define cyth_swap(C) cyth_rot(C, -2)
+
+typedef struct {
+  void *data;
+  size_t size;
+} cyth_userdata;
+
+enum CYTH_EQOP {
+  CYTH_OPEQ,
+  CYTH_OPNE,
+  CYTH_OPCOUNT
+};
 
 CYTH_API cyth_State *cyth_newstate(void);
 CYTH_API void cyth_openstdlib(cyth_State *C);
 CYTH_API int cyth_gettop(cyth_State *C);
 CYTH_API void cyth_destroystate(cyth_State *C);
 
-CYTH_API void cyth_over(cyth_State *C, int i);
+CYTH_API void cyth_copy(cyth_State *C, int i);
 CYTH_API void cyth_rot(cyth_State *C, int i);
 CYTH_API void cyth_pop(cyth_State *C);
 
@@ -41,9 +54,9 @@ CYTH_API cyth_integer cyth_arginteger(cyth_State *C, int i);
 CYTH_API const char *cyth_argstring(cyth_State *C, int i);
 CYTH_API int cyth_argboolean(cyth_State *C, int i);
 CYTH_API cyth_Cfunction cyth_argcfunction(cyth_State *C, int i);
+CYTH_API cyth_userdata cyth_arguserdata(cyth_State *C, int i);
 
 CYTH_API void cyth_call(cyth_State *C, int i, int n, int r);
-CYTH_API int cyth_runprotected(cyth_State *C, int i, int n, int r);
 
 CYTH_API void cyth_loadfile(cyth_State *C, const char *filename);
 CYTH_API void cyth_loadstring(cyth_State *C, const char *chunkname, const char *chunk);
@@ -60,4 +73,9 @@ CYTH_API void cyth_setf(cyth_State *C, int i);
 CYTH_API void cyth_getf(cyth_State *C, int i);
 CYTH_API void cyth_setfield(cyth_State *C, int i, const char *name);
 CYTH_API void cyth_getfield(cyth_State *C, int i, const char *name);
+
+CYTH_API void *cyth_newuserdata(cyth_State *C, size_t size);
+CYTH_API void cyth_setdestructor(cyth_State *C, int i, cyth_Destructor d);
+
+CYTH_API int cyth_compare(cyth_State *C, int i1, int i2, int op);
 #endif

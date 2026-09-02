@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 /* Cyth */
 
@@ -39,7 +40,7 @@ CYTH_API void cyth_destroystate(cyth_State *C) {
     cythE_closestate(C);
 }
 
-CYTH_API void cyth_over(cyth_State *C, int i) {
+CYTH_API void cyth_copy(cyth_State *C, int i) {
   Tvalue t;
   t = *cythE_peek(C, i);
   cythA_push(C, t);
@@ -120,6 +121,15 @@ CYTH_API cyth_Cfunction cyth_argcfunction(cyth_State *C, int i) {
   return obj2cf(cythE_peek(C, i));
 }
 
+CYTH_API cyth_userdata cyth_arguserdata(cyth_State *C, int i) {
+  checkarg(C, CYTH_USERDATA, i);
+  userdata ud = obj2ud(cythE_peek(C, i));
+  cyth_userdata pud = {0};
+  pud.data = ud.data;
+  pud.size = ud.size;
+  return pud;
+}
+
 CYTH_API void cyth_call(cyth_State *C, int i, int n, int r) {
   cythF_call(C, i, n, r);
 }
@@ -174,7 +184,7 @@ CYTH_API void cyth_newarray(cyth_State *C) {
 
 CYTH_API void cyth_setf(cyth_State *C, int i) {
   Tvalue k;
-  cyth_over(C, i);
+  cyth_copy(C, i);
   cyth_rot(C, -3);
   k = cythA_pop(C);
   cythV_setf(C, k);
@@ -182,7 +192,7 @@ CYTH_API void cyth_setf(cyth_State *C, int i) {
 
 CYTH_API void cyth_getf(cyth_State *C, int i) {
   Tvalue res, k;
-  cyth_over(C, i);
+  cyth_copy(C, i);
   cyth_rot(C, -2);
   k = cythA_pop(C);
   cythV_getf(C, &res, k);
@@ -198,4 +208,24 @@ CYTH_API void cyth_setfield(cyth_State *C, int i, const char *name) {
 CYTH_API void cyth_getfield(cyth_State *C, int i, const char *name) {
   cyth_pushstring(C, name);
   cyth_getf(C, incindex(i, 1));
+}
+
+CYTH_API void *cyth_newuserdata(cyth_State *C, size_t size) {
+  return cythA_udnew(C, size);
+}
+
+CYTH_API void cyth_setdestructor(cyth_State *C, int i, cyth_Destructor d) {
+  cythA_udsetdestructor(C, i, d);
+}
+
+CYTH_API int cyth_compare(cyth_State *C, int i1, int i2, int op) {
+  if (op >= CYTH_OPCOUNT)
+    cythE_error(C, "invalid operator");
+  if (i1 == i2) {
+    return true;
+  }
+  Tvalue l = *cythE_peek(C, i1);
+  Tvalue r = *cythE_peek(C, i2);
+  int res = cythV_objequ(C, l, r);
+  return (op == CYTH_OPNE) ? (!res) : res;
 }
