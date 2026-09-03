@@ -111,21 +111,21 @@ String *cythA_popstr(cyth_State *C) {
 }
 
 /* parse stream with a recover point set */
-#define fileext(file, wanted) (strcmp(strrchr(file, '.'), wanted) == 0)
+#define _streq(e1, e2) (strcmp(e1, e2) == 0)
 
 static int pparse(cyth_State *C, void *aux) {
   Stream *s = (Stream*)aux;
-  char *name = s2cstr(cythA_popstr(C));
   stkrel top = C->top.p;
   cyth_Function *f = NULL;
-  if (fileext(name, ".cyth")) f = cythP_parse_cyth(C, s, name);
-  else if (fileext(name, ".cx")) f = cythP_parse_cx(C, s, name);
-  else cythE_error(C, "Unknown file extension for %s", name);
+  char *name = s2cstr(cythA_popstr(C));
+  char *ext = strrchr(name, '.');
+  if (!ext)
+    cythE_error(C, "no file extension for file '%s'", name);
+  if (_streq(ext, ".cyth")) f = cythP_parse_cyth(C, s, name);
+  else if (_streq(ext, ".cx")) f = cythP_parse_cx(C, s, name);
+  else cythE_error(C, "unknown file extension for %s", name);
   if (f == NULL) {
-    /*
-    ** message is on the stack
-    ** so we push the error int
-    */
+    /* message is already on the stack */
     cythA_pushint(C, 1);
   } else {
     C->top.p = top; /* erase lexer table */
@@ -135,7 +135,7 @@ static int pparse(cyth_State *C, void *aux) {
   return 0;
 }
 
-#undef fileext
+#undef _streq
 
 int cythA_load(cyth_State *C, Stream *s, char *name) {
   String *sname = cythS_new(C, name);
