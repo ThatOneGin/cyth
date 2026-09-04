@@ -17,9 +17,7 @@ typedef struct {
   cyth_Cfunction func;
 } cyth_reg;
 
-void cythA_remove(cyth_State *C, int idx);
-void cythA_insert(cyth_State *C, int idx);
-void cythA_settop(cyth_State *C, int top);
+void cythA_settop(cyth_State *C, int i);
 void cythA_push(cyth_State *C, Tvalue v);
 Tvalue cythA_pop(cyth_State *C);
 void cythA_pushint(cyth_State *C, int i);

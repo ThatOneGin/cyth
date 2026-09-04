@@ -35,6 +35,10 @@ CYTH_API int cyth_gettop(cyth_State *C) {
   return cythE_gettop(C);
 }
 
+CYTH_API void cyth_settop(cyth_State *C, int i) {
+  cythA_settop(C, i);
+}
+
 CYTH_API void cyth_destroystate(cyth_State *C) {
   if (C)
     cythE_closestate(C);

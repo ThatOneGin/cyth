@@ -36,6 +36,7 @@ enum CYTH_EQOP {
 CYTH_API cyth_State *cyth_newstate(void);
 CYTH_API void cyth_openstdlib(cyth_State *C);
 CYTH_API int cyth_gettop(cyth_State *C);
+CYTH_API void cyth_settop(cyth_State *C, int i);
 CYTH_API void cyth_destroystate(cyth_State *C);
 
 CYTH_API void cyth_copy(cyth_State *C, int i);

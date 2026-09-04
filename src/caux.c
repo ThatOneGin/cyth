@@ -8,37 +8,9 @@
 #include <cvm.h>
 #include <caux.h>
 
-#define checkidx(idx) if (idx > 0) idx = -idx;
-#define auxcheck(C, e, msg) ((!(e)) ? cythE_error(C, "%s: %s", #e, msg) : ((void)0))
-
-/* remove value at position idx */
-void cythA_remove(cyth_State *C, int idx) {
-  checkidx(idx);
-  stkrel sv = &C->top.p[idx];
-  for (;sv != C->top.p-1; sv++) {
-    objcopy(sv, sv+1);
-  }
-  C->top.p--;
-}
-
-/* insert top-1 at position idx */
-void cythA_insert(cyth_State *C, int idx) {
-  checkidx(idx);
-  if (idx < (C->base.p - C->top.p)) return;
-  stkrel sv = &C->top.p[idx];
-  Tvalue val = C->top.p[-1];
-  for (; sv < C->top.p-1; sv++) {
-    objcopy(sv+1, sv);
-  }
-  C->top.p[idx] = val;
-}
-
-static void fillstack(stkrel from, stkrel to, Tvalue with) {
-  while (from < to) {
-    *from = with;
-    from++;
-  }
-}
+#define check(C, e, msg) \
+  if (!(e))              \
+    cythE_error(C, msg)
 
 static void expect_top_type(cyth_State *C, int t) {
   if (cyth_tt(C->top.p-1) != t)
@@ -47,33 +19,29 @@ static void expect_top_type(cyth_State *C, int t) {
       cythA_type2str(cyth_tt(C->top.p-1)));
 }
 
-/*
-** set the stack slot top to 'top'. if the stack
-** is being reallocated, fill the new entries to
-** none (no value).
-*/
-void cythA_settop(cyth_State *C, int top) {
-  if (top > 0) { /* absolute index */
-    if ((unsigned)top > C->maxoff) {
-      cmem_t savedtop = C->top.p - C->base.p;
-      stkrel newbase = realloc(C->base.p, sizeof(*C->base.p)*(C->maxoff+top));
-      if (newbase == NULL)
-        cythE_error(C, "Couldn't reallocate stack.\n");
-      C->maxoff += top;
-      C->base.p = newbase;
-      C->top.p = C->base.p + (savedtop + top);
-      fillstack(C->base.p+savedtop, C->top.p, NONE);
-    } else {
-      stkrel oldtop = C->top.p;
-      C->top.p += top;
-      fillstack(oldtop, C->top.p, NONE);
-    }
-  } else { /* relative index */
-    if (top == 0) return;
-    else if ((C->base.p - C->top.p) > top)
-      cythE_error(C, "Invalid stack top index.\n");
-    C->top.p += top;
+void cythA_settop(cyth_State *C, int i) {
+  Call_info *ci = C->ci;
+  stkrel top, base = NULL;
+  ptrdiff_t off = 0;
+  if (ci) {
+    top = ci->top.p;
+    base = ci->func.p + 1;
+  } else {
+    top = C->top.p;
+    base = C->base.p;
   }
+  if (i < 0) {
+    check(C, ~i <= top - base, "invalid new top");
+    off = i + 1;
+  } else {
+    cmem_t diff = top - base;
+    check(C, diff + i <= C->maxoff - diff, "invalid new top");
+    off = i;
+    for (ptrdiff_t i = 0; i < off; i++)
+      top[i] = NONE;
+  }
+  if (ci) ci->top.p = top + off;
+  else C->top.p = top + off;
 }
 
 void cythA_push(cyth_State *C, Tvalue v) {
@@ -160,7 +128,6 @@ void *cythA_udnew(cyth_State *C, cmem_t n) {
 
 /* set the destruct method of userdata at top-i */
 void cythA_udsetdestructor(cyth_State *C, int i, cyth_Destructor d) {
-  checkidx(i);
   if (cyth_isuserdata(C, i)) {
     userdata ud = obj2ud(cythE_peek(C, i));
     ud.destructor = d;
@@ -191,7 +158,7 @@ int cythA_typeof(cyth_State *C, int i) {
 
 /* only works for C functions */
 Tvalue cythA_arg(cyth_State *C, int idx) {
-  auxcheck(C, idx > 0, "Invalid argument index");
+  check(C, idx > 0, "invalid argument index (less than zero)");
   return *cythE_peek(C, idx);
 }
 
