@@ -50,10 +50,10 @@ void cythM_error(cyth_State *C, const char *type, cmem_t size) {
 /* helper function to reallocate vectors */
 void cythM_grow(cyth_State *C, void **ptr,
                 cmem_t *size, cmem_t scalar, const char *type) {
-  if (*size == 0)
-    *size = INCSIZE;
   cmem_t old_size = *size;
   *size *= 2;
+  if (*size == 0)
+    *size = INCSIZE;
   void *tmp = _realloc(*ptr, (*size)*scalar);
   if (tmp == NULL) {
     *size = old_size + INCSIZE;
@@ -63,8 +63,8 @@ void cythM_grow(cyth_State *C, void **ptr,
     if (tmp == NULL)
       cythM_error(C, type, *size);
   }
-  C->G->count += *size - old_size;
-  C->G->total += *size - old_size;
+  C->G->count += scalar * (*size - old_size);
+  C->G->total += scalar * (*size - old_size);
   *ptr = tmp;
 }
 

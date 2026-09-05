@@ -62,7 +62,7 @@ int cythF_emitK(cyth_Function *f, Tvalue k) {
 int cythF_emitF(cyth_Function *f, cyth_Function *f2) {
   checkveclimit(f->C, f->fsize, cyth_Function);
   if (f->nf >= f->fsize)
-    cythM_vecgrow(f->C, f->f, f->fsize, sizeof(*f->f));
+    cythM_vecgrow(f->C, f->f, f->fsize, cyth_Function *);
   f->f[f->nf++] = f2;
   return f->nf-1;
 }
