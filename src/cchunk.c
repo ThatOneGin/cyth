@@ -117,6 +117,7 @@ typedef struct {
   Stream *input; /* input stream */
   cyth_State *C;
   size_t offset;
+  SBuffer *buf;
 } Loader;
 
 static void unexpected_EOS(Loader *L) {
@@ -144,13 +145,24 @@ static void load_size(Loader *L, cmem_t *s, int size) {
 }
 
 static void load_string(Loader *L, String **s) {
-  cmem_t len;
+  static char buf[32];
+  cmem_t len, times, rem;
   load_size(L, &len, DEFAULTINTSIZE);
-  *s = cythS_newstrobj(L->C, len);
-  if (len > 0) load_bytearray(L, (*s)->data, len);
-  else *(*s)->data = 0;
-  (*s)->len = len;
-  cythS_finishstrobj(L->C, s);
+  times = (cmem_t)(len / sizeof(buf));
+  rem = len - len * times;
+  if (times > 0) {
+    for (size_t i = 0; i < times; i++) {
+      load_bytearray(L, buf, sizeof(buf));
+      cythO_buffer_appendstr(L->C, L->buf, buf, sizeof(buf));
+    }
+  }
+  if (rem > 0) {
+    load_bytearray(L, buf, rem);
+    cythO_buffer_appendstr(L->C, L->buf, buf, rem);
+  }
+  cythO_buffer_appendchar(L->C, L->buf, 0);
+  *s = cythS_new(L->C, L->buf->data);
+  cythO_buffer_rewind(L->C, L->buf);
 }
 
 static void load_value(Loader *L, Tvalue *v) {
@@ -222,10 +234,13 @@ void cythL_load(cyth_State *C, Stream *input, char *name) {
   L.name = (name != NULL) ? name : "binary chunk";
   L.input = input;
   L.offset = 0;
+  L.buf = &(SBuffer){0};
+  cythO_buffer_new(L.buf);
   cyth_Function *f = cythF_newfunc(C);
   load_header(&L);
   load_function(&L, f); /* load the root (main) chunk */
   cythA_push(C, f2obj(f));
+  cythO_buffer_free(C, L.buf);
 }
 
 /* printer */
