@@ -233,3 +233,14 @@ CYTH_API int cyth_compare(cyth_State *C, int i1, int i2, int op) {
   int res = cythV_objequ(C, l, r);
   return (op == CYTH_OPNE) ? (!res) : res;
 }
+
+CYTH_API size_t cyth_len(cyth_State *C, int i) {
+  Tvalue *o = cythE_peek(C, i);
+  switch (cyth_tt(o)) {
+  case CYTH_STRING: return obj2s(o)->len;
+  case CYTH_TABLE: return obj2t(o)->len;
+  case CYTH_USERDATA: return obj2ud(o).size;
+  case CYTH_ARRAY: return obj2a(o)->narray;
+  default: return 0;
+  }
+}

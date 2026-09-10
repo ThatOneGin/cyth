@@ -79,4 +79,5 @@ CYTH_API void *cyth_newuserdata(cyth_State *C, size_t size);
 CYTH_API void cyth_setdestructor(cyth_State *C, int i, cyth_Destructor d);
 
 CYTH_API int cyth_compare(cyth_State *C, int i1, int i2, int op);
+CYTH_API size_t cyth_len(cyth_State *C, int i);
 #endif
