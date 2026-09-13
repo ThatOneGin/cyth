@@ -491,9 +491,10 @@ static void ifdo(lex_State *ls) {
   free_exp(ls, &e);
   int pc = emitInstlZ(ls, line, OP_JF, 0);
   block(ls);
-  patch(ls, pc, savepc(ls) - 2);
+  patch(ls, pc, savepc(ls) - pc - 1);
 }
 
+/* whiledo = 'while' expr block */
 static void whiledo(lex_State *ls) {
   int cond, jf, out;
   expdsc e = {0};
