@@ -55,7 +55,7 @@ typedef union {
   Table *table;
   cyth_Function *function;
   cyth_Cfunction cfunction;
-  userdata userdata;
+  userdata *userdata;
   Array *array;
   byte boolean;
 } Value;

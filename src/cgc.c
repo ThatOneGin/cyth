@@ -16,7 +16,7 @@ static void *val2ptr(Tvalue v) {
   case CYTH_STRING: return obj2s(&v);
   case CYTH_TABLE: return obj2t(&v);
   case CYTH_FUNCTION: return obj2f(&v);
-  case CYTH_USERDATA: return obj2ud(&v).data;
+  case CYTH_USERDATA: return obj2ud(&v)->data;
   case CYTH_ARRAY: return obj2a(&v);
   default: return NULL;
   }
@@ -24,11 +24,11 @@ static void *val2ptr(Tvalue v) {
 
 static void *gco2ptr(gc_object *o) {
   switch (cyth_tt(o)) {
-  case GCOS: return o->v.s;
-  case GCOT: return o->v.t;
-  case GCOF: return o->v.f;
+  case GCOS: return &o->v.s;
+  case GCOT: return &o->v.t;
+  case GCOF: return &o->v.f;
   case GCOU: return o->v.u.data;
-  case GCOA: return o->v.a;
+  case GCOA: return &o->v.a;
   default: return NULL;
   }
 }
@@ -36,15 +36,13 @@ static void *gco2ptr(gc_object *o) {
 static void freeobj(cyth_State *C, gc_object *o) {
   switch (o->tt_) {
   case GCOS:
-    cythS_free(C, o->v.s);
-    cythM_free(C, o->v.s, sizeof(*o->v.s));
+    cythS_free(C, &o->v.s);
     break;
   case GCOT:
-    cythH_free(C, o->v.t);
-    cythM_free(C, o->v.t, sizeof(*o->v.t));
+    cythH_free(C, &o->v.t);
     break;
   case GCOF:
-    cythF_freefunc(o->v.f);
+    cythF_freefunc(&o->v.f);
     break;
   case GCOU:
     if (o->v.u.destructor != NULL)
@@ -53,8 +51,7 @@ static void freeobj(cyth_State *C, gc_object *o) {
       cythM_free(C, o->v.u.data, o->v.u.size);
     break;
   case GCOA:
-    cythR_free(C, o->v.a);
-    cythM_free(C, o->v.a, sizeof(*o->v.a));
+    cythR_free(C, &o->v.a);
     break;
   }
   cythM_free(C, o, sizeof(gc_object));

@@ -61,7 +61,7 @@ int cythV_objequ(cyth_State *C,
   case CYTH_BOOL:
     return obj2b(&t1) == obj2b(&t2);
   case CYTH_USERDATA:
-    return obj2ud(&t1).data == obj2ud(&t2).data;
+    return obj2ud(&t1)->data == obj2ud(&t2)->data;
   default:
     return 0;
   }

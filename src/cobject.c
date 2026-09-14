@@ -6,8 +6,7 @@
 
 Table *cythH_new(cyth_State *C) {
   gc_object *ref = cythG_newobj(C, GCOT);
-  ref->v.t = cythM_malloc(C, sizeof(Table));
-  Table *t = ref->v.t;
+  Table *t = &ref->v.t;
   t->list = NULL;
   t->len = 0;
   return t;
@@ -79,11 +78,10 @@ void cythH_free(cyth_State *C, Table *t) {
 
 Array *cythR_new(cyth_State *C) {
   gc_object *ref = cythG_newobj(C, GCOA);
-  Array *a = cythM_malloc(C, sizeof(Array));
+  Array *a = &ref->v.a;
   a->arraysize = 2;
   a->narray = 0;
   cythM_vecnew(C, a->data, a->arraysize, Tvalue);
-  ref->v.a = a;
   return a;
 }
 

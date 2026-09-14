@@ -19,11 +19,11 @@
 struct gc_object {
   byte tt_;
   union {
-    String *s;
-    Table *t;
-    cyth_Function *f;
+    String s;
+    Table t;
+    cyth_Function f;
     userdata u;
-    Array *a;
+    Array a;
   } v;
   byte mark;
   struct gc_object *next;

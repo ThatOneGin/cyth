@@ -28,14 +28,13 @@ String *cythS_new(cyth_State *C, char *data) {
        return C->cache.strings[i];
      }
   }
-  s = cythM_malloc(C, sizeof(String));
+  ref = cythG_newobj(C, GCOS);
+  s = &ref->v.s;
   s->data = cythM_malloc(C, len+1);
   s->len = len;
   s->aux = -1;
   s->data[s->len] = 0;
   memcpy(s->data, data, s->len);
-  ref = cythG_newobj(C, GCOS);
-  ref->v.s = s;
   if (C->cache.nstrings >= C->cache.stringsize)
     cythM_vecgrow(C, C->cache.strings, C->cache.stringsize, String);
   C->cache.strings[C->cache.nstrings++] = s;

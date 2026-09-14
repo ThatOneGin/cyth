@@ -114,24 +114,22 @@ int cythA_load(cyth_State *C, Stream *s, char *name) {
 
 /* create an userdata object and push it onto the stack */
 void *cythA_udnew(cyth_State *C, cmem_t n) {
-  gc_object *ref;
-  userdata ud = {0};
-  ud.destructor = NULL;
-  ud.data = cythM_malloc(C, n);
-  ud.size = n;
-  ref = cythG_newobj(C, GCOU);
-  ud.ref = ref;
-  ref->v.u = ud;
+  gc_object *ref = cythG_newobj(C, GCOU);
+  userdata *ud = &ref->v.u;
+  ud->destructor = NULL;
+  ud->data = cythM_malloc(C, n);
+  ud->size = n;
+  ud->ref = ref;
   cythA_push(C, ud2obj(ud));
-  return ud.data;
+  return ud->data;
 }
 
 /* set the destruct method of userdata at top-i */
 void cythA_udsetdestructor(cyth_State *C, int i, cyth_Destructor d) {
   if (cyth_isuserdata(C, i)) {
-    userdata ud = obj2ud(cythE_peek(C, i));
-    ud.destructor = d;
-    gc_object *ref = ud.ref;
+    userdata *ud = obj2ud(cythE_peek(C, i));
+    ud->destructor = d;
+    gc_object *ref = ud->ref;
     ref->v.u.destructor = d;
   }
 }

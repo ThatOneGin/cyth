@@ -127,10 +127,10 @@ CYTH_API cyth_Cfunction cyth_argcfunction(cyth_State *C, int i) {
 
 CYTH_API cyth_userdata cyth_arguserdata(cyth_State *C, int i) {
   checkarg(C, CYTH_USERDATA, i);
-  userdata ud = obj2ud(cythE_peek(C, i));
+  userdata *ud = obj2ud(cythE_peek(C, i));
   cyth_userdata pud = {0};
-  pud.data = ud.data;
-  pud.size = ud.size;
+  pud.data = ud->data;
+  pud.size = ud->size;
   return pud;
 }
 
@@ -239,7 +239,7 @@ CYTH_API size_t cyth_len(cyth_State *C, int i) {
   switch (cyth_tt(o)) {
   case CYTH_STRING: return obj2s(o)->len;
   case CYTH_TABLE: return obj2t(o)->len;
-  case CYTH_USERDATA: return obj2ud(o).size;
+  case CYTH_USERDATA: return obj2ud(o)->size;
   case CYTH_ARRAY: return obj2a(o)->narray;
   default: return 0;
   }

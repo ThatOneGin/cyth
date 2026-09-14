@@ -11,8 +11,7 @@
 
 cyth_Function *cythF_newfunc(cyth_State *C) {
   gc_object *ref = cythG_newobj(C, GCOF);
-  cyth_Function *f = cythM_malloc(C, sizeof(cyth_Function));
-  ref->v.f = f;
+  cyth_Function *f = &ref->v.f;
   f->C = C;
   f->code = NULL;
   f->ncode = 0;
@@ -72,7 +71,6 @@ void cythF_freefunc(cyth_Function *f) {
   cythM_vecfree(f->C, f->k, f->ksize, Tvalue);
   cythM_vecfree(f->C, f->lineinfo, f->linesize, int);
   cythM_vecfree(f->C, f->f, f->fsize, cyth_Function*);
-  cythM_free(f->C, f, sizeof(cyth_Function));
 }
 
 void cythF_precall(cyth_State *C, stkrel func, int nargs, int nwanted) {
