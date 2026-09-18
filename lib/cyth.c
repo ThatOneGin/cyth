@@ -151,16 +151,11 @@ static int generic_writer(cyth_State *C, void *b, size_t size, void *aux) {
   return fwrite(b, size, 1, (FILE*)aux);
 }
 
-CYTH_API void cyth_packprogram(cyth_State *C, int i, const char *outname) {
+CYTH_API void cyth_unloadfunction(cyth_State *C, int i, void *ud, cyth_Writer writer) {
   checktype(C, CYTH_FUNCTION, i);
-  FILE *d = fopen(outname, "wb");
-  if (d == NULL) goto defer;
-  cythU_unload(C, obj2f(cythE_peek(C, i)), generic_writer, d);
-defer:
-  if (d != NULL)
-    fclose(d);
-  else
-    cythE_error(C, "could not open file %s: %s", outname, strerror(errno));
+  Tvalue *t = cythE_peek(C, i);
+  cyth_Function *f = obj2f(t);
+  cythU_unload(C, f, writer, ud);
 }
 
 CYTH_API void cyth_printfunction(cyth_State *C, int i) {

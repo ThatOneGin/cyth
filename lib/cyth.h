@@ -11,6 +11,7 @@ typedef struct cyth_State cyth_State;
 typedef int64_t cyth_integer;
 typedef int (*cyth_Cfunction)(cyth_State *);
 typedef void (*cyth_Destructor)(cyth_State *, void *);
+typedef int (*cyth_Writer)(cyth_State *, void *, size_t, void *);
 #endif
 
 #ifdef CYTH_INTERNAL
@@ -61,7 +62,7 @@ CYTH_API void cyth_call(cyth_State *C, int i, int n, int r);
 
 CYTH_API void cyth_loadfile(cyth_State *C, const char *filename);
 CYTH_API void cyth_loadstring(cyth_State *C, const char *chunkname, const char *chunk);
-CYTH_API void cyth_packprogram(cyth_State *C, int i, const char *outname);
+CYTH_API void cyth_unloadfunction(cyth_State *C, int i, void *ud, cyth_Writer writer);
 CYTH_API void cyth_printfunction(cyth_State *C, int i);
 
 CYTH_API void cyth_setglobal(cyth_State *C, int i, const char *name);
