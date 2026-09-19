@@ -146,9 +146,8 @@ CYTH_API void cyth_loadstring(cyth_State *C, const char *chunkname, const char *
   cythI_loadstring(C, (char*)chunkname, (char*)chunk);
 }
 
-static int generic_writer(cyth_State *C, void *b, size_t size, void *aux) {
-  (void)C;
-  return fwrite(b, size, 1, (FILE*)aux);
+CYTH_API void cyth_loadbinstr(cyth_State *C, const char *name, size_t size, const char *chunk) {
+  cythI_loadbinstr(C, (char*)name, size, (char *)chunk);
 }
 
 CYTH_API void cyth_unloadfunction(cyth_State *C, int i, void *ud, cyth_Writer writer) {

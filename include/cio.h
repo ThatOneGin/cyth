@@ -23,4 +23,5 @@ int cythI_read(Stream *s, void *b, cmem_t n);
 void cythI_close(Stream *s);
 void cythI_loadfile(cyth_State *C, char *filename);
 void cythI_loadstring(cyth_State *C, char *chunkname, char *chunk);
+void cythI_loadbinstr(cyth_State *C, char *chunkname, size_t size, char *chunk);
 #endif

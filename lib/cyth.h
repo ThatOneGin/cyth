@@ -62,6 +62,7 @@ CYTH_API void cyth_call(cyth_State *C, int i, int n, int r);
 
 CYTH_API void cyth_loadfile(cyth_State *C, const char *filename);
 CYTH_API void cyth_loadstring(cyth_State *C, const char *chunkname, const char *chunk);
+CYTH_API void cyth_loadbinstr(cyth_State *C, const char *name, size_t size, const char *chunk);
 CYTH_API void cyth_unloadfunction(cyth_State *C, int i, void *ud, cyth_Writer writer);
 CYTH_API void cyth_printfunction(cyth_State *C, int i);
 

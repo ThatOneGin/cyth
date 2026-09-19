@@ -142,7 +142,7 @@ void cythI_loadfile(cyth_State *C, char *filename) {
   }
 }
 
-/* compile string (for tests) */
+/* compile string */
 void cythI_loadstring(cyth_State *C, char *chunkname, char *chunk) {
   struct BufferS b;
   b.data = chunk;
@@ -151,4 +151,14 @@ void cythI_loadstring(cyth_State *C, char *chunkname, char *chunk) {
   cythI_new(C, &s, readS, &b);
   if (cythA_load(C, &s, chunkname))
     cythE_throw(C, 1, cythA_popstr(C));
+}
+
+/* compile binary string */
+void cythI_loadbinstr(cyth_State *C, char *chunkname, size_t size, char *chunk) {
+  struct BufferS b;
+  b.data = chunk;
+  b.size = size;
+  Stream s;
+  cythI_new(C, &s, readS, &b);
+  cythL_load(C, &s, chunkname);
 }
