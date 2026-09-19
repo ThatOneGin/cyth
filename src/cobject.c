@@ -4,6 +4,8 @@
 #include <cvm.h>
 #include <string.h>
 
+#define max(x, y) ((x) > (y) ? (x) : (y))
+
 Table *cythH_new(cyth_State *C) {
   gc_object *ref = cythG_newobj(C, GCOT);
   Table *t = &ref->v.t;
@@ -124,12 +126,16 @@ void cythO_buffer_new(SBuffer *s) {
 
 void cythO_buffer_appendstr(cyth_State *C, SBuffer *s,
                             char *str, cmem_t len) {
-  cmem_t toappend = len == 0 ? strlen(str) : len;
-  if (toappend == 0) return;
-  if (s->n >= s->s)
-    cythM_vecgrow(C, s->data, s->s, char);
-  memcpy(s->data+s->n, str, toappend);
-  s->n += toappend;
+  if (str == NULL || len == 0) return;
+  cmem_t required = s->n + len;
+  if (required > s->s) {
+    size_t oldsz = s->s;
+    size_t newsz = s->s * 1.5;
+    s->s = max(required, newsz);
+    s->data = cythM_realloc(C, s->data, oldsz, s->s);
+  }
+  memcpy(s->data+s->n, str, len);
+  s->n += len;
 }
 
 void cythO_buffer_rewind(cyth_State *C, SBuffer *s) {
@@ -139,7 +145,10 @@ void cythO_buffer_rewind(cyth_State *C, SBuffer *s) {
 }
 
 void cythO_buffer_free(cyth_State *C, SBuffer *s) {
-  cythM_vecfree(C, s->data, s->s, char);
+  cythM_free(C, s->data, s->s);
+  s->s = 0;
+  s->n = 0;
+  s->data = NULL;
 }
 
 void cythO_buffer_appendchar(cyth_State *C,

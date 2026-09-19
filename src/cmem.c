@@ -90,7 +90,14 @@ void *cythM_realloc(cyth_State *C, void *ptr, cmem_t oldsize, cmem_t size) {
     C->G->count += count;
     C->G->total += count;
   }
-  return _realloc(ptr, size);
+  void *p = _realloc(ptr, size);
+  if (!p)
+    p = tryagain(C, ptr, size);
+  if (!p)
+    cythM_rawmemerr(C, "could not reallocate "
+                       "memory (from %lu to %lu)\n",
+                       oldsize, size);
+  return p;
 }
 
 void cythM_free(cyth_State *C, void *ptr, cmem_t size) {
