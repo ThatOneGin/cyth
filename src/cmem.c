@@ -2,16 +2,6 @@
 #include <cstate.h>
 #include <cgc.h>
 
-/*
-** For memory errors, we can't directly use
-** cythE_error as it allocates memory for strings
-** also, this excludes the recover point thing.
-*/
-#define cythM_rawmemerr(C, ...) \
-  {fprintf(stderr, "[Error]: Memory error: "); \
-  fprintf(stderr, __VA_ARGS__); \
-  cythE_closestate(C); exit(1);}
-
 /* auxiliary function */
 static void *_realloc(void *ptr, cmem_t size) {
   if (ptr == NULL && size > 0) {
@@ -37,19 +27,15 @@ static void *tryagain(cyth_State *C, void *ptr, cmem_t size) {
   return NULL;
 }
 
-void cythM_error(cyth_State *C, const char *type, cmem_t size) {
-  if (type != NULL) {
-    cythM_rawmemerr(C,
-      "Block of %s and size %lu is too big.\n", type, size);
-  } else {
-    cythM_rawmemerr(C,
-      "Block of size %lu is too big.\n", size);
-  }
+void cythM_error(cyth_State *C) {
+  cyth_writeerror(MEMERRMSG);
+  cythE_closestate(C);
+  exit(1);
 }
 
 /* helper function to reallocate vectors */
 void cythM_grow(cyth_State *C, void **ptr,
-                cmem_t *size, cmem_t scalar, const char *type) {
+                cmem_t *size, cmem_t scalar) {
   cmem_t old_size = *size;
   *size *= 2;
   if (*size == 0)
@@ -61,7 +47,7 @@ void cythM_grow(cyth_State *C, void **ptr,
     if (tmp == NULL)
       tmp = tryagain(C, *ptr, (*size)*scalar);
     if (tmp == NULL)
-      cythM_error(C, type, *size);
+      cythM_error(C);
   }
   C->G->count += scalar * (*size - old_size);
   C->G->total += scalar * (*size - old_size);
@@ -74,7 +60,7 @@ void *cythM_malloc(cyth_State *C, cmem_t size) {
   if (ptr == NULL)
     ptr = tryagain(C, ptr, size);
   if (ptr == NULL)
-    cythM_error(C, NULL, size);
+    cythM_error(C);
   C->G->count += size;
   C->G->total += size;
   return ptr;
@@ -94,9 +80,7 @@ void *cythM_realloc(cyth_State *C, void *ptr, cmem_t oldsize, cmem_t size) {
   if (!p)
     p = tryagain(C, ptr, size);
   if (!p)
-    cythM_rawmemerr(C, "could not reallocate "
-                       "memory (from %lu to %lu)\n",
-                       oldsize, size);
+    cythM_error(C);
   return p;
 }
 

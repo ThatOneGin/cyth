@@ -11,12 +11,14 @@
 /* Optional maximum vector size */
 #define MAXVECSIZE USHRT_MAX
 
+#define MEMERRMSG "out of memory\n"
+
 #define cythM_vecnew(C, v, s, t) ((v)=cythM_malloc(C, sizeof(t)*(s)))
 #define cythM_vecgrow(C, v, s, t) \
-  cythM_grow(C, ((void**)&(v)), &s, sizeof(t), #t)
+  cythM_grow(C, ((void**)&(v)), &s, sizeof(t))
 #define cythM_vecfree(C, v, s, t) (cythM_free(C, v, sizeof(t)*(s)), (s)=0)
 
-void cythM_grow(cyth_State *C, void **ptr, cmem_t *size, cmem_t scalar, const char *type);
+void cythM_grow(cyth_State *C, void **ptr, cmem_t *size, cmem_t scalar);
 void *cythM_malloc(cyth_State *C, cmem_t size);
 void *cythM_realloc(cyth_State *C, void *ptr, cmem_t oldsize, cmem_t size);
 void cythM_free(cyth_State *C, void *ptr, cmem_t size);

@@ -11,11 +11,13 @@
 #define cyth_assert(e) assert(e)
 #endif
 
-/* error macro to use when no cyth_State is available */
-#ifndef cyth_rawerr
-#define cyth_rawerr(...) \
-  (fprintf(stderr, "[Error]: "), fprintf(stderr, __VA_ARGS__), exit(1))
+#ifndef cyth_write
+#define cyth_write(s, stream) fputs(s, stream)
 #endif
+
+#define cyth_writestring(s) cyth_write(s, stdout)
+#define cyth_writeerror(s) \
+  (cyth_write("[Error]: ", stderr), (cyth_write(s, stderr)))
 
 typedef int8_t sbyte;
 typedef uint8_t byte;
