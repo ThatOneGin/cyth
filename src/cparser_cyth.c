@@ -454,7 +454,6 @@ static void mainfunc(lex_State *ls) {
 static int pmainfunc(cyth_State *C, void *aux) {
   (void)C;
   mainfunc((lex_State*)aux);
-  cythA_pushint(C, 0);
   return 0;
 }
 
@@ -465,10 +464,10 @@ cyth_Function *cythP_parse_cyth(cyth_State *C, Stream *input, char *chunkname) {
   lex_State ls = cythL_new(C, LEXMCYTH, chunkname, input);
   ls.pdata = (void*)&blk;
   cythL_next(&ls);
-  cythE_runprotected(C, pmainfunc, &ls);
-  if (!cythA_popint(C)) {
+  byte fail = cythE_runprotected(C, pmainfunc, &ls);
+  if (fail) {
     /* if it doesn't fails, f is the top of the stack (the main function) */
-    f = obj2f(&C->top.p[-1]);
+    f = obj2f(cythE_peek(C, -1));
   }
   cythO_buffer_free(C, &ls.buf);
   cythM_vecfree(C, blk.vars.vars, blk.vars.s, Vardsc);

@@ -193,7 +193,6 @@ void cythE_throw(cyth_State *C, byte errcode, String *errmsg) {
     C->errhandler->errmsg = errmsg;
     C->errhandler->errcode = errcode;
     cythA_pushstr(C, errmsg);
-    cythA_pushint(C, 1);
     cyth_throw(C, 1);
   } else {
     printf("%*s", (unsigned int)errmsg->len, errmsg->data);
@@ -205,8 +204,10 @@ void cythE_throw(cyth_State *C, byte errcode, String *errmsg) {
 byte cythE_runprotected(cyth_State *C,
                         cyth_Pfunction f,
                         void *ud) {
-  cyth_jmpbuf newhandler;
+  cyth_jmpbuf newhandler = {0};
   newhandler.previous = C->errhandler;
+  newhandler.errcode = 0;
+  newhandler.errmsg = NULL;
   C->errhandler = &newhandler;
   cyth_try(C, f, ud);
   C->errhandler = C->errhandler->previous;

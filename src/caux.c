@@ -92,13 +92,9 @@ static int pparse(cyth_State *C, void *aux) {
   if (_streq(ext, ".cyth")) f = cythP_parse_cyth(C, s, name);
   else if (_streq(ext, ".cx")) f = cythP_parse_cx(C, s, name);
   else cythE_error(C, "unknown file extension for %s", name);
-  if (f == NULL) {
-    /* message is already on the stack */
-    cythA_pushint(C, 1);
-  } else {
+  if (f != NULL) {
     C->top.p = top; /* erase lexer table */
     cythA_push(C, f2obj(f));
-    cythA_pushint(C, 0);
   }
   return 0;
 }
@@ -108,8 +104,8 @@ static int pparse(cyth_State *C, void *aux) {
 int cythA_load(cyth_State *C, Stream *s, char *name) {
   String *sname = cythS_new(C, name);
   cythA_pushstr(C, sname);
-  cythE_runprotected(C, pparse, s);
-  return cythA_popint(C);
+  byte errcode = cythE_runprotected(C, pparse, s);
+  return errcode;
 }
 
 /* create an userdata object and push it onto the stack */
