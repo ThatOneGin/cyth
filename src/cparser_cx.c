@@ -657,7 +657,7 @@ cyth_Function *cythP_parse_cx(cyth_State *C, Stream *input, char *chunkname) {
   ls.pdata = (void*)&blk;
   cythL_next(&ls);
   byte fail = cythE_runprotected(C, pmainfunc, &ls);
-  if (fail) {
+  if (!fail) {
     /* if it doesn't fails, f is the top of the stack (the main function) */
     f = obj2f(cythE_peek(C, -1));
   }

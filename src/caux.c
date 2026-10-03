@@ -95,6 +95,12 @@ static int pparse(cyth_State *C, void *aux) {
   if (f != NULL) {
     C->top.p = top; /* erase lexer table */
     cythA_push(C, f2obj(f));
+  } else {
+    Tvalue *errobj = cythE_peek(C, -1);
+    String *errmsg;
+    if (cyth_tt(errobj) == CYTH_STRING) errmsg = obj2s(errobj);
+    else errmsg = cythS_new(C, "parsing error"); /* very unlikely to happen */
+    cythE_throw(C, 1, errmsg); /* throw it again */
   }
   return 0;
 }
