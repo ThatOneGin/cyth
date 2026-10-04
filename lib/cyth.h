@@ -31,13 +31,22 @@ typedef struct {
 enum CYTH_EQOP {
   CYTH_OPEQ,
   CYTH_OPNE,
-  CYTH_OPCOUNT
+  CYTH_EQOPCOUNT
+};
+
+enum CYTH_BINOP {
+  CYTH_OPADD,
+  CYTH_OPSUB,
+  CYTH_OPDIV,
+  CYTH_OPMUL,
+  CYTH_BINOPCOUNT
 };
 
 CYTH_API cyth_State *cyth_newstate(void);
 CYTH_API void cyth_openstdlib(cyth_State *C);
 CYTH_API int cyth_gettop(cyth_State *C);
 CYTH_API void cyth_settop(cyth_State *C, int i);
+CYTH_API void cyth_error(cyth_State *C, const char *f, ...);
 CYTH_API void cyth_destroystate(cyth_State *C);
 
 CYTH_API void cyth_copy(cyth_State *C, int i);
@@ -82,4 +91,6 @@ CYTH_API void cyth_setdestructor(cyth_State *C, int i, cyth_Destructor d);
 
 CYTH_API int cyth_compare(cyth_State *C, int i1, int i2, int op);
 CYTH_API size_t cyth_len(cyth_State *C, int i);
+
+CYTH_API int cyth_arith(cyth_State *C, int i1, int i2, int op);
 #endif
