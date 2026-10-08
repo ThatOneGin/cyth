@@ -1,6 +1,7 @@
 #include <cbuiltin.h>
 #include <cstring.h>
 #include <cgc.h>
+#include <cvm.h>
 
 #define cyth_builtinerr(C, f) cythE_error(C, "%s: " f, __func__)
 #define cyth_pushcstr(C, s) (cythA_pushstr(C, cythS_new(C, s)))
@@ -70,10 +71,40 @@ static int load(cyth_State *C) {
   return 0;
 }
 
+static int array(cyth_State *C) {
+  cythA_push(C, a2obj(cythR_new(C)));
+  return 1;
+}
+
+static int table(cyth_State *C) {
+  cythA_push(C, t2obj(cythH_new(C)));
+  return 1;
+}
+
+static int set(cyth_State *C) {
+  Tvalue k;
+  cythV_swap(C);
+  k = cythA_pop(C);
+  cythV_setf(C, k);
+  return 0;
+}
+
+static int get(cyth_State *C) {
+  Tvalue res, k;
+  k = cythA_pop(C);
+  cythV_getf(C, &res, k);
+  cythA_push(C, res);
+  return 1;
+}
+
 static cyth_reg funcs[] = {
   {"print", print},
   {"tostring", tostring},
   {"load", load},
+  {"array", array},
+  {"table", table},
+  {"set", set},
+  {"get", get},
   {NULL, NULL}
 };
 
