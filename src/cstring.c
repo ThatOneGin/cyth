@@ -4,6 +4,10 @@
 #include <string.h>
 #include <stdarg.h>
 
+#define islngstr(len) (len > SHRSTRLENGTH)
+#define HASH_PRIME 16777619u
+#define HASH_OFFSET_BASIS 2166136261u
+
 /* initialize cyth_State cache */
 void cythS_init(cyth_State *C) {
   C->cache.nstrings = 0;
@@ -17,24 +21,57 @@ void cythS_clear(cyth_State *C) {
   cythM_vecfree(C, C->cache.strings, C->cache.stringsize, String);
 }
 
+static hash_t hashf(const char *data, size_t len) {
+  hash_t hash = HASH_OFFSET_BASIS;
+  for (size_t i = 0; i < len; i++) {
+    hash ^= data[i];
+    hash *= HASH_PRIME;
+  }
+  return hash;
+}
+
+static String *search_string(cyth_State *C, const char *data, size_t len, hash_t hash) {
+  String *str;
+  if (islngstr(len))
+    return NULL;
+  for (cmem_t i = 0; i < C->cache.nstrings; i++) {
+    str = C->cache.strings[i];
+    if (str->len == len) {
+      if (str->lng)
+        return (memcmp(str->data, data, len) == 0) ? str : NULL;
+      else if (str->hash == hash) /* not lngstr, there is a hash */
+        return (memcmp(str->data, data, len) == 0) ? str : NULL;
+    }
+  }
+  return NULL;
+}
+
+static String *create_strobj(cyth_State *C,
+                             const char *data, size_t len,
+                             hash_t hash, sbyte lng) {
+  gc_object *ref = cythG_newobj(C, GCOS);
+  String *s = &ref->v.s;
+  s->data = cythM_malloc(C, len + 1);
+  s->len = len;
+  s->hash = hash;
+  s->lng = lng;
+  s->aux = -1;
+  memcpy(s->data, data, len);
+  s->data[len] = 0;
+  return s;
+}
+
 /* create a string and search for it in cache */
 String *cythS_new(cyth_State *C, char *data) {
   size_t len = strlen(data);
   String *s;
-  gc_object *ref;
-   for (cmem_t i = 0; i < C->cache.nstrings; i++) {
-     if (len == C->cache.strings[i]->len &&
-         memcmp(C->cache.strings[i]->data, data, len) == 0) {
-       return C->cache.strings[i];
-     }
-  }
-  ref = cythG_newobj(C, GCOS);
-  s = &ref->v.s;
-  s->data = cythM_malloc(C, len+1);
-  s->len = len;
-  s->aux = -1;
-  s->data[s->len] = 0;
-  memcpy(s->data, data, s->len);
+  hash_t hash;
+  if (islngstr(len)) hash = 0;
+  else hash = hashf(data, len);
+  s = search_string(C, data, len, hash);
+  if (s) return s;
+  s = create_strobj(C, data, len, hash, islngstr(len));
+  if (s->lng) return s; /* do not put it in the cache */
   if (C->cache.nstrings >= C->cache.stringsize)
     cythM_vecgrow(C, C->cache.strings, C->cache.stringsize, String);
   C->cache.strings[C->cache.nstrings++] = s;
@@ -42,7 +79,12 @@ String *cythS_new(cyth_State *C, char *data) {
 }
 
 int cythS_streq(String *s1, String *s2) {
-  return s1 == s2;
+  if (s1->len == s2->len) {
+    if (s1->lng || s2->lng) return memcmp(s1->data, s2->data, s1->len);
+    else if (s1->hash == s2->hash) return s1 == s2;
+    else return 0;
+  }
+  return 0;
 }
 
 String *cythS_vsprintf(cyth_State *C,
@@ -66,7 +108,7 @@ String *cythS_sprintf(cyth_State *C, const char *f, ...) {
 ** free its memory
 */
 void cythS_free(cyth_State *C, String *s) {
-  cythS_erase(C, s);
+  if (!s->lng) cythS_erase(C, s);
   cythM_free(C, s->data, s->len+1);
 }
 
@@ -77,7 +119,7 @@ void cythS_free(cyth_State *C, String *s) {
 void cythS_erase(cyth_State *C, String *s) {
   stringtable *cache = &C->cache;
   for (cmem_t i = 0; i < cache->nstrings; i++) {
-    if (s == cache->strings[i]) {
+    if (cythS_streq(s, cache->strings[i])) {
       for (cmem_t j = i; j < cache->nstrings - 1; j++)
         cache->strings[j] = cache->strings[j+1];
       cache->nstrings--;

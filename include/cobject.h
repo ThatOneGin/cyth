@@ -1,14 +1,32 @@
 #ifndef COBJECT_H
 #define COBJECT_H
 #include <cprefix.h>
+#include <stdint.h>
+
+/*
+** maximum length a short string can have
+** before being considered a long string
+**
+** the difference between them is that
+** strings with length above this limit
+** are not interned in the stringtable,
+** instead, they are only managed by
+** the garbage collector and can only
+** be accessed through the GC object list.
+*/
+#define SHRSTRLENGTH 64
 
 typedef struct cyth_State cyth_State;
 typedef struct global_State global_State;
 typedef struct gc_object gc_object;
 
+typedef uint32_t hash_t;
+
 typedef struct {
   char *data;
   size_t len;
+  hash_t hash;
+  sbyte lng; /* true if strings exceeds SHRSTRLENGTH */
   sbyte aux; /* this field helps to identify reserved words */
 } String;
 
