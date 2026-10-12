@@ -121,7 +121,6 @@ void *cythA_udnew(cyth_State *C, cmem_t n) {
   ud->destructor = NULL;
   ud->data = cythM_malloc(C, n);
   ud->size = n;
-  ud->ref = ref;
   cythA_push(C, ud2obj(ud));
   return ud->data;
 }
@@ -131,8 +130,6 @@ void cythA_udsetdestructor(cyth_State *C, int i, cyth_Destructor d) {
   if (cyth_isuserdata(C, i)) {
     userdata *ud = obj2ud(cythE_peek(C, i));
     ud->destructor = d;
-    gc_object *ref = ud->ref;
-    ref->v.u.destructor = d;
   }
 }
 

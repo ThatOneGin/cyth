@@ -40,12 +40,11 @@ enum CYTH_VALUES {
 
 typedef struct cyth_Function cyth_Function;
 typedef int (*cyth_Cfunction)(cyth_State *);
-typedef void (*cyth_Destructor)(void*, void*); /* params: userdata, pointer */
+typedef void (*cyth_Destructor)(void*, void*); /* params: cyth_State, pointer */
 
 typedef struct {
   void *data;
   cmem_t size;
-  gc_object *ref;
   cyth_Destructor destructor;
 } userdata;
 

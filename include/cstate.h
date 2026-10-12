@@ -17,7 +17,7 @@
 #define GCOA 4
 
 struct gc_object {
-  byte tt_;
+  struct gc_object *next;
   union {
     String s;
     Table t;
@@ -25,8 +25,8 @@ struct gc_object {
     userdata u;
     Array a;
   } v;
+  byte tt_;
   byte mark;
-  struct gc_object *next;
 };
 
 /* hooks (primarly used for debugging) */
