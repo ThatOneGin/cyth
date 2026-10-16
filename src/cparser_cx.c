@@ -342,6 +342,13 @@ static void xexp(lex_State *ls, expdsc *e) {
       e->u.c.nargs = n;
       e->u.c.idx = idx;
     } break;
+    /*
+    ** function calls such as 'x:f' have the same meaning of 'f(x)'
+    ** when a this type of function call has no extra argument, the
+    ** parenthesis can be omitted for chaining, for example, x:f:g
+    ** which is the same of (x:f):g or g(f(x)), but it is completely
+    ** valid to put them and have something like x:f():g()
+    */
     case ':': {
       int n = 1;
       expdsc e2;
@@ -360,10 +367,12 @@ static void xexp(lex_State *ls, expdsc *e) {
         free_exp(ls, &e2); /* caller */
         free_exp(ls, e);   /* first arg */
       }
-      expect(ls, '(', "'(' to open argument list");
-      if (ls->t.type != ')')
-        n += explist(ls, e);
-      expect(ls, ')', "')' to close argument list");
+      if (ls->t.type == '(') {
+        expect(ls, '(', "'(' to open argument list");
+        if (ls->t.type != ')')
+          n += explist(ls, e);
+        expect(ls, ')', "')' to close argument list");
+      }
       /* swap solves all the problem with already used expressions */
       int idx = emitInstab(ls, OP_CALL, n, 1);
       e->k = EXPCALL;
