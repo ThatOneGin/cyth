@@ -14,20 +14,21 @@ enum calltype {
 
 struct cyth_Function {
   cyth_State *C;
-  Instruction *code;
   cmem_t ncode;
-  cmem_t codesize;
-  Tvalue *k; /* constants */
   cmem_t nk;
-  cmem_t ksize; 
-  int *lineinfo; /* debug info */
   cmem_t nline;
-  cmem_t linesize;
-  cyth_Function **f;
   cmem_t nf;
+  cmem_t codesize;
+  cmem_t ksize; 
+  cmem_t linesize;
   cmem_t fsize;
   byte nresults;
   byte nparams;
+  String *name; /* for debug purposes */
+  Instruction *code;
+  int *lineinfo; /* debug info */
+  Tvalue *k; /* constants */
+  cyth_Function **f;
 };
 
 cyth_Function *cythF_newfunc(cyth_State *C);

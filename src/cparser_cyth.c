@@ -408,6 +408,7 @@ static void func(lex_State *ls) {
   expect(ls, '(', "'('");
   expect(ls, TK_FUNC, "'func' keyword.");
   name = expect(ls, TK_NAME, "identifier").value.s;
+  f->name = name;
   funcparams(ls);
   funcresults(ls);
   blockbody(ls, ')');
@@ -429,6 +430,7 @@ static void mainfunc(lex_State *ls) {
   func_State fs;
   openfunc(ls, &fs);
   cyth_Function *f = ls->fs->f;
+  f->name = cythS_new(ls->C, "start");
   while (ls->t.type == '(') {
     func(ls);
   }

@@ -82,6 +82,7 @@ static void markvalue(global_State *G, void *root, Tvalue v) {
       markvalue(G, vptr, a->data[i]);
   } else if (cyth_tt(&v) == CYTH_FUNCTION) {
     cyth_Function *f = obj2f(&v);
+    markvalue(G, vptr, s2obj(f->name));
     for (cmem_t i = 0; i < f->nk; i++)
       markvalue(G, vptr, f->k[i]);
   }

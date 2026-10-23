@@ -13,20 +13,21 @@ cyth_Function *cythF_newfunc(cyth_State *C) {
   gc_object *ref = cythG_newobj(C, GCOF);
   cyth_Function *f = &ref->v.f;
   f->C = C;
-  f->code = NULL;
   f->ncode = 0;
-  f->codesize = 0;
-  f->k = NULL;
   f->nk = 0;
-  f->ksize = 0;
-  f->lineinfo = NULL;
   f->nline = 0;
-  f->linesize = 0;
-  f->f = NULL;
   f->nf = 0;
+  f->codesize = 0;
+  f->ksize = 0;
+  f->linesize = 0;
   f->fsize = 0;
   f->nresults = 0;
   f->nparams = 0;
+  f->name = NULL;
+  f->code = NULL;
+  f->lineinfo = NULL;
+  f->k = NULL;
+  f->f = NULL;
   return f;
 }
 

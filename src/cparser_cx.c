@@ -581,6 +581,7 @@ static void func(lex_State *ls) {
   int start_line = saveline(ls);
   expect(ls, TK_FUNC, "'func' keyword.");
   name = expect(ls, TK_NAME, "identifier").value.s;
+  fs.f->name = name;
   Symtab s = {0};
   enter(ls, &s);
   funcparams(ls);
@@ -631,6 +632,7 @@ static void mainfunc(lex_State *ls) {
   func_State fs = {0};
   openfunc(ls, &fs);
   cyth_Function *f = fs.f;
+  f->name = cythS_new(ls->C, "start");
   while (ls->t.type != TK_EOF) {
     toplevel(ls);
   }

@@ -85,6 +85,7 @@ static void unload_function(Unloader *U, cyth_Function *f) {
   unload_int(U, f->fsize, sizeof(int16_t));
   unload_byte(U, f->nresults);
   unload_byte(U, f->nparams);
+  unload_string(U, f->name);
   unload_vector(U, f->code, f->ncode);
   unload_vector(U, f->lineinfo, f->nline);
   unload_constants(U, f);
@@ -218,6 +219,7 @@ static void load_function(Loader *L, cyth_Function *f) {
   f->lineinfo = cythM_malloc(L->C, sizeof(*f->lineinfo) * f->nline);
   f->k = cythM_malloc(L->C, sizeof(*f->k) * f->nk);
   f->f = cythM_malloc(L->C, sizeof(*f->f) * f->nf);
+  load_string(L, &f->name);
   load_vector(L, f->code, f->ncode, Instruction);
   load_vector(L, f->lineinfo, f->nline, int);
   load_constants(L, f);
@@ -252,6 +254,10 @@ static void print_int(cyth_integer i) {
 }
 
 static void print_string(String *s) {
+  if (!s || s->len == 0) {
+    Putc('?');
+    return;
+  }
   Putc('"');
   char *p = s->data;
   for (cmem_t i = 0; i < s->len; p++, i++) {
@@ -267,7 +273,7 @@ static void print_string(String *s) {
     case '\\': printf("\\\\"); break;
     default: Putc(*p); break;
   }
- }
+  }
   Putc('"');
 }
 
@@ -368,9 +374,13 @@ static void print_code(cyth_Function *f) {
 }
 
 void cythL_print(cyth_Function *f) {
-  printf("Function %p (%d in, %d out):\n", (void*)f, f->nparams, f->nresults);
+  printf("Function ");
+  print_string(f->name);
+  printf(" %p (%d in, %d out):\n",(void*)f, f->nparams, f->nresults);
   print_code(f);
-  printf("constants for %p (%lu):\n", (void*)f, f->nk);
+  printf("constants for ");
+  print_string(f->name);
+  printf(" %p (%lu):\n", (void*)f, f->nk);
   print_constants(f);
   for (cmem_t i = 0; i < f->nf; i++) {
     cythL_print(f->f[i]);
