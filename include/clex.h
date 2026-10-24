@@ -43,6 +43,6 @@ static inline int c_isspace(int c) {return isspace(c);}
 lex_State cythL_new(cyth_State *C, int mode, char *name, Stream *input);
 void cythL_anchorstring(lex_State *ls, String *s);
 String *cythL_createstring(lex_State *ls, char *s);
-void cythL_syntaxerror(lex_State *ls, const char *s);
+void cythL_syntaxerror(lex_State *ls, const char *f, ...);
 void cythL_next(lex_State *ls);
 #endif

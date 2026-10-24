@@ -86,7 +86,7 @@ static void setvar(lex_State *ls, Vardsc v) {
     curr = blk->vars.vars[i];
     if (curr.name == v.name) {
       if (curr.k == VKGLB || curr.k == VKFUN)
-        cythE_error(ls->C, "Trying to redefine variable '%*s'",
+        cythL_syntaxerror(ls, "Trying to redefine variable '%*s'",
           (unsigned int)v.name->len, v.name->data);
     }
   }
@@ -640,7 +640,7 @@ static void mainfunc(lex_State *ls) {
     Vardsc v;
   getvar(ls, cythS_new(ls->C, "main"), &v);
   if (v.k != VKFUN)
-    cythE_error(ls->C, "Expected symbol 'main' to be a function.");
+    cythL_syntaxerror(ls, "Expected symbol 'main' to be a function.");
   else {
     Instruction i = 0;
     setopcode(i, OP_FUNC);

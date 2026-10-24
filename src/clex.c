@@ -2,6 +2,7 @@
 #include <caux.h>
 #include <cmem.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 /* cx */
 extern void lexxinit(lex_State *ls);
@@ -42,17 +43,24 @@ String *cythL_createstring(lex_State *ls, char *s) {
   return sdesc;
 }
 
-void cythL_syntaxerror(lex_State *ls, const char *s) {
+void cythL_syntaxerror(lex_State *ls, const char *f, ...) {
   char *modename = ls->mode == LEXMCYTH ? "cyth" : "cx";
-  cythE_error(ls->C, "%s: %s: Syntax error near line %d: %s",
-    modename, s2cstr(ls->sourcename), ls->line, s);
+  String *errmsg = NULL;
+  va_list ap;
+  va_start(ap, f);
+  errmsg = cythS_vsprintf(ls->C, f, ap);
+  va_end(ap);
+  errmsg =
+    cythS_sprintf(ls->C, "%s: %s: syntax error near line %d: %s\n",
+    modename, s2cstr(ls->sourcename), ls->line, s2cstr(errmsg));
+  cythE_throw(ls->C, CYTH_SYNTAXERR, errmsg);
 }
 
 /* get next token stored in ls->t */
 void cythL_next(lex_State *ls) {
   if (ls->mode == LEXMCYTH) lexc(ls);
   else if (ls->mode == LEXMCX) lexx(ls);
-  else cythE_error(ls->C, "Unknown mode %d", ls->mode);
+  else cythL_syntaxerror(ls, "invalid mode");
 }
 
 #undef next

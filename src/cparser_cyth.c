@@ -56,7 +56,7 @@ static void setvar(lex_State *ls, Vardsc v) {
     cythM_vecgrow(ls->C, blk->vars.vars, blk->vars.s, Vardsc);
   for (cmem_t i = 0; i < blk->vars.n; i++) {
     if (blk->vars.vars[i].name == v.name) {
-      cythE_error(ls->C, "Trying to redefine variable '%*s'",
+      cythL_syntaxerror(ls, "Trying to redefine variable '%*s'",
         (unsigned int)v.name->len, v.name->data);
     }
   }
@@ -122,7 +122,7 @@ static void setlabel(lex_State *ls, String *name, int pc, int patch) {
       *pl = l;
       return;
     } else if (pl->name == name && !pl->patch) {
-      cythE_error(ls->C, "Trying to redefine label '%*s'",
+      cythL_syntaxerror(ls, "Trying to redefine label '%*s'",
                   (unsigned int)name->len, name->data);
     }
   }
@@ -229,7 +229,7 @@ static void check_labels(lex_State *ls) {
   for (cmem_t i = 0; i < d->labels.n; i++) {
     l = d->labels.labels[i];
     if (l.patch)
-      cythE_error(ls->C, "Unknown label '%*s'",
+      cythL_syntaxerror(ls, "Unknown label '%*s'",
         (unsigned int) l.name->len, l.name->data);
   }
 }
@@ -438,7 +438,7 @@ static void mainfunc(lex_State *ls) {
   Vardsc v;
   getvar(ls, cythS_new(ls->C, "main"), &v);
   if (v.k != VKFUN)
-    cythE_error(ls->C, "Expected symbol 'main' to be a function.");
+    cythL_syntaxerror(ls, "Expected symbol 'main' to be a function.");
   else {
     Instruction i = 0;
     setopcode(i, OP_FUNC);
