@@ -236,3 +236,30 @@ void cythE_hookcall(cyth_State *C, int event) {
     ci->top.p = ci_top;
   }
 }
+
+void cythE_printtrace(cyth_State *C, int nlvl) {
+  if (nlvl > CYTH_MAX_TRACE_LVL)
+    nlvl = CYTH_MAX_TRACE_LVL;
+  Call_info *ci = C->ci;
+  while (nlvl > 0 && ci != NULL) {
+    switch (ci->type) {
+    case CYTHCALL: {
+      cyth_Function *f = ci->u.cyth.f;
+      String *name = f->name;
+      char *cname = s2cstr(name);
+      int pc = ci->u.cyth.pc;
+      int line = 0;
+      if ((cmem_t)pc >= f->nline) printf("at function %*s\n", (int)name->len, cname);
+      else {
+        line = f->lineinfo[pc];
+        printf("\tat function %*s line %d\n", (int)name->len, cname, line);
+      }
+    } break;
+    case CCALL:
+      printf("\tat [C function]\n");
+      break;
+    }
+    nlvl--;
+    ci = ci->prev;
+  }
+}

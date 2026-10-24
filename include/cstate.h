@@ -97,6 +97,11 @@ struct cyth_State {
   byte runhook; /* if a hook is callable in the current environment (hooks are not recursive) */
 };
 
+#define CYTH_MAX_TRACE_LVL 15
+#define CYTH_NOERR 0
+#define CYTH_RUNERR 1
+#define CYTH_SYNTAXERR 2
+
 cyth_State *cythE_openstate(void);
 void cythE_newci(cyth_State *C);
 cmem_t cythE_gettop(cyth_State *C);
@@ -109,4 +114,5 @@ void cythE_throw(cyth_State *C, byte errcode, String *errmsg);
 byte cythE_runprotected(cyth_State *C, cyth_Pfunction f, void *ud);
 void cythE_sethook(cyth_State *C, cyth_hook hook, int mask);
 void cythE_hookcall(cyth_State *C, int event);
+void cythE_printtrace(cyth_State *C, int nlvl);
 #endif
