@@ -89,7 +89,7 @@ static void help(void) {
 int main(int argc, char **argv) {
   cyth_State *C = cythE_openstate();
   if (!C) {
-    printf("[Error]: could not initialize cyth\n");
+    cyth_writeerror("could not initialize cyth");
     return 1;
   }
   if (!handle_short_args(++argv, --argc))

@@ -134,12 +134,11 @@ void cythE_closestate(cyth_State *C) {
 
 void cythE_error(cyth_State *C,
                  const char *f, ...) {
-  char *fmt = s2cstr(cythS_sprintf(C, "[Error]: %s\n", f));
   va_list ap;
   va_start(ap, f);
-  String *message = cythS_vsprintf(C, fmt, ap);
+  String *message = cythS_vsprintf(C, f, ap);
   va_end(ap);
-  cythE_throw(C, 1, message);
+  cythE_throw(C, CYTH_RUNERR, message);
 }
 
 void cythE_inctop(cyth_State *C) {
@@ -195,7 +194,7 @@ void cythE_throw(cyth_State *C, byte errcode, String *errmsg) {
     cythA_pushstr(C, errmsg);
     cyth_throw(C, 1);
   } else {
-    printf("%*s", (unsigned int)errmsg->len, errmsg->data);
+    printf("[cyth] %*s", (unsigned int)errmsg->len, errmsg->data);
     cythE_closestate(C);
     exit(1);
   }

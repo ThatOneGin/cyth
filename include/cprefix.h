@@ -17,7 +17,7 @@
 
 #define cyth_writestring(s) cyth_write(s, stdout)
 #define cyth_writeerror(s) \
-  (cyth_write("[Error]: ", stderr), (cyth_write(s, stderr)))
+  (cyth_write("[cyth] ", stderr), (cyth_write(s, stderr)))
 
 typedef int8_t sbyte;
 typedef uint8_t byte;
