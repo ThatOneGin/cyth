@@ -194,7 +194,9 @@ void cythE_throw(cyth_State *C, byte errcode, String *errmsg) {
     cythA_pushstr(C, errmsg);
     cyth_throw(C, 1);
   } else {
-    printf("[cyth] %*s", (unsigned int)errmsg->len, errmsg->data);
+    printf("[cyth] %*s\n", (unsigned int)errmsg->len, errmsg->data);
+    if (errcode == CYTH_RUNERR)
+      cythE_printtrace(C, CYTH_MAX_TRACE_LVL);
     cythE_closestate(C);
     exit(1);
   }
@@ -240,6 +242,8 @@ void cythE_printtrace(cyth_State *C, int nlvl) {
   if (nlvl > CYTH_MAX_TRACE_LVL)
     nlvl = CYTH_MAX_TRACE_LVL;
   Call_info *ci = C->ci;
+  if (ci)
+    printf("stack trace:\n");
   while (nlvl > 0 && ci != NULL) {
     switch (ci->type) {
     case CYTHCALL: {
@@ -248,10 +252,13 @@ void cythE_printtrace(cyth_State *C, int nlvl) {
       char *cname = s2cstr(name);
       int pc = ci->u.cyth.pc;
       int line = 0;
-      if ((cmem_t)pc >= f->nline) printf("at function %*s\n", (int)name->len, cname);
+      if ((cmem_t)pc >= f->nline)
+        printf("at function '%*s'\n",
+          (int)name->len, cname);
       else {
         line = f->lineinfo[pc];
-        printf("\tat function %*s line %d\n", (int)name->len, cname, line);
+        printf("\tat function '%*s' line %d\n",
+          (int)name->len, cname, line);
       }
     } break;
     case CCALL:
