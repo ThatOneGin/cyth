@@ -2,6 +2,7 @@
 
 #include <errno.h>
 #include <string.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -37,6 +38,14 @@ CYTH_API int cyth_gettop(cyth_State *C) {
 
 CYTH_API void cyth_settop(cyth_State *C, int i) {
   cythA_settop(C, i);
+}
+
+CYTH_API void cyth_error(cyth_State *C, const char *f, ...) {
+  va_list ap;
+  va_start(ap, f);
+  String *msg = cythS_vsprintf(C, f, ap);
+  va_end(ap);
+  cythE_throw(C, CYTH_RUNERR, msg);
 }
 
 CYTH_API void cyth_destroystate(cyth_State *C) {
