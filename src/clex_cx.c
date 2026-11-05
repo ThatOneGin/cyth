@@ -137,6 +137,19 @@ void lexx(lex_State *ls) {
       } else
         ls->t.type = ls->t.value.i = '-';
       break;
+    case '=':
+      next(ls);
+      if (ls->current == '=') {
+        ls->t.type = ls->t.value.i = TK_EQ;
+        next(ls);
+      } else
+        ls->t.type = ls->t.value.i = '=';
+      break;
+    case '!':
+      next(ls);
+      expect(ls, '=', "expected '=' for != token");
+      ls->t.type = ls->t.value.i = TK_NE;
+      break;
     default:
       if (!iscntrl(ls->current)) {
         ls->t.value.i = ls->t.type = ls->current;

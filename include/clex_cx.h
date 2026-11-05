@@ -29,7 +29,9 @@ enum tkreserved {
 /* end reserved */
   TK_NAME, TK_INT, TK_STR,
 
-  TK_ARROW /* -> */
+  TK_ARROW, /* -> */
+  TK_EQ,
+  TK_NE,
 };
 
 void lexxinit(lex_State *ls);

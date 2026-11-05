@@ -310,8 +310,10 @@ static void pexp(lex_State *ls, expdsc *e) {
 }
 
 static int prec[] = {
-  [OPR_MUL] = 2, [OPR_DIV] = 2, /* *, / */
-  [OPR_ADD] = 1, [OPR_SUB] = 1, /* +, - */
+  [OPR_MUL] = 3, [OPR_DIV] = 3, /* *, / */
+  [OPR_ADD] = 2, [OPR_SUB] = 2, /* +, - */
+  [OPR_EQ] = 1, [OPR_NE] = 1, /* ==, != */
+  [OPR_GT] = 1, [OPR_LT] = 1, /* >, < */
   [OPR_INVALID] = 0
 };
 
@@ -321,6 +323,10 @@ static int getopr(lex_State *ls) {
   case '-': return OPR_SUB;
   case '/': return OPR_DIV;
   case '*': return OPR_MUL;
+  case TK_EQ: return OPR_EQ;
+  case TK_NE: return OPR_NE;
+  case '>': return OPR_GT;
+  case '<': return OPR_LT;
   default: return OPR_INVALID;
   }
 }
