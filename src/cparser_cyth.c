@@ -254,7 +254,9 @@ static void instruction(lex_State *ls) {
   case TK_DIV:
   case TK_MUL:
   case TK_EQ:
-  case TK_NEQ:
+  case TK_NE:
+  case TK_GT:
+  case TK_LT:
     setopcode(i, OP_BINOP);
     setargz(i, (opcode.type - TK_ADD));
     break;
