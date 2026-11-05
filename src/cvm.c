@@ -4,6 +4,8 @@
 #include <cgc.h>
 #include <ctype.h>
 
+#define iscmpoperator(o) ((o) >= OPR_EQ && (o) <= OPR_LT)
+
 #define rebase(C)          \
   {if ((C)->rebase) {      \
     base = ci->func.p + 1; \
@@ -190,7 +192,7 @@ static int tointeger(Tvalue t, cyth_integer *i) {
 }
 
 /* convert both hands to integers and do the operation */
-static int dobinop(cyth_integer *res, int op, Tvalue l, Tvalue r) {
+static int dobinop(cyth_State *C, cyth_integer *res, int op, Tvalue l, Tvalue r) {
   cyth_integer lhs = 0;
   cyth_integer rhs = 0;
   int lres = tointeger(l, &lhs);
@@ -202,6 +204,17 @@ static int dobinop(cyth_integer *res, int op, Tvalue l, Tvalue r) {
   case OPR_SUB: *res = (cyth_integer)lhs - rhs; break;
   case OPR_MUL: *res = (cyth_integer)lhs * rhs; break;
   case OPR_DIV: *res = (cyth_integer)lhs / rhs; break;
+  case OPR_EQ: *res = cythV_objequ(C, l, r); break;
+  case OPR_NE: *res = !cythV_objequ(C, l, r); break;
+  case OPR_GT:
+  case OPR_LT: {
+    cyth_integer li, ri;
+    if (tointeger(l, &li) < 0) return -1;
+    if (tointeger(l, &ri) < 0) return -1;
+    if (op == OPR_GT) *res = li > ri;
+    else if (op == OPR_LT) *res = li < ri;
+    else cyth_assert(0);
+  } break;
   default: cyth_assert(0); break;
   }
   return 0;
@@ -209,11 +222,15 @@ static int dobinop(cyth_integer *res, int op, Tvalue l, Tvalue r) {
 
 int cythV_arith(cyth_State *C, Tvalue *res, Tvalue l, Tvalue r, int op) {
   (void)C;
-  *res = i2obj(0);
-  if (dobinop(&obj2i(res), op, l, r) < 0)
+  if (dobinop(C, &obj2i(res), op, l, r) < 0) {
+    if (iscmpoperator(op))
+      *res = b2obj(0);
     return 0;
+  }
+  if (iscmpoperator(op)) cyth_tt(res) = CYTH_BOOL;
   return 1;
 }
+
 
 /* get the field of a table or an array */
 void cythV_getf(cyth_State *C, Tvalue *res, Tvalue k)
@@ -294,9 +311,10 @@ returning:
         cyth_integer res = 0;
         Tvalue r = pop(C);
         Tvalue l = pop(C);
-        if (dobinop(&res, getargz(i), l, r) < 0)
+        if (dobinop(C, &res, getargz(i), l, r) < 0)
           cythE_error(C, "could not do binary operation");
-        cythA_pushint(C, res);
+        if (iscmpoperator(getargz(i))) cythA_push(C, b2obj(res));
+        else cythA_pushint(C, res);
       } vmbreak;
       vmcase(OP_SETVAR) {
         if (C->top.p == base)
@@ -316,16 +334,6 @@ returning:
           ci = C->ci; /* return to caller */
           goto returning;
         } else return;
-      } vmbreak;
-      vmcase(OP_EQ) {
-        Tvalue r = pop(C);
-        Tvalue l = pop(C);
-        cythA_push(C, b2obj(cythV_objequ(C, l, r)));
-      } vmbreak;
-      vmcase(OP_NEQ) {
-        Tvalue r = pop(C);
-        Tvalue l = pop(C);
-        cythA_push(C, b2obj((!cythV_objequ(C, l, r))));
       } vmbreak;
       vmcase(OP_JT) {
         int32_t az = cythC_imm2int(getargz(i));

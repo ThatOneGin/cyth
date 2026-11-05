@@ -9,6 +9,10 @@ enum BINOPR {
   OPR_SUB,
   OPR_DIV,
   OPR_MUL,
+  OPR_EQ,
+  OPR_NE,
+  OPR_GT,
+  OPR_LT,
   OPR_COUNT
 };
 

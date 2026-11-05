@@ -253,6 +253,8 @@ static void instruction(lex_State *ls) {
   case TK_SUB:
   case TK_DIV:
   case TK_MUL:
+  case TK_EQ:
+  case TK_NEQ:
     setopcode(i, OP_BINOP);
     setargz(i, (opcode.type - TK_ADD));
     break;
@@ -278,8 +280,6 @@ static void instruction(lex_State *ls) {
       setargz(i, emitK(ls, s2obj(name)));
     }
   } break;
-  case TK_EQ: setopcode(i, OP_EQ); break;
-  case TK_NEQ: setopcode(i, OP_NEQ); break;
   case TK_JF:
     setopcode(i, OP_JF);
     setargz(i, labelref(ls));

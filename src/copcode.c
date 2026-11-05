@@ -25,6 +25,10 @@ char *cythC_getbinopname(int o) {
   case OPR_SUB: return "SUB";
   case OPR_MUL: return "MUL";
   case OPR_DIV: return "DIV";
+  case OPR_EQ: return "EQ";
+  case OPR_NE: return "NE";
+  case OPR_GT: return "GT";
+  case OPR_LT: return "LT";
   default: return "invalid";
   }
 }

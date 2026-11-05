@@ -51,8 +51,6 @@ enum opmode {
   X(OP_SETVAR, "SETVAR", iZ) \
   X(OP_GETVAR, "GETVAR", iZ) \
   X(OP_RETURN, "RETURN", iZ) \
-  X(OP_EQ, "EQ", iZ)         \
-  X(OP_NEQ, "NEQ", iZ)       \
   X(OP_JT, "JT", iZs)        \
   X(OP_JF, "JF", iZs)        \
   X(OP_JMP, "JMP", iZs)      \
