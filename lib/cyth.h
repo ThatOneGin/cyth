@@ -28,17 +28,15 @@ typedef struct {
   size_t size;
 } cyth_userdata;
 
-enum CYTH_EQOP {
-  CYTH_OPEQ,
-  CYTH_OPNE,
-  CYTH_EQOPCOUNT
-};
-
 enum CYTH_BINOP {
   CYTH_OPADD,
   CYTH_OPSUB,
   CYTH_OPDIV,
   CYTH_OPMUL,
+  CYTH_OPEQ,
+  CYTH_OPNE,
+  CYTH_OPGT,
+  CYTH_OPLT,
   CYTH_BINOPCOUNT
 };
 
@@ -89,8 +87,7 @@ CYTH_API void cyth_getfield(cyth_State *C, int i, const char *name);
 CYTH_API void *cyth_newuserdata(cyth_State *C, size_t size);
 CYTH_API void cyth_setdestructor(cyth_State *C, int i, cyth_Destructor d);
 
-CYTH_API int cyth_compare(cyth_State *C, int i1, int i2, int op);
 CYTH_API size_t cyth_len(cyth_State *C, int i);
 
-CYTH_API int cyth_arith(cyth_State *C, int i1, int i2, int op);
+CYTH_API int cyth_binopr(cyth_State *C, int i1, int i2, int op);
 #endif

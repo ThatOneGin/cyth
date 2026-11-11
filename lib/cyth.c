@@ -225,18 +225,6 @@ CYTH_API void cyth_setdestructor(cyth_State *C, int i, cyth_Destructor d) {
   cythA_udsetdestructor(C, i, d);
 }
 
-CYTH_API int cyth_compare(cyth_State *C, int i1, int i2, int op) {
-  if (op >= CYTH_EQOPCOUNT)
-    cythE_error(C, "invalid operator");
-  if (i1 == i2) {
-    return true;
-  }
-  Tvalue l = *cythE_peek(C, i1);
-  Tvalue r = *cythE_peek(C, i2);
-  int res = cythV_objequ(C, l, r);
-  return (op == CYTH_OPNE) ? (!res) : res;
-}
-
 CYTH_API size_t cyth_len(cyth_State *C, int i) {
   Tvalue *o = cythE_peek(C, i);
   switch (cyth_tt(o)) {
@@ -248,12 +236,16 @@ CYTH_API size_t cyth_len(cyth_State *C, int i) {
   }
 }
 
-CYTH_API int cyth_arith(cyth_State *C, int i1, int i2, int op) {
+CYTH_API int cyth_binopr(cyth_State *C, int i1, int i2, int op) {
   static int optable[CYTH_BINOPCOUNT] = {
     [CYTH_OPADD] = OPR_ADD,
     [CYTH_OPSUB] = OPR_SUB,
     [CYTH_OPDIV] = OPR_DIV,
     [CYTH_OPMUL] = OPR_MUL,
+    [CYTH_OPEQ]  = OPR_EQ,
+    [CYTH_OPNE]  = OPR_NE,
+    [CYTH_OPGT]  = OPR_GT,
+    [CYTH_OPLT]  = OPR_LT,
   };
   if (op >= CYTH_BINOPCOUNT)
     cythE_error(C, "invalid operator %d", op);
