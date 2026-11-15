@@ -95,7 +95,7 @@ static void setvar(lex_State *ls, Vardsc v) {
   blk->vars.vars[blk->vars.n++] = v;
 }
 
-static void getvar(lex_State *ls, String *name, Vardsc *v) {
+static int getvar(lex_State *ls, String *name, Vardsc *v) {
   Vardsc dummy = {0};
   if (v == NULL) /* result is unused */
     v = &dummy;
@@ -103,11 +103,12 @@ static void getvar(lex_State *ls, String *name, Vardsc *v) {
   for (cmem_t i = 0; i < blk->vars.n; i++) {
     if (blk->vars.vars[i].name == name) {
       *v = blk->vars.vars[i];
-      return;
+      return (int)i;
     }
   }
   v->k = VKGLB;
   v->name = name;
+  return -1;
 }
 
 /* enter new scope */
@@ -460,11 +461,13 @@ static void ret(lex_State *ls) {
 static void assign(lex_State *ls, expdsc *e) {
   Vardsc v;
   String *name;
-  int k = ((DataBlk*)ls->pdata)->nlocvars;
+  int k;
   name = e->u.s;
   v.name = name;
   expect(ls, '=', "'='");
   if (e->k == EXPNAME) {
+    if ((k=getvar(ls, e->u.s, &v)) == -1)
+      k = ((DataBlk*)ls->pdata)->nlocvars;
     expr(ls, e);
     free_exp(ls, e);
     emitInstZ(ls, OP_SETVAR, k);
