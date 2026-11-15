@@ -520,7 +520,7 @@ static void whiledo(lex_State *ls) {
   jf = emitInstZ(ls, OP_JF, 0);
   block(ls);
   out = emitInstZ(ls, OP_JMP, cythC_imm_new(cond - savepc(ls) - 1));
-  patch(ls, jf, out-1);
+  patch(ls, jf, out - jf);
 }
 
 /* stat = return | block | ifdo | exprstat */

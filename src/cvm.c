@@ -210,7 +210,7 @@ static int dobinop(cyth_State *C, cyth_integer *res, int op, Tvalue l, Tvalue r)
   case OPR_LT: {
     cyth_integer li, ri;
     if (tointeger(l, &li) < 0) return -1;
-    if (tointeger(l, &ri) < 0) return -1;
+    if (tointeger(r, &ri) < 0) return -1;
     if (op == OPR_GT) *res = li > ri;
     else if (op == OPR_LT) *res = li < ri;
     else cyth_assert(0);
