@@ -645,9 +645,7 @@ static void mainfunc(lex_State *ls) {
   expect(ls, TK_EOF, "End-of-file");
     Vardsc v;
   getvar(ls, cythS_new(ls->C, "main"), &v);
-  if (v.k != VKFUN)
-    cythL_syntaxerror(ls, "Expected symbol 'main' to be a function.");
-  else {
+  if (v.k == VKFUN) {
     Instruction i = 0;
     setopcode(i, OP_FUNC);
     setargz(i, v.i);
