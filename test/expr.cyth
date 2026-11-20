@@ -1,0 +1,5 @@
+(func main() -> 0
+
+  (print (tostring 47) "Hello, world!")
+
+  )

@@ -336,11 +336,80 @@ static void label(lex_State *ls) {
   setlabel(ls, name, pc, NOPATCH);
 }
 
-/* label | instruction */
+static int sexpr(lex_State *ls, int nret);
+
+/* expr = INT | STR | sexpr */
+static int expr(lex_State *ls) {
+  Instruction i = 0;
+  int line = saveline(ls);
+  switch (ls->t.type) {
+  case TK_INT:
+  case TK_STR: {
+    Tvalue v;
+    value(ls, &v);
+    setopcode(i, OP_PUSH);
+    setargz(i, emitK(ls, v));
+    emitC(ls, i, line);
+  } break;
+  case TK_NAME: {    
+    Vardsc v;
+    String *name = expect(ls, TK_NAME, "Expected identifier.").value.s;
+    getvar(ls, name, &v);
+    if (v.k == VKLOC) {
+      setopcode(i, OP_GETVAR);
+      setargz(i, v.i);
+    } else { /* a function */
+      setopcode(i, OP_GETGLB);
+      setargz(i, emitK(ls, s2obj(name)));
+    }
+    emitC(ls, i, line);
+    if (v.k == VKFUN) {
+      func_State *fs = ls->fs->prev ? ls->fs->prev : ls->fs;
+      int nres = fs->f->f[v.i]->nresults;
+      return nres > 0 ? nres : 1;
+    }
+  } break;
+  case '(':
+    return sexpr(ls, 1);
+  default:
+    cyth_assert(0);
+  }
+  return 1;
+}
+
+/* sexpr = '(' expr list ')'*/
+static int sexpr(lex_State *ls, int ret) {
+  int n = 0;
+  int line = saveline(ls);
+  int nret = 0;
+  expect(ls, '(', "'(' to open s-expression");
+  if (ls->t.type != ')' && ret) {
+    nret = expr(ls);
+    n++;
+  }
+  while (ls->t.type != ')' && ls->t.type != TK_EOF) {
+    n += expr(ls);
+  }
+  expect(ls, ')', "')' to close s-expression");
+  if (n > 0) {
+    Instruction i = 0;
+    setopcode(i, OP_CALL);
+    setarga(i, (n-1));
+    setargb(i, (ret ? nret : 0));
+    emitC(ls, i, line);
+  }
+  return nret;
+}
+
+/* label | sexpr | instruction */
 static void instblock(lex_State *ls) {
   switch (ls->t.type) {
   case ':':
     label(ls);
+    break;
+  case '(':
+    /* the first expression does not return any value */
+    sexpr(ls, 0);
     break;
   default:
     instruction(ls);
